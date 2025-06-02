@@ -14,6 +14,8 @@ import { ApiError, formatZodError } from '../utils/errors';
  */
 import { STATUS_CODE } from '../constants';
 
+const REFRESH_PATH = `${process.env.BASE_PATH}/auth/refresh-token`;
+
 export const errorHandler = (
   error: Error,
   req: Request,
@@ -21,6 +23,18 @@ export const errorHandler = (
   next: NextFunction,
 ): any => {
   console.error(`Error Occurred on PATH: ${req.path} `, error);
+
+  if (req.path === REFRESH_PATH) {
+    res
+      .clearCookie('accessToken', { path: '/' })
+      .clearCookie('refreshToken', { path: REFRESH_PATH });
+  }
+
+  if (error instanceof SyntaxError) {
+    return res.status(400).json({
+      message: 'Invalid JSON format, please check your request body',
+    });
+  }
 
   if (error instanceof ApiError) {
     return res.status(error.statusCode).json({

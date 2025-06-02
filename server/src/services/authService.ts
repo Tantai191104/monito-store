@@ -16,8 +16,8 @@ import UserModel from '../models/userModel';
 /**
  * Utils
  */
-import { BadRequestException, NotFoundException } from '../utils/errors';
-import { generateTokens } from '../utils/jwt';
+import { BadRequestException, NotFoundException, UnauthorizedException } from '../utils/errors';
+import { generateTokens, verifyToken } from '../utils/jwt';
 
 export const authService = {
   async register({ name, email, password }: RegisterPayload) {
@@ -78,6 +78,41 @@ export const authService = {
       throw error;
     } finally {
       session.endSession();
+    }
+  },
+  async refreshToken(refreshToken: string) {
+    try {
+      const decoded = verifyToken(
+        refreshToken,
+        process.env.REFRESH_TOKEN_SECRET!,
+      );
+
+      const user = await UserModel.findById(decoded.userId);
+      
+      if (!user) {
+        throw new UnauthorizedException(
+          'User not found',
+          'AUTH_USER_NOT_FOUND',
+        );
+      }
+
+      const tokens = generateTokens({ userId: user._id as string });
+
+      return tokens;
+    } catch (error) {
+      if (error instanceof Error && error.name === 'TokenExpiredError') {
+        throw new UnauthorizedException(
+          'Refresh token expired',
+          'TOKEN_EXPIRED',
+        );
+      }
+      if (error instanceof Error && error.name === 'JsonWebTokenError') {
+        throw new UnauthorizedException(
+          'Invalid refresh token',
+          'INVALID_TOKEN',
+        );
+      }
+      throw error;
     }
   },
 };

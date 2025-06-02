@@ -15,12 +15,11 @@ export const authenticate = (
   next: NextFunction,
 ) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith('Bearer ')) {
+    let token = req.cookies?.accessToken;
+
+    if (!token) {
       throw new UnauthorizedException('No token provided');
     }
-
-    const token = authHeader.split(' ')[1];
 
     const decoded = verifyToken(token, process.env.ACCESS_TOKEN_SECRET!);
 
