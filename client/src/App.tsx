@@ -1,10 +1,25 @@
+/**
+ * Node modules
+ */
+import { BrowserRouter } from 'react-router-dom';
+/**
+ * Routes
+ */
+import AppRoutes from '@/routers/AppRoutes';
+
+/**
+ * Providers
+ */
+import { QueryProvider } from '@/providers/QueryProvider';
 
 const App = () => {
   return (
-    <div>
-      {/* APP ROUTES */}
-    </div>
-  )
-}
+    <QueryProvider>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+    </QueryProvider>
+  );
+};
 
-export default App
+export default App;
