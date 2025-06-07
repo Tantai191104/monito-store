@@ -2,12 +2,10 @@ export type User = {
   _id: string;
   name: string;
   email: string;
+  role: string;
   avatarUrl: string | null;
   isActive: boolean;
-  role: string;
   lastLogin: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
 };
 
 export type RegisterPayload = Pick<User, 'name' | 'email'> & {

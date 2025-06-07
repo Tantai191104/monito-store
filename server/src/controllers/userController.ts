@@ -24,7 +24,7 @@ export const userController = {
 
       res.status(STATUS_CODE.OK).json({
         message: 'Get current user successfully',
-        data: user,
+        data: { user },
       });
     } catch (error) {
       next(error);

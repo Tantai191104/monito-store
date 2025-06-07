@@ -18,6 +18,7 @@ import UserModel from '../models/userModel';
  */
 import { BadRequestException, NotFoundException, UnauthorizedException } from '../utils/errors';
 import { generateTokens, verifyToken } from '../utils/jwt';
+import { ERROR_CODE_ENUM } from '../constants';
 
 export const authService = {
   async register({ name, email, password }: RegisterPayload) {
@@ -27,7 +28,7 @@ export const authService = {
         const existingUser = await UserModel.exists({ email }).session(session);
 
         if (existingUser) {
-          throw new BadRequestException('Email already exists!');
+          throw new BadRequestException('Email already exists!', ERROR_CODE_ENUM.AUTH_EMAIL_ALREADY_EXISTS);
         }
 
         const newUser = new UserModel({
