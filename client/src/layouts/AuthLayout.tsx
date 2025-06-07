@@ -15,7 +15,7 @@ import { Logo } from '@/components/Logo';
 
 const AuthLayout = () => {
   return (
-    <div className="relative flex h-screen overflow-hidden bg-gradient-to-r from-[#FCEED5] from-6% via-[#FCEED5] via-75% to-[#FFE7BA] to-100%">
+    <div className="relative flex h-screen overflow-hidden bg-gradient-to-r from-[#FCEED5] from-6% via-[#FCEED5] via-75% to-[#FFE7BA] to-100% subpixel-antialiased">
       <div className="absolute -top-[12%] -right-[25%] aspect-square h-[150vh] rotate-[60deg] rounded-[10%] bg-[#002A48]" />
       <img
         src={DogsBanner}

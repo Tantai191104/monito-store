@@ -4,10 +4,10 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 
 /**
- * Pages
+ * Layouts
  */
-import LoginPage from '@/pages/auth/LoginPage';
-import RegisterPage from '@/pages/auth/RegisterPage';
+import AuthLayout from '@/layouts/AuthLayout';
+import BaseLayout from '@/layouts/BaseLayout';
 
 /**
  * Components
@@ -18,7 +18,13 @@ import { ProtectedRoute } from './components/ProtectedRoute';
  * Hooks
  */
 import { useAuth } from '@/hooks/useAuth';
-import AuthLayout from '@/layouts/AuthLayout';
+
+/**
+ * Pages
+ */
+import HomePage from '@/pages/home/HomePage';
+import LoginPage from '@/pages/auth/LoginPage';
+import RegisterPage from '@/pages/auth/RegisterPage';
 
 const AppRoutes = () => {
   const { user, isAuthenticated } = useAuth();
@@ -31,6 +37,9 @@ const AppRoutes = () => {
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+        </Route>
+        <Route element={<BaseLayout />}>
+          <Route index element={<HomePage />} />
         </Route>
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>

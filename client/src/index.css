@@ -120,3 +120,13 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .container {
+    @apply mx-auto w-full;
+
+    @media (min-width: 1400px) {
+      max-width: 1280px;
+    }
+  }
+}
