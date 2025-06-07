@@ -21,6 +21,12 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { GoogleIcon } from '@/components/icons/GoogleIcon';
 
+/**
+ * Hooks
+ */
+import { useAuth } from '@/hooks/useAuth';
+import { LoaderCircleIcon } from 'lucide-react';
+
 const formSchema = z
   .object({
     name: z
@@ -54,6 +60,8 @@ const formSchema = z
   });
 
 const RegisterPage = () => {
+  const { register } = useAuth();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -63,9 +71,12 @@ const RegisterPage = () => {
       confirmPassword: '',
     },
   });
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    console.log(values);
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    const { confirmPassword, ...registerData } = values;
+    await register.mutateAsync(registerData);
   };
+
   return (
     <div className="flex w-[400px] flex-col gap-4 rounded-lg bg-white p-5">
       <div className="flex flex-col items-center gap-2 text-center">
@@ -109,7 +120,11 @@ const RegisterPage = () => {
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <Input placeholder="••••••••••••" {...field} />
+                  <Input
+                    type="password"
+                    placeholder="••••••••••••"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -122,21 +137,38 @@ const RegisterPage = () => {
               <FormItem>
                 <FormLabel>Confirm Password</FormLabel>
                 <FormControl>
-                  <Input placeholder="••••••••••••" {...field} />
+                  <Input
+                    type="password"
+                    placeholder="••••••••••••"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full">
-            Register
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={register.isPending}
+          >
+            {register.isPending ? (
+              <LoaderCircleIcon className="size-5" />
+            ) : (
+              'Register'
+            )}
           </Button>
           <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
             <span className="bg-background text-muted-foreground relative z-10 px-2">
               Or continue with
             </span>
           </div>
-          <Button variant="outline" className="w-full">
+          <Button
+            variant="outline"
+            className="w-full"
+            type="button"
+            disabled={register.isPending}
+          >
             <GoogleIcon />
             Login with Google
           </Button>

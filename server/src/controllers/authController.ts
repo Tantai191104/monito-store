@@ -18,6 +18,10 @@ import { authService } from '../services/authService';
  * Constants
  */
 import { STATUS_CODE } from '../constants';
+
+/**
+ * Utils
+ */
 import { UnauthorizedException } from '../utils/errors';
 
 export const authController = {
@@ -57,7 +61,7 @@ export const authController = {
       });
 
       res.status(STATUS_CODE.OK).json({
-        message: 'Login successful',
+        message: 'Login successfully',
         data: {
           user,
         },
@@ -103,7 +107,7 @@ export const authController = {
       res.clearCookie('refreshToken');
 
       res.status(STATUS_CODE.OK).json({
-        message: 'Logout successful',
+        message: 'Logout successfully',
       });
     } catch (error) {
       next(error);

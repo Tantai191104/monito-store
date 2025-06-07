@@ -10,28 +10,32 @@ import type { ApiResponse } from '@/types/api';
 import type { LoginPayload, RegisterPayload, User } from '@/types/user';
 
 export const authService = {
-  async register(data: RegisterPayload) {
-    const response = await API.post('/auth/register', data);
+  async register(data: RegisterPayload): Promise<ApiResponse> {
+    const response = await API.post<ApiResponse>('/auth/register', data);
     return response.data;
   },
 
-  async login(data: LoginPayload) {
-    const response = await API.post<ApiResponse<User>>('/auth/login', data);
+  async login(data: LoginPayload): Promise<ApiResponse<{ user: User }>> {
+    const response = await API.post<ApiResponse<{ user: User }>>(
+      '/auth/login',
+      data,
+    );
     return response.data;
   },
 
-  async logout() {
-    const response = await API.post('/auth/logout');
+  async logout(): Promise<ApiResponse> {
+    const response = await API.post<ApiResponse>('/auth/logout');
     return response.data;
   },
 
-  async refreshToken() {
-    const response = await API.post('/auth/refresh-token');
+  async refreshToken(): Promise<ApiResponse> {
+    const response = await API.post<ApiResponse>('/auth/refresh-token');
     return response.data;
   },
 
-  async getCurrentUser() {
-    const response = await API.get<ApiResponse<User>>('/user/current-user');
+  async getCurrentUser(): Promise<ApiResponse<{ user: User }>> {
+    const response =
+      await API.get<ApiResponse<{ user: User }>>('/user/current-user');
     return response.data;
   },
 };

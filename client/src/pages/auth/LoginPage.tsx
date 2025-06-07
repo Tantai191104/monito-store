@@ -4,6 +4,7 @@
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Link } from 'react-router-dom';
 
 /**
  * Components
@@ -19,7 +20,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { GoogleIcon } from '@/components/icons/GoogleIcon';
-import { Link } from 'react-router-dom';
+
+/**
+ * Hooks
+ */
+import { useAuth } from '@/hooks/useAuth';
+import { LoaderCircleIcon } from 'lucide-react';
 
 const formSchema = z.object({
   email: z
@@ -32,11 +38,12 @@ const formSchema = z.object({
     .string()
     .trim()
     .nonempty('Password is required')
-    .min(8, 'Minimum 8 characters')
-    .max(50, 'Maximum 50 characters'),
+    .min(1, 'Password is required'),
 });
 
 const LoginPage = () => {
+  const { login } = useAuth();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -45,9 +52,10 @@ const LoginPage = () => {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    console.log(values);
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    await login.mutateAsync(values);
   };
+
   return (
     <div className="flex w-[400px] flex-col gap-6 rounded-lg bg-white p-5">
       <div className="flex flex-col items-center gap-2 text-center">
@@ -88,21 +96,34 @@ const LoginPage = () => {
                   </a>
                 </div>
                 <FormControl>
-                  <Input placeholder="••••••••••••" {...field} />
+                  <Input
+                    type="password"
+                    placeholder="••••••••••••"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full">
-            Login
+          <Button type="submit" className="w-full" disabled={login.isPending}>
+            {login.isPending ? (
+              <LoaderCircleIcon className="size-5" />
+            ) : (
+              'Login'
+            )}
           </Button>
           <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
             <span className="bg-background text-muted-foreground relative z-10 px-2">
               Or continue with
             </span>
           </div>
-          <Button variant="outline" className="w-full">
+          <Button
+            disabled={login.isPending}
+            variant="outline"
+            className="w-full"
+            type="button"
+          >
             <GoogleIcon />
             Login with Google
           </Button>
