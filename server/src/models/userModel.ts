@@ -13,6 +13,7 @@ export interface UserDocument extends Document {
   email: string;
   password: string;
   avatarUrl: string | null;
+  role: 'admin' | 'customer';
   isActive: boolean;
   lastLogin: Date | null;
   comparePassword(value: string): Promise<boolean>;
@@ -22,28 +23,41 @@ const userSchema = new Schema<UserDocument>(
   {
     name: {
       type: String,
-      required: true,
       trim: true,
+      required: [true, 'Username is required'],
+      maxLength: [50, 'Username must be less than 50 characters'],
+      unique: [true, 'Username must be unique'],
     },
     email: {
       type: String,
-      required: true,
-      unique: true,
+      required: [true, 'Email is required'],
+      unique: [true, 'Email must be unique'],
+      maxLength: [50, 'Email must be less than 50 characters'],
       trim: true,
       lowercase: true,
     },
     password: {
       type: String,
-      required: true,
+      required: [true, 'Password is required'],
       trim: true,
     },
     avatarUrl: {
       type: String,
+      trim: true,
       default: null,
     },
     isActive: {
       type: Boolean,
       default: true,
+    },
+    role: {
+      type: String,
+      required: [true, 'Role is required'],
+      enum: {
+        values: ['admin', 'customer'],
+        message: '{VALUE} is not supported',
+      },
+      default: 'customer',
     },
     lastLogin: {
       type: Date,

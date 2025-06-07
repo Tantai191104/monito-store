@@ -1,7 +1,12 @@
 /**
  * Node modules
  */
-import { Navigate } from "react-router-dom";
+import { Navigate } from 'react-router-dom';
+
+/**
+ * Hooks
+ */
+import { useAuth } from '@/hooks/useAuth';
 
 export const ProtectedRoute = ({
   children,

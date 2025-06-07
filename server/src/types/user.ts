@@ -4,6 +4,7 @@ export type User = {
   email: string;
   avatarUrl: string | null;
   isActive: boolean;
+  role: string;
   lastLogin: Date | null;
   createdAt: Date;
   updatedAt: Date;
