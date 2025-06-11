@@ -57,6 +57,8 @@ app.use(`${BASE_PATH}/auth`, authRoute);
 app.use(`${BASE_PATH}/user`, userRoute);
 app.use(`${BASE_PATH}/products`, productRoute);
 app.use(`${BASE_PATH}/pets`, petRoute);
+app.use(`${BASE_PATH}/breeds`, breedRoute);
+app.use(`${BASE_PATH}/colors`, colorRoute);
 
 /**
  * Error Handler

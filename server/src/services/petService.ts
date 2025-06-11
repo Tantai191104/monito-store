@@ -61,6 +61,7 @@ export const petService = {
       breed,
       gender,
       size,
+      color,
       minPrice,
       maxPrice,
       location,
@@ -78,6 +79,7 @@ export const petService = {
     if (breed) query.breed = new RegExp(breed, 'i');
     if (gender) query.gender = gender;
     if (size) query.size = size;
+    if (color) query.color = new RegExp(color, 'i');
     if (minPrice !== undefined || maxPrice !== undefined) {
       query.price = {};
       if (minPrice !== undefined) query.price.$gte = minPrice;
