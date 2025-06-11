@@ -21,6 +21,8 @@ import { errorHandler } from './middlewares/errorHandler';
  */
 import authRoute from './routes/authRoute';
 import userRoute from './routes/userRoute';
+import productRoute from './routes/productRoute';
+import petRoute from './routes/petRoute';
 
 /**
  * App
@@ -53,6 +55,8 @@ const BASE_PATH = process.env.BASE_PATH;
  */
 app.use(`${BASE_PATH}/auth`, authRoute);
 app.use(`${BASE_PATH}/user`, userRoute);
+app.use(`${BASE_PATH}/products`, productRoute);
+app.use(`${BASE_PATH}/pets`, petRoute);
 
 /**
  * Error Handler

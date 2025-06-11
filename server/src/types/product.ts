@@ -32,7 +32,7 @@ export type Product = {
 
 export type CreateProductPayload = Omit<
   Product,
-  '_id' | 'createdAt' | 'updatedAt' | 'isInStock' | 'discount'
+  '_id' | 'createdAt' | 'updatedAt' | 'isInStock' | 'discount' | 'createdBy'
 >;
 
 export type UpdateProductPayload = Partial<CreateProductPayload>;
@@ -45,4 +45,8 @@ export type ProductFilters = {
   petType?: string;
   inStock?: boolean;
   isActive?: boolean;
+  page?: number;
+  limit?: number;
+  sortBy?: 'name' | 'price' | 'rating' | 'createdAt';
+  sortOrder?: 'asc' | 'desc';
 };

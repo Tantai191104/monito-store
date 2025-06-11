@@ -24,7 +24,10 @@ export type Pet = {
   updatedAt: Date;
 };
 
-export type CreatePetPayload = Omit<Pet, '_id' | 'createdAt' | 'updatedAt'>;
+export type CreatePetPayload = Omit<
+  Pet,
+  '_id' | 'createdAt' | 'updatedAt' | 'createdBy'
+>;
 
 export type UpdatePetPayload = Partial<CreatePetPayload>;
 
@@ -37,4 +40,8 @@ export type PetFilters = {
   maxPrice?: number;
   location?: string;
   isAvailable?: boolean;
+  page?: number;
+  limit?: number;
+  sortBy?: 'name' | 'price' | 'publishedDate' | 'createdAt';
+  sortOrder?: 'asc' | 'desc';
 };
