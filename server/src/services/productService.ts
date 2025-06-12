@@ -61,7 +61,7 @@ export const productService = {
       inStock,
       isActive,
       page = 1,
-      limit = 10,
+      limit = 15,
       sortBy = 'createdAt',
       sortOrder = 'desc',
     } = filters;

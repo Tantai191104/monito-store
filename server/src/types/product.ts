@@ -32,7 +32,7 @@ export type Product = {
 
 export type CreateProductPayload = Omit<
   Product,
-  '_id' | 'createdAt' | 'updatedAt' | 'isInStock' | 'discount' | 'createdBy'
+  '_id' | 'createdAt' | 'updatedAt' | 'isInStock' | 'discount' | 'createdBy' | 'rating' | 'reviewCount'
 >;
 
 export type UpdateProductPayload = Partial<CreateProductPayload>;
