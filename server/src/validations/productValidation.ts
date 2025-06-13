@@ -40,15 +40,15 @@ export const createProductSchema = z.object({
     material: z.string().trim().optional(),
     color: z.string().trim().optional(),
     ageGroup: z.string().trim().optional(),
-    petType: z.array(z.string()).optional(),
-    ingredients: z.array(z.string()).optional(),
+    petType: z.array(z.string()).default([]),
+    ingredients: z.array(z.string()).default([]),
   }),
   stock: z
     .number()
     .min(0, 'Stock cannot be negative'),
-  tags: z.array(z.string()).optional(),
-  gifts: z.array(z.string()).optional(),
-  isActive: z.boolean(),
+  tags: z.array(z.string()).default([]),
+  gifts: z.array(z.string()).default([]),
+  isActive: z.boolean().default(true),
 });
 
 export const updateProductSchema = createProductSchema.partial();
@@ -62,7 +62,7 @@ export const productFiltersSchema = z.object({
   inStock: z.boolean().optional(),
   isActive: z.boolean().optional(),
   page: z.number().min(1).default(1),
-  limit: z.number().min(1).max(100).default(10),
+  limit: z.number().min(1).max(100).default(15),
   sortBy: z.enum(['name', 'price', 'rating', 'createdAt']).default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
 });
