@@ -17,7 +17,7 @@ import { connectDB } from './config/connectDB';
 import { errorHandler } from './middlewares/errorHandler';
 
 /**
- * Import Routes
+ * Routes
  */
 import authRoute from './routes/authRoute';
 import userRoute from './routes/userRoute';
@@ -25,6 +25,7 @@ import productRoute from './routes/productRoute';
 import petRoute from './routes/petRoute';
 import breedRoute from './routes/breedRoute';
 import colorRoute from './routes/colorRoute';
+import categoryRoute from './routes/categoryRoute';
 
 /**
  * App
@@ -61,6 +62,7 @@ app.use(`${BASE_PATH}/products`, productRoute);
 app.use(`${BASE_PATH}/pets`, petRoute);
 app.use(`${BASE_PATH}/breeds`, breedRoute);
 app.use(`${BASE_PATH}/colors`, colorRoute);
+app.use(`${BASE_PATH}/categories`, categoryRoute);
 
 /**
  * Error Handler

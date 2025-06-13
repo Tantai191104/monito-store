@@ -51,14 +51,9 @@ export const colorsData = [
   },
   {
     name: 'Tricolor',
-    hexCode: '#8B4513',
+    hexCode: '#8B4516',
     description:
       'Combination of three colors typically black, brown, and white',
-  },
-  {
-    name: 'Black & White',
-    hexCode: '#000000',
-    description: 'Combination of black and white markings',
   },
   {
     name: 'Silver',

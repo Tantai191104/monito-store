@@ -15,7 +15,9 @@ import { seedAdmin } from './seedAdmin';
 import { seedStaff } from './seedStaff';
 import { seedBreeds } from './seedBreeds';
 import { seedColors } from './seedColors';
+import { seedCategories } from './seedCategories';
 import { seedPets } from './seedPets';
+import { seedProducts } from './seedProducts';
 
 const runSeeds = async () => {
   try {
@@ -42,8 +44,16 @@ const runSeeds = async () => {
     await seedColors();
     console.log('');
 
-    // 5. Seed pets
+    // 5. Seed categories
+    await seedCategories();
+    console.log('');
+
+    // 6. Seed pets
     await seedPets();
+    console.log('');
+
+    // 7. Seed products
+    await seedProducts();
     console.log('');
 
     console.log('🎉 All seeds completed successfully!');

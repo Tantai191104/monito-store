@@ -5,8 +5,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface ProductDocument extends Document {
   name: string;
-  category: 'Food' | 'Toy' | 'Accessory' | 'Healthcare' | 'Grooming' | 'Other';
-  subcategory?: string;
+  category: mongoose.Types.ObjectId;
   brand: string;
   price: number;
   originalPrice?: number;
@@ -18,8 +17,6 @@ export interface ProductDocument extends Document {
     size?: string;
     material?: string;
     color?: string;
-    ageGroup?: string;
-    petType?: string[];
     ingredients?: string[];
   };
   stock: number;
@@ -41,17 +38,9 @@ const productSchema = new Schema<ProductDocument>(
       maxLength: [200, 'Product name must be less than 200 characters'],
     },
     category: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Category',
       required: [true, 'Category is required'],
-      enum: {
-        values: ['Food', 'Toy', 'Accessory', 'Healthcare', 'Grooming', 'Other'],
-        message: '{VALUE} is not a valid category',
-      },
-    },
-    subcategory: {
-      type: String,
-      trim: true,
-      maxLength: [100, 'Subcategory must be less than 100 characters'],
     },
     brand: {
       type: String,
@@ -105,14 +94,6 @@ const productSchema = new Schema<ProductDocument>(
       color: {
         type: String,
         trim: true,
-      },
-      ageGroup: {
-        type: String,
-        trim: true,
-      },
-      petType: {
-        type: [String],
-        default: [],
       },
       ingredients: {
         type: [String],
@@ -185,7 +166,6 @@ productSchema.index({ brand: 1 });
 productSchema.index({ price: 1 });
 productSchema.index({ rating: -1 });
 productSchema.index({ createdAt: -1 });
-productSchema.index({ 'specifications.petType': 1 });
 
 const ProductModel = mongoose.model<ProductDocument>('Product', productSchema);
 export default ProductModel;

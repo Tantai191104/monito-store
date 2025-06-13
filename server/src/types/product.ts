@@ -1,8 +1,9 @@
+import { Category } from './category';
+
 export type Product = {
   _id: string;
   name: string;
-  category: 'Food' | 'Toy' | 'Accessory' | 'Healthcare' | 'Grooming' | 'Other';
-  subcategory?: string;
+  category: Category | string;
   brand: string;
   price: number;
   originalPrice?: number;
@@ -14,8 +15,6 @@ export type Product = {
     size?: string;
     material?: string;
     color?: string;
-    ageGroup?: string;
-    petType?: string[];
     ingredients?: string[];
   };
   stock: number;
@@ -30,11 +29,26 @@ export type Product = {
   updatedAt: Date;
 };
 
-export type CreateProductPayload = Omit<
-  Product,
-
-  '_id' | 'createdAt' | 'updatedAt' | 'isInStock' | 'discount' | 'createdBy' | 'rating' | 'reviewCount'
->;
+export type CreateProductPayload = {
+  name: string;
+  category: string; // ObjectId string
+  brand: string;
+  price: number;
+  originalPrice?: number;
+  description: string;
+  images: string[];
+  specifications: {
+    weight?: string;
+    size?: string;
+    material?: string;
+    color?: string;
+    ingredients?: string[];
+  };
+  stock: number;
+  tags?: string[];
+  gifts?: string[];
+  isActive?: boolean;
+};
 
 export type UpdateProductPayload = Partial<CreateProductPayload>;
 
@@ -43,7 +57,6 @@ export type ProductFilters = {
   brand?: string;
   minPrice?: number;
   maxPrice?: number;
-  petType?: string;
   inStock?: boolean;
   isActive?: boolean;
   page?: number;

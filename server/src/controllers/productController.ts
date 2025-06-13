@@ -92,9 +92,8 @@ export const productController = {
     try {
       const { id } = req.params;
       const body = updateProductSchema.parse(req.body);
-      const userId = req.userId!;
 
-      const product = await productService.updateProduct(id, body, userId);
+      const product = await productService.updateProduct(id, body);
 
       res.status(STATUS_CODE.OK).json({
         message: 'Product updated successfully',
@@ -112,9 +111,8 @@ export const productController = {
   ): Promise<void> {
     try {
       const { id } = req.params;
-      const userId = req.userId!;
 
-      await productService.deleteProduct(id, userId);
+      await productService.deleteProduct(id);
 
       res.status(STATUS_CODE.OK).json({
         message: 'Product deleted successfully',
