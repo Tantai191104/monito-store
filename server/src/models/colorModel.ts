@@ -5,7 +5,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface ColorDocument extends Document {
   name: string;
-  hexCode?: string; // Optional hex code for display
+  hexCode: string;
   description?: string;
   isActive: boolean;
   createdBy: mongoose.Types.ObjectId;
@@ -22,6 +22,8 @@ const colorSchema = new Schema<ColorDocument>(
     },
     hexCode: {
       type: String,
+      required: [true, 'Hex Code is required'],
+      unique: [true, 'Hex Code must be unique'],
       trim: true,
       match: [/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, 'Invalid hex color code'],
     },

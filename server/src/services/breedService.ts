@@ -34,12 +34,8 @@ export const breedService = {
     }
   },
 
-  async getBreeds(filters: { isActive?: boolean } = {}) {
-    const query: any = {};
-
-    if (filters.isActive !== undefined) query.isActive = filters.isActive;
-
-    const breeds = await BreedModel.find(query).sort({ name: 1 });
+  async getBreeds() {
+    const breeds = await BreedModel.find().sort({ name: 1 });
 
     return breeds;
   },
@@ -61,7 +57,6 @@ export const breedService = {
       description?: string;
       isActive?: boolean;
     },
-    userId: string,
   ) {
     try {
       const breed = await BreedModel.findById(breedId);
@@ -82,7 +77,7 @@ export const breedService = {
     }
   },
 
-  async deleteBreed(breedId: string, userId: string) {
+  async deleteBreed(breedId: string) {
     const breed = await BreedModel.findById(breedId);
 
     if (!breed) {

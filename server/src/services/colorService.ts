@@ -34,12 +34,8 @@ export const colorService = {
     }
   },
 
-  async getColors(filters: { isActive?: boolean } = {}) {
-    const query: any = {};
-
-    if (filters.isActive !== undefined) query.isActive = filters.isActive;
-
-    const colors = await ColorModel.find(query).sort({ name: 1 });
+  async getColors() {
+    const colors = await ColorModel.find().sort({ name: 1 });
 
     return colors;
   },
@@ -62,7 +58,6 @@ export const colorService = {
       description?: string;
       isActive?: boolean;
     },
-    userId: string,
   ) {
     try {
       const color = await ColorModel.findById(colorId);
@@ -83,7 +78,7 @@ export const colorService = {
     }
   },
 
-  async deleteColor(colorId: string, userId: string) {
+  async deleteColor(colorId: string) {
     const color = await ColorModel.findById(colorId);
 
     if (!color) {

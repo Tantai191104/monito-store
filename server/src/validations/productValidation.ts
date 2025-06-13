@@ -42,13 +42,13 @@ export const createProductSchema = z.object({
     ageGroup: z.string().trim().optional(),
     petType: z.array(z.string()).optional(),
     ingredients: z.array(z.string()).optional(),
-  }).optional(),
+  }),
   stock: z
     .number()
     .min(0, 'Stock cannot be negative'),
   tags: z.array(z.string()).optional(),
   gifts: z.array(z.string()).optional(),
-  isActive: z.boolean().optional(),
+  isActive: z.boolean(),
 });
 
 export const updateProductSchema = createProductSchema.partial();

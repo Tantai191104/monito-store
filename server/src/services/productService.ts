@@ -149,13 +149,13 @@ export const productService = {
         }
 
         // Check if user is the creator or admin
-        if (product.createdBy.toString() !== userId) {
-          // Here you would check if user is admin
-          // For now, only creator can update
-          throw new BadRequestException(
-            'You can only update your own products',
-          );
-        }
+        // if (product.createdBy.toString() !== userId) {
+        //   // Here you would check if user is admin
+        //   // For now, only creator can update
+        //   throw new BadRequestException(
+        //     'You can only update your own products',
+        //   );
+        // }
 
         Object.assign(product, data);
         await product.save({ session });
@@ -187,11 +187,11 @@ export const productService = {
         }
 
         // Check if user is the creator or admin
-        if (product.createdBy.toString() !== userId) {
-          throw new BadRequestException(
-            'You can only delete your own products',
-          );
-        }
+        // if (product.createdBy.toString() !== userId) {
+        //   throw new BadRequestException(
+        //     'You can only delete your own products',
+        //   );
+        // }
 
         await ProductModel.findByIdAndDelete(productId).session(session);
       });

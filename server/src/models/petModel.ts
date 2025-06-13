@@ -4,13 +4,12 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface PetDocument extends Document {
-  sku: string;
   name: string;
-  breed: string;
+  breed: mongoose.Types.ObjectId;
   gender: 'Male' | 'Female';
   age: string;
   size: 'Small' | 'Medium' | 'Large';
-  color: string;
+  color: mongoose.Types.ObjectId;
   price: number;
   images: string[];
   description?: string;
@@ -21,20 +20,12 @@ export interface PetDocument extends Document {
   location: string;
   publishedDate: Date;
   additionalInfo?: string;
-  category: 'Dog' | 'Cat' | 'Bird' | 'Fish' | 'Other';
   isAvailable: boolean;
   createdBy: mongoose.Types.ObjectId;
 }
 
 const petSchema = new Schema<PetDocument>(
   {
-    sku: {
-      type: String,
-      required: [true, 'SKU is required'],
-      unique: [true, 'SKU must be unique'],
-      trim: true,
-      uppercase: true,
-    },
     name: {
       type: String,
       required: [true, 'Pet name is required'],
@@ -42,10 +33,9 @@ const petSchema = new Schema<PetDocument>(
       maxLength: [100, 'Pet name must be less than 100 characters'],
     },
     breed: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Breed',
       required: [true, 'Breed is required'],
-      trim: true,
-      maxLength: [100, 'Breed name must be less than 100 characters'],
     },
     gender: {
       type: String,
@@ -69,9 +59,9 @@ const petSchema = new Schema<PetDocument>(
       },
     },
     color: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Color',
       required: [true, 'Color is required'],
-      trim: true,
     },
     price: {
       type: Number,
@@ -123,14 +113,6 @@ const petSchema = new Schema<PetDocument>(
       trim: true,
       maxLength: [500, 'Additional info must be less than 500 characters'],
     },
-    category: {
-      type: String,
-      required: [true, 'Category is required'],
-      enum: {
-        values: ['Dog', 'Cat', 'Bird', 'Fish', 'Other'],
-        message: '{VALUE} is not a valid category',
-      },
-    },
     isAvailable: {
       type: Boolean,
       default: true,
@@ -146,12 +128,12 @@ const petSchema = new Schema<PetDocument>(
   },
 );
 
-// Indexes for better performance
-petSchema.index({ sku: 1 });
-petSchema.index({ category: 1, isAvailable: 1 });
+// Indexes for better performance (removed SKU index)
 petSchema.index({ breed: 1 });
+petSchema.index({ color: 1 });
 petSchema.index({ price: 1 });
 petSchema.index({ publishedDate: -1 });
+petSchema.index({ isAvailable: 1 });
 
 const PetModel = mongoose.model<PetDocument>('Pet', petSchema);
 export default PetModel;

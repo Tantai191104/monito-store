@@ -7,6 +7,7 @@ import { Router } from 'express';
  * Middlewares
  */
 import { authenticate } from '../middlewares/authenticate';
+import { requireAdminOrStaff } from '../middlewares/authorize';
 
 /**
  * Controllers
@@ -18,15 +19,25 @@ const petRoute = Router();
 // Public routes
 petRoute.get('/', petController.getPets);
 petRoute.get('/:id', petController.getPetById);
-petRoute.get('/sku/:sku', petController.getPetBySku);
 
-// Protected routes
-petRoute.post('/', authenticate, petController.createPet);
-petRoute.put('/:id', authenticate, petController.updatePet);
-petRoute.delete('/:id', authenticate, petController.deletePet);
+// Protected routes - Only admin and staff can manage pets
+petRoute.post('/', authenticate, requireAdminOrStaff, petController.createPet);
+petRoute.put(
+  '/:id',
+  authenticate,
+  requireAdminOrStaff,
+  petController.updatePet,
+);
+petRoute.delete(
+  '/:id',
+  authenticate,
+  requireAdminOrStaff,
+  petController.deletePet,
+);
 petRoute.patch(
   '/:id/availability',
   authenticate,
+  requireAdminOrStaff,
   petController.updateAvailability,
 );
 

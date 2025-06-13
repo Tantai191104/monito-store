@@ -1,15 +1,6 @@
 import { z } from 'zod';
 
 export const createPetSchema = z.object({
-  sku: z
-    .string()
-    .trim()
-    .min(1, 'SKU is required')
-    .max(50, 'SKU must be less than 50 characters')
-    .regex(
-      /^[A-Z0-9]+$/,
-      'SKU must contain only uppercase letters and numbers',
-    ),
   name: z
     .string()
     .trim()
@@ -17,9 +8,8 @@ export const createPetSchema = z.object({
     .max(100, 'Pet name must be less than 100 characters'),
   breed: z
     .string()
-    .trim()
-    .min(1, 'Breed is required')
-    .max(100, 'Breed name must be less than 100 characters'),
+    .min(1, 'Breed ID is required')
+    .regex(/^[0-9a-fA-F]{24}$/, 'Invalid breed ID format'),
   gender: z.enum(['Male', 'Female'], {
     errorMap: () => ({ message: 'Gender must be Male or Female' }),
   }),
@@ -27,7 +17,10 @@ export const createPetSchema = z.object({
   size: z.enum(['Small', 'Medium', 'Large'], {
     errorMap: () => ({ message: 'Size must be Small, Medium, or Large' }),
   }),
-  color: z.string().trim().min(1, 'Color is required'),
+  color: z
+    .string()
+    .min(1, 'Color ID is required')
+    .regex(/^[0-9a-fA-F]{24}$/, 'Invalid color ID format'),
   price: z.number().min(0, 'Price must be greater than or equal to 0'),
   images: z
     .array(z.string().url('Invalid image URL'))
@@ -48,19 +41,16 @@ export const createPetSchema = z.object({
     .trim()
     .max(500, 'Additional info must be less than 500 characters')
     .optional(),
-  category: z.enum(['Dog', 'Cat', 'Bird', 'Fish', 'Other'], {
-    errorMap: () => ({ message: 'Invalid category' }),
-  }),
   isAvailable: z.boolean().default(true),
 });
 
 export const updatePetSchema = createPetSchema.partial();
 
 export const petFiltersSchema = z.object({
-  category: z.string().optional(),
   breed: z.string().optional(),
   gender: z.string().optional(),
   size: z.string().optional(),
+  color: z.string().optional(),
   minPrice: z.number().min(0).optional(),
   maxPrice: z.number().min(0).optional(),
   location: z.string().optional(),

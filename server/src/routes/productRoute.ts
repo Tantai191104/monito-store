@@ -7,6 +7,7 @@ import { Router } from 'express';
  * Middlewares
  */
 import { authenticate } from '../middlewares/authenticate';
+import { requireAdminOrStaff } from '../middlewares/authorize';
 
 /**
  * Controllers
@@ -19,10 +20,30 @@ const productRoute = Router();
 productRoute.get('/', productController.getProducts);
 productRoute.get('/:id', productController.getProductById);
 
-// Protected routes
-productRoute.post('/', authenticate, productController.createProduct);
-productRoute.put('/:id', authenticate, productController.updateProduct);
-productRoute.delete('/:id', authenticate, productController.deleteProduct);
-productRoute.patch('/:id/stock', authenticate, productController.updateStock);
+// Protected routes - Only admin and staff can manage products
+productRoute.post(
+  '/',
+  authenticate,
+  requireAdminOrStaff,
+  productController.createProduct,
+);
+productRoute.put(
+  '/:id',
+  authenticate,
+  requireAdminOrStaff,
+  productController.updateProduct,
+);
+productRoute.delete(
+  '/:id',
+  authenticate,
+  requireAdminOrStaff,
+  productController.deleteProduct,
+);
+productRoute.patch(
+  '/:id/stock',
+  authenticate,
+  requireAdminOrStaff,
+  productController.updateStock,
+);
 
 export default productRoute;

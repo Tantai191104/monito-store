@@ -18,7 +18,7 @@ export const colorController = {
     req: Request,
     res: Response,
     next: NextFunction,
-  ): Promise<void> {
+  ): Promise<any> {
     try {
       const { name, hexCode, description } = req.body;
       const userId = req.userId!;
@@ -49,11 +49,7 @@ export const colorController = {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const { isActive } = req.query;
-
-      const colors = await colorService.getColors({
-        isActive: isActive === 'true',
-      });
+      const colors = await colorService.getColors();
 
       res.status(STATUS_CODE.OK).json({
         message: 'Colors retrieved successfully',
@@ -91,13 +87,13 @@ export const colorController = {
     try {
       const { id } = req.params;
       const { name, hexCode, description, isActive } = req.body;
-      const userId = req.userId!;
 
-      const color = await colorService.updateColor(
-        id,
-        { name, hexCode, description, isActive },
-        userId,
-      );
+      const color = await colorService.updateColor(id, {
+        name,
+        hexCode,
+        description,
+        isActive,
+      });
 
       res.status(STATUS_CODE.OK).json({
         message: 'Color updated successfully',
@@ -115,9 +111,8 @@ export const colorController = {
   ): Promise<void> {
     try {
       const { id } = req.params;
-      const userId = req.userId!;
 
-      await colorService.deleteColor(id, userId);
+      await colorService.deleteColor(id);
 
       res.status(STATUS_CODE.OK).json({
         message: 'Color deleted successfully',

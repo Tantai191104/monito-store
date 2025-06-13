@@ -84,25 +84,6 @@ export const petController = {
     }
   },
 
-  async getPetBySku(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ): Promise<void> {
-    try {
-      const { sku } = req.params;
-
-      const pet = await petService.getPetBySku(sku);
-
-      res.status(STATUS_CODE.OK).json({
-        message: 'Pet retrieved successfully',
-        data: { pet },
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-
   async updatePet(
     req: Request,
     res: Response,
@@ -111,9 +92,8 @@ export const petController = {
     try {
       const { id } = req.params;
       const body = updatePetSchema.parse(req.body);
-      const userId = req.userId!;
 
-      const pet = await petService.updatePet(id, body, userId);
+      const pet = await petService.updatePet(id, body);
 
       res.status(STATUS_CODE.OK).json({
         message: 'Pet updated successfully',
@@ -131,9 +111,8 @@ export const petController = {
   ): Promise<void> {
     try {
       const { id } = req.params;
-      const userId = req.userId!;
 
-      await petService.deletePet(id, userId);
+      await petService.deletePet(id);
 
       res.status(STATUS_CODE.OK).json({
         message: 'Pet deleted successfully',
@@ -147,11 +126,10 @@ export const petController = {
     req: Request,
     res: Response,
     next: NextFunction,
-  ): Promise<void> {
+  ): Promise<any> {
     try {
       const { id } = req.params;
       const { isAvailable } = req.body;
-      const userId = req.userId!;
 
       if (typeof isAvailable !== 'boolean') {
         return res.status(STATUS_CODE.BAD_REQUEST).json({
@@ -159,7 +137,7 @@ export const petController = {
         });
       }
 
-      const pet = await petService.updateAvailability(id, isAvailable, userId);
+      const pet = await petService.updateAvailability(id, isAvailable);
 
       res.status(STATUS_CODE.OK).json({
         message: 'Pet availability updated successfully',

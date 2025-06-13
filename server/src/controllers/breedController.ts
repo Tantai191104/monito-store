@@ -18,7 +18,7 @@ export const breedController = {
     req: Request,
     res: Response,
     next: NextFunction,
-  ): Promise<void> {
+  ): Promise<any> {
     try {
       const { name, description } = req.body;
       const userId = req.userId!;
@@ -49,11 +49,7 @@ export const breedController = {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const { isActive } = req.query;
-
-      const breeds = await breedService.getBreeds({
-        isActive: isActive === 'true',
-      });
+      const breeds = await breedService.getBreeds();
 
       res.status(STATUS_CODE.OK).json({
         message: 'Breeds retrieved successfully',
@@ -91,13 +87,12 @@ export const breedController = {
     try {
       const { id } = req.params;
       const { name, description, isActive } = req.body;
-      const userId = req.userId!;
 
-      const breed = await breedService.updateBreed(
-        id,
-        { name, description, isActive },
-        userId,
-      );
+      const breed = await breedService.updateBreed(id, {
+        name,
+        description,
+        isActive,
+      });
 
       res.status(STATUS_CODE.OK).json({
         message: 'Breed updated successfully',
@@ -115,9 +110,8 @@ export const breedController = {
   ): Promise<void> {
     try {
       const { id } = req.params;
-      const userId = req.userId!;
 
-      await breedService.deleteBreed(id, userId);
+      await breedService.deleteBreed(id);
 
       res.status(STATUS_CODE.OK).json({
         message: 'Breed deleted successfully',

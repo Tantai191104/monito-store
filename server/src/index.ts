@@ -23,6 +23,8 @@ import authRoute from './routes/authRoute';
 import userRoute from './routes/userRoute';
 import productRoute from './routes/productRoute';
 import petRoute from './routes/petRoute';
+import breedRoute from './routes/breedRoute';
+import colorRoute from './routes/colorRoute';
 
 /**
  * App

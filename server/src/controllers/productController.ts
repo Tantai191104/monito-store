@@ -128,13 +128,13 @@ export const productController = {
     req: Request,
     res: Response,
     next: NextFunction,
-  ): Promise<void> {
+  ): Promise<any> {
     try {
       const { id } = req.params;
       const { quantity, operation } = req.body;
 
       if (!quantity || !operation || !['add', 'subtract'].includes(operation)) {
-        return res.status(STATUS_CODE.BAD_REQUEST).json({
+        res.status(STATUS_CODE.BAD_REQUEST).json({
           message: 'Quantity and valid operation (add/subtract) are required',
         });
       }

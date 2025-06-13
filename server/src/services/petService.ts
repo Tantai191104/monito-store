@@ -12,12 +12,13 @@ import { CreatePetPayload, UpdatePetPayload, PetFilters } from '../types/pet';
  * Models
  */
 import PetModel from '../models/petModel';
+import BreedModel from '../models/breedModel';
+import ColorModel from '../models/colorModel';
 
 /**
  * Utils
  */
 import { NotFoundException, BadRequestException } from '../utils/errors';
-import { ERROR_CODE_ENUM } from '../constants';
 
 export const petService = {
   /**
@@ -27,12 +28,22 @@ export const petService = {
     const session = await mongoose.startSession();
     try {
       return await session.withTransaction(async () => {
-        // Check if SKU already exists
-        const existingSku = await PetModel.exists({ sku: data.sku }).session(
-          session,
-        );
-        if (existingSku) {
-          throw new BadRequestException('SKU already exists');
+        // Validate breed exists
+        const breedExists = await BreedModel.exists({
+          _id: data.breed,
+          isActive: true,
+        }).session(session);
+        if (!breedExists) {
+          throw new BadRequestException('Invalid breed selected');
+        }
+
+        // Validate color exists
+        const colorExists = await ColorModel.exists({
+          _id: data.color,
+          isActive: true,
+        }).session(session);
+        if (!colorExists) {
+          throw new BadRequestException('Invalid color selected');
         }
 
         const newPet = new PetModel({
@@ -41,7 +52,11 @@ export const petService = {
         });
 
         await newPet.save({ session });
-        await newPet.populate('createdBy', 'name email');
+        await newPet.populate([
+          { path: 'createdBy', select: 'name email' },
+          { path: 'breed', select: 'name description' },
+          { path: 'color', select: 'name hexCode description' },
+        ]);
 
         return newPet;
       });
@@ -57,7 +72,6 @@ export const petService = {
    */
   async getPets(filters: PetFilters) {
     const {
-      category,
       breed,
       gender,
       size,
@@ -75,11 +89,8 @@ export const petService = {
     // Build query
     const query: any = {};
 
-    if (category) query.category = category;
-    if (breed) query.breed = new RegExp(breed, 'i');
     if (gender) query.gender = gender;
     if (size) query.size = size;
-    if (color) query.color = new RegExp(color, 'i');
     if (minPrice !== undefined || maxPrice !== undefined) {
       query.price = {};
       if (minPrice !== undefined) query.price.$gte = minPrice;
@@ -87,6 +98,50 @@ export const petService = {
     }
     if (location) query.location = new RegExp(location, 'i');
     if (isAvailable !== undefined) query.isAvailable = isAvailable;
+
+    // Handle breed filter (can be ObjectId or breed name)
+    if (breed) {
+      if (mongoose.Types.ObjectId.isValid(breed)) {
+        query.breed = breed;
+      } else {
+        // Find breed by name
+        const breedDoc = await BreedModel.findOne({
+          name: new RegExp(breed, 'i'),
+          isActive: true,
+        });
+        if (breedDoc) {
+          query.breed = breedDoc._id;
+        } else {
+          // If breed not found, return empty results
+          return {
+            pets: [],
+            pagination: { page, limit, total: 0, pages: 0 },
+          };
+        }
+      }
+    }
+
+    // Handle color filter (can be ObjectId or color name)
+    if (color) {
+      if (mongoose.Types.ObjectId.isValid(color)) {
+        query.color = color;
+      } else {
+        // Find color by name
+        const colorDoc = await ColorModel.findOne({
+          name: new RegExp(color, 'i'),
+          isActive: true,
+        });
+        if (colorDoc) {
+          query.color = colorDoc._id;
+        } else {
+          // If color not found, return empty results
+          return {
+            pets: [],
+            pagination: { page, limit, total: 0, pages: 0 },
+          };
+        }
+      }
+    }
 
     // Build sort
     const sort: any = {};
@@ -101,7 +156,11 @@ export const petService = {
         .sort(sort)
         .skip(skip)
         .limit(limit)
-        .populate('createdBy', 'name email')
+        .populate([
+          { path: 'createdBy', select: 'name email' },
+          { path: 'breed', select: 'name description' },
+          { path: 'color', select: 'name hexCode description' },
+        ])
         .lean(),
       PetModel.countDocuments(query),
     ]);
@@ -121,26 +180,11 @@ export const petService = {
    * Get pet by ID
    */
   async getPetById(petId: string) {
-    const pet = await PetModel.findById(petId).populate(
-      'createdBy',
-      'name email',
-    );
-
-    if (!pet) {
-      throw new NotFoundException('Pet not found');
-    }
-
-    return pet;
-  },
-
-  /**
-   * Get pet by SKU
-   */
-  async getPetBySku(sku: string) {
-    const pet = await PetModel.findOne({ sku }).populate(
-      'createdBy',
-      'name email',
-    );
+    const pet = await PetModel.findById(petId).populate([
+      { path: 'createdBy', select: 'name email' },
+      { path: 'breed', select: 'name description' },
+      { path: 'color', select: 'name hexCode description' },
+    ]);
 
     if (!pet) {
       throw new NotFoundException('Pet not found');
@@ -152,7 +196,7 @@ export const petService = {
   /**
    * Update pet
    */
-  async updatePet(petId: string, data: UpdatePetPayload, userId: string) {
+  async updatePet(petId: string, data: UpdatePetPayload) {
     const session = await mongoose.startSession();
     try {
       return await session.withTransaction(async () => {
@@ -162,26 +206,40 @@ export const petService = {
           throw new NotFoundException('Pet not found');
         }
 
-        // Check if user is the creator or admin
-        if (pet.createdBy.toString() !== userId) {
-          throw new BadRequestException('You can only update your own pets');
+        // Admin can update any pet, staff/others can only update their own
+        // if (userRole !== 'admin' && pet.createdBy.toString() !== userId) {
+        //   throw new BadRequestException('You can only update your own pets');
+        // }
+
+        // Validate breed if updating
+        if (data.breed) {
+          const breedExists = await BreedModel.exists({
+            _id: data.breed,
+            isActive: true,
+          }).session(session);
+          if (!breedExists) {
+            throw new BadRequestException('Invalid breed selected');
+          }
         }
 
-        // Check SKU uniqueness if updating
-        if (data.sku && data.sku !== pet.sku) {
-          const existingSku = await PetModel.exists({
-            sku: data.sku,
-            _id: { $ne: petId },
+        // Validate color if updating
+        if (data.color) {
+          const colorExists = await ColorModel.exists({
+            _id: data.color,
+            isActive: true,
           }).session(session);
-
-          if (existingSku) {
-            throw new BadRequestException('SKU already exists');
+          if (!colorExists) {
+            throw new BadRequestException('Invalid color selected');
           }
         }
 
         Object.assign(pet, data);
         await pet.save({ session });
-        await pet.populate('createdBy', 'name email');
+        await pet.populate([
+          { path: 'createdBy', select: 'name email' },
+          { path: 'breed', select: 'name description' },
+          { path: 'color', select: 'name hexCode description' },
+        ]);
 
         return pet;
       });
@@ -195,7 +253,7 @@ export const petService = {
   /**
    * Delete pet
    */
-  async deletePet(petId: string, userId: string) {
+  async deletePet(petId: string) {
     const session = await mongoose.startSession();
     try {
       return await session.withTransaction(async () => {
@@ -206,9 +264,9 @@ export const petService = {
         }
 
         // Check if user is the creator or admin
-        if (pet.createdBy.toString() !== userId) {
-          throw new BadRequestException('You can only delete your own pets');
-        }
+        // if (pet.createdBy.toString() !== userId) {
+        //   throw new BadRequestException('You can only delete your own pets');
+        // }
 
         await PetModel.findByIdAndDelete(petId).session(session);
       });
@@ -225,7 +283,6 @@ export const petService = {
   async updateAvailability(
     petId: string,
     isAvailable: boolean,
-    userId: string,
   ) {
     const session = await mongoose.startSession();
     try {
@@ -237,12 +294,16 @@ export const petService = {
         }
 
         // Check if user is the creator or admin
-        if (pet.createdBy.toString() !== userId) {
-          throw new BadRequestException('You can only update your own pets');
-        }
+        // if (pet.createdBy.toString() !== userId) {
+        //   throw new BadRequestException('You can only update your own pets');
+        // }
 
         pet.isAvailable = isAvailable;
         await pet.save({ session });
+        await pet.populate([
+          { path: 'breed', select: 'name description' },
+          { path: 'color', select: 'name hexCode description' },
+        ]);
 
         return pet;
       });

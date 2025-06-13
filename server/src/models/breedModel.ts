@@ -15,6 +15,7 @@ const breedSchema = new Schema<BreedDocument>(
     name: {
       type: String,
       required: [true, 'Breed name is required'],
+      unique: true,
       trim: true,
       maxLength: [100, 'Breed name must be less than 100 characters'],
     },
@@ -38,8 +39,8 @@ const breedSchema = new Schema<BreedDocument>(
   },
 );
 
-// Compound index to ensure unique breed name per category
-breedSchema.index({ name: 1 }, { unique: true });
+breedSchema.index({ name: 1 });
+breedSchema.index({ isActive: 1 });
 
 const BreedModel = mongoose.model<BreedDocument>('Breed', breedSchema);
 export default BreedModel;
