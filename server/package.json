@@ -5,7 +5,13 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "seed": "ts-node-dev --transpile-only src/seeds/index.ts",
+    "seed:admin": "ts-node-dev --transpile-only src/seeds/seedAdmin.ts",
+    "seed:breeds": "ts-node-dev --transpile-only src/seeds/seedBreeds.ts",
+    "seed:colors": "ts-node-dev --transpile-only src/seeds/seedColors.ts",
+    "seed:pets": "ts-node-dev --transpile-only src/seeds/seedPets.ts",
+    "seed:products": "ts-node-dev --transpile-only src/seeds/seedProducts.ts"
   },
   "keywords": [],
   "author": "",
