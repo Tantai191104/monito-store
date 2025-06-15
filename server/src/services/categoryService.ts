@@ -1,4 +1,3 @@
-
 /**
  * Types
  */
@@ -18,12 +17,9 @@ import CategoryModel from '../models/categoryModel';
 import { NotFoundException, BadRequestException } from '../utils/errors';
 
 export const categoryService = {
-  async createCategory(data: CreateCategoryPayload, userId: string) {
+  async createCategory(data: CreateCategoryPayload) {
     try {
-      const newCategory = new CategoryModel({
-        ...data,
-        createdBy: userId,
-      });
+      const newCategory = new CategoryModel(data);
 
       await newCategory.save();
       return newCategory;
@@ -50,23 +46,13 @@ export const categoryService = {
     return category;
   },
 
-  async updateCategory(
-    categoryId: string,
-    data: UpdateCategoryPayload,
-  ) {
+  async updateCategory(categoryId: string, data: UpdateCategoryPayload) {
     try {
       const category = await CategoryModel.findById(categoryId);
 
       if (!category) {
         throw new NotFoundException('Category not found');
       }
-
-      // Admin can update any category, staff/others can only update their own
-    //   if (userRole !== 'admin' && category.createdBy.toString() !== userId) {
-    //     throw new BadRequestException(
-    //       'You can only update your own categories',
-    //     );
-    //   }
 
       Object.assign(category, data);
       await category.save();
@@ -86,11 +72,6 @@ export const categoryService = {
     if (!category) {
       throw new NotFoundException('Category not found');
     }
-
-    // Admin can delete any category, staff/others can only delete their own
-    // if (userRole !== 'admin' && category.createdBy.toString() !== userId) {
-    //   throw new BadRequestException('You can only delete your own categories');
-    // }
 
     await CategoryModel.findByIdAndDelete(categoryId);
   },

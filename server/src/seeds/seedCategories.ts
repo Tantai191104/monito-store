@@ -1,9 +1,7 @@
-
 /**
  * Models
  */
 import CategoryModel from '../models/categoryModel';
-import UserModel from '../models/userModel';
 
 /**
  * Data
@@ -18,21 +16,7 @@ export const seedCategories = async () => {
     await CategoryModel.deleteMany({});
     console.log('🗑️  Cleared existing categories');
 
-    // Find admin user
-    const adminUser = await UserModel.findOne({ role: 'admin' });
-    if (!adminUser) {
-      throw new Error('Admin user not found. Please create admin user first.');
-    }
-
-    // Insert categories
-    const categoriesWithCreator = categoriesData.map((category) => ({
-      ...category,
-      createdBy: adminUser._id,
-    }));
-
-    const createdCategories = await CategoryModel.insertMany(
-      categoriesWithCreator,
-    );
+    const createdCategories = await CategoryModel.insertMany(categoriesData);
     console.log(
       `✅ Successfully seeded ${createdCategories.length} categories`,
     );

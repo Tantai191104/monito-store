@@ -21,7 +21,6 @@ export const breedController = {
   ): Promise<any> {
     try {
       const { name, description } = req.body;
-      const userId = req.userId!;
 
       if (!name) {
         return res.status(STATUS_CODE.BAD_REQUEST).json({
@@ -29,10 +28,7 @@ export const breedController = {
         });
       }
 
-      const breed = await breedService.createBreed(
-        { name, description },
-        userId,
-      );
+      const breed = await breedService.createBreed({ name, description });
 
       res.status(STATUS_CODE.CREATED).json({
         message: 'Breed created successfully',

@@ -1,9 +1,4 @@
 /**
- * Node modules
- */
-import mongoose from 'mongoose';
-
-/**
  * Models
  */
 import BreedModel from '../models/breedModel';
@@ -14,15 +9,9 @@ import BreedModel from '../models/breedModel';
 import { NotFoundException, BadRequestException } from '../utils/errors';
 
 export const breedService = {
-  async createBreed(
-    data: { name: string; description?: string },
-    userId: string,
-  ) {
+  async createBreed(data: { name: string; description?: string }) {
     try {
-      const newBreed = new BreedModel({
-        ...data,
-        createdBy: userId,
-      });
+      const newBreed = new BreedModel(data);
 
       await newBreed.save();
       return newBreed;

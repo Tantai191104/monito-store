@@ -26,7 +26,6 @@ export interface ProductDocument extends Document {
   rating: number;
   reviewCount: number;
   isActive: boolean;
-  createdBy: mongoose.Types.ObjectId;
 }
 
 const productSchema = new Schema<ProductDocument>(
@@ -132,11 +131,6 @@ const productSchema = new Schema<ProductDocument>(
     isActive: {
       type: Boolean,
       default: true,
-    },
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: [true, 'Creator is required'],
     },
   },
   {

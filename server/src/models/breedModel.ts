@@ -7,7 +7,6 @@ export interface BreedDocument extends Document {
   name: string;
   description?: string;
   isActive: boolean;
-  createdBy: mongoose.Types.ObjectId;
 }
 
 const breedSchema = new Schema<BreedDocument>(
@@ -15,23 +14,18 @@ const breedSchema = new Schema<BreedDocument>(
     name: {
       type: String,
       required: [true, 'Breed name is required'],
-      unique: true,
+      unique: [true, 'Breed name must be unique'],
       trim: true,
-      maxLength: [100, 'Breed name must be less than 100 characters'],
+      maxLength: [50, 'Breed name must be less than 50 characters'],
     },
     description: {
       type: String,
       trim: true,
-      maxLength: [500, 'Description must be less than 500 characters'],
+      maxLength: [200, 'Description must be less than 200 characters'],
     },
     isActive: {
       type: Boolean,
       default: true,
-    },
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: [true, 'Creator is required'],
     },
   },
   {

@@ -21,7 +21,6 @@ export const colorController = {
   ): Promise<any> {
     try {
       const { name, hexCode, description } = req.body;
-      const userId = req.userId!;
 
       if (!name) {
         return res.status(STATUS_CODE.BAD_REQUEST).json({
@@ -29,10 +28,11 @@ export const colorController = {
         });
       }
 
-      const color = await colorService.createColor(
-        { name, hexCode, description },
-        userId,
-      );
+      const color = await colorService.createColor({
+        name,
+        hexCode,
+        description,
+      });
 
       res.status(STATUS_CODE.CREATED).json({
         message: 'Color created successfully',

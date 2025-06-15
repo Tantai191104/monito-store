@@ -1,9 +1,4 @@
 /**
- * Node modules
- */
-import mongoose from 'mongoose';
-
-/**
  * Models
  */
 import ColorModel from '../models/colorModel';
@@ -14,15 +9,13 @@ import ColorModel from '../models/colorModel';
 import { NotFoundException, BadRequestException } from '../utils/errors';
 
 export const colorService = {
-  async createColor(
-    data: { name: string; hexCode?: string; description?: string },
-    userId: string,
-  ) {
+  async createColor(data: {
+    name: string;
+    hexCode?: string;
+    description?: string;
+  }) {
     try {
-      const newColor = new ColorModel({
-        ...data,
-        createdBy: userId,
-      });
+      const newColor = new ColorModel(data);
 
       await newColor.save();
       return newColor;

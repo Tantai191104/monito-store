@@ -1,14 +1,12 @@
-
 /**
  * Models
  */
 import ProductModel from '../models/productModel';
-import UserModel from '../models/userModel';
 import CategoryModel from '../models/categoryModel';
 
 /**
  * Data
-*/
+ */
 import { productsData } from './data/product';
 
 export const seedProducts = async () => {
@@ -18,12 +16,6 @@ export const seedProducts = async () => {
     // Clear existing products
     await ProductModel.deleteMany({});
     console.log('🗑️  Cleared existing products');
-
-    // Find admin user
-    const adminUser = await UserModel.findOne({ role: 'admin' });
-    if (!adminUser) {
-      throw new Error('Admin user not found. Please create admin user first.');
-    }
 
     // Get category references
     const [
@@ -69,7 +61,6 @@ export const seedProducts = async () => {
     const productsWithCategoryRefs = productsData.map((product) => ({
       ...product,
       category: categoryMap[product.category], // Replace category name with ObjectId
-      createdBy: adminUser._id,
     }));
 
     const createdProducts = await ProductModel.insertMany(

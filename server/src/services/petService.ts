@@ -24,7 +24,7 @@ export const petService = {
   /**
    * Create new pet
    */
-  async createPet(data: CreatePetPayload, userId: string) {
+  async createPet(data: CreatePetPayload) {
     const session = await mongoose.startSession();
     try {
       return await session.withTransaction(async () => {
@@ -46,14 +46,10 @@ export const petService = {
           throw new BadRequestException('Invalid color selected');
         }
 
-        const newPet = new PetModel({
-          ...data,
-          createdBy: userId,
-        });
+        const newPet = new PetModel(data);
 
         await newPet.save({ session });
         await newPet.populate([
-          { path: 'createdBy', select: 'name email' },
           { path: 'breed', select: 'name description' },
           { path: 'color', select: 'name hexCode description' },
         ]);
@@ -157,7 +153,6 @@ export const petService = {
         .skip(skip)
         .limit(limit)
         .populate([
-          { path: 'createdBy', select: 'name email' },
           { path: 'breed', select: 'name description' },
           { path: 'color', select: 'name hexCode description' },
         ])
@@ -181,7 +176,6 @@ export const petService = {
    */
   async getPetById(petId: string) {
     const pet = await PetModel.findById(petId).populate([
-      { path: 'createdBy', select: 'name email' },
       { path: 'breed', select: 'name description' },
       { path: 'color', select: 'name hexCode description' },
     ]);
@@ -205,11 +199,6 @@ export const petService = {
         if (!pet) {
           throw new NotFoundException('Pet not found');
         }
-
-        // Admin can update any pet, staff/others can only update their own
-        // if (userRole !== 'admin' && pet.createdBy.toString() !== userId) {
-        //   throw new BadRequestException('You can only update your own pets');
-        // }
 
         // Validate breed if updating
         if (data.breed) {
@@ -236,7 +225,6 @@ export const petService = {
         Object.assign(pet, data);
         await pet.save({ session });
         await pet.populate([
-          { path: 'createdBy', select: 'name email' },
           { path: 'breed', select: 'name description' },
           { path: 'color', select: 'name hexCode description' },
         ]);
@@ -263,11 +251,6 @@ export const petService = {
           throw new NotFoundException('Pet not found');
         }
 
-        // Check if user is the creator or admin
-        // if (pet.createdBy.toString() !== userId) {
-        //   throw new BadRequestException('You can only delete your own pets');
-        // }
-
         await PetModel.findByIdAndDelete(petId).session(session);
       });
     } catch (error) {
@@ -280,10 +263,7 @@ export const petService = {
   /**
    * Update pet availability
    */
-  async updateAvailability(
-    petId: string,
-    isAvailable: boolean,
-  ) {
+  async updateAvailability(petId: string, isAvailable: boolean) {
     const session = await mongoose.startSession();
     try {
       return await session.withTransaction(async () => {
@@ -292,11 +272,6 @@ export const petService = {
         if (!pet) {
           throw new NotFoundException('Pet not found');
         }
-
-        // Check if user is the creator or admin
-        // if (pet.createdBy.toString() !== userId) {
-        //   throw new BadRequestException('You can only update your own pets');
-        // }
 
         pet.isAvailable = isAvailable;
         await pet.save({ session });

@@ -21,7 +21,6 @@ export interface PetDocument extends Document {
   publishedDate: Date;
   additionalInfo?: string;
   isAvailable: boolean;
-  createdBy: mongoose.Types.ObjectId;
 }
 
 const petSchema = new Schema<PetDocument>(
@@ -117,18 +116,13 @@ const petSchema = new Schema<PetDocument>(
       type: Boolean,
       default: true,
     },
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: [true, 'Creator is required'],
-    },
   },
   {
     timestamps: true,
   },
 );
 
-// Indexes for better performance (removed SKU index)
+// Indexes for better performance
 petSchema.index({ breed: 1 });
 petSchema.index({ color: 1 });
 petSchema.index({ price: 1 });

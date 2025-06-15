@@ -21,7 +21,6 @@ export const categoryController = {
   ): Promise<any> {
     try {
       const { name, description } = req.body;
-      const userId = req.userId!;
 
       if (!name) {
         return res.status(STATUS_CODE.BAD_REQUEST).json({
@@ -29,10 +28,10 @@ export const categoryController = {
         });
       }
 
-      const category = await categoryService.createCategory(
-        { name, description },
-        userId,
-      );
+      const category = await categoryService.createCategory({
+        name,
+        description,
+      });
 
       res.status(STATUS_CODE.CREATED).json({
         message: 'Category created successfully',

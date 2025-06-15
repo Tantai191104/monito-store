@@ -24,7 +24,6 @@ export type Product = {
   rating: number;
   reviewCount: number;
   isActive: boolean;
-  createdBy: string;
   createdAt: Date;
   updatedAt: Date;
 };

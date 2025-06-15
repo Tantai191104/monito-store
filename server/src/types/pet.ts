@@ -20,7 +20,6 @@ export type Pet = {
   publishedDate?: Date;
   additionalInfo?: string;
   isAvailable: boolean;
-  createdBy: string;
   createdAt: Date;
   updatedAt: Date;
 };

@@ -6,7 +6,11 @@ import mongoose from 'mongoose';
 /**
  * Types
  */
-import { CreateProductPayload, UpdateProductPayload, ProductFilters } from '../types/product';
+import {
+  CreateProductPayload,
+  UpdateProductPayload,
+  ProductFilters,
+} from '../types/product';
 
 /**
  * Models
@@ -24,7 +28,7 @@ export const productService = {
   /**
    * Create new product
    */
-  async createProduct(data: CreateProductPayload, userId: string) {
+  async createProduct(data: CreateProductPayload) {
     const session = await mongoose.startSession();
     try {
       return await session.withTransaction(async () => {
@@ -37,14 +41,10 @@ export const productService = {
           throw new BadRequestException('Invalid category selected');
         }
 
-        const newProduct = new ProductModel({
-          ...data,
-          createdBy: userId,
-        });
+        const newProduct = new ProductModel(data);
 
         await newProduct.save({ session });
         await newProduct.populate([
-          { path: 'createdBy', select: 'name email' },
           { path: 'category', select: 'name description' },
         ]);
 
@@ -121,10 +121,7 @@ export const productService = {
         .sort(sort)
         .skip(skip)
         .limit(limit)
-        .populate([
-          { path: 'createdBy', select: 'name email' },
-          { path: 'category', select: 'name description' },
-        ])
+        .populate([{ path: 'category', select: 'name description' }])
         .lean(),
       ProductModel.countDocuments(query),
     ]);
@@ -145,7 +142,6 @@ export const productService = {
    */
   async getProductById(productId: string) {
     const product = await ProductModel.findById(productId).populate([
-      { path: 'createdBy', select: 'name email' },
       { path: 'category', select: 'name description' },
     ]);
 
@@ -162,10 +158,7 @@ export const productService = {
   /**
    * Update product
    */
-  async updateProduct(
-    productId: string,
-    data: UpdateProductPayload,
-  ) {
+  async updateProduct(productId: string, data: UpdateProductPayload) {
     const session = await mongoose.startSession();
     try {
       return await session.withTransaction(async () => {
@@ -177,11 +170,6 @@ export const productService = {
             ERROR_CODE_ENUM.PRODUCT_NOT_FOUND,
           );
         }
-
-        // Admin can update any product, staff/others can only update their own
-        // if (userRole !== 'admin' && product.createdBy.toString() !== userId) {
-        //   throw new BadRequestException('You can only update your own products');
-        // }
 
         // Validate category if updating
         if (data.category) {
@@ -197,7 +185,6 @@ export const productService = {
         Object.assign(product, data);
         await product.save({ session });
         await product.populate([
-          { path: 'createdBy', select: 'name email' },
           { path: 'category', select: 'name description' },
         ]);
 
@@ -225,11 +212,6 @@ export const productService = {
             ERROR_CODE_ENUM.PRODUCT_NOT_FOUND,
           );
         }
-
-        // Admin can delete any product, staff/others can only delete their own
-        // if (userRole !== 'admin' && product.createdBy.toString() !== userId) {
-        //   throw new BadRequestException('You can only delete your own products');
-        // }
 
         await ProductModel.findByIdAndDelete(productId).session(session);
       });
@@ -260,13 +242,10 @@ export const productService = {
           );
         }
 
-        // Admin can update any product stock, staff/others can only update their own
-        // if (userRole !== 'admin' && product.createdBy.toString() !== userId) {
-        //   throw new BadRequestException('You can only update your own products');
-        // }
-
         const newStock =
-          operation === 'add' ? product.stock + quantity : product.stock - quantity;
+          operation === 'add'
+            ? product.stock + quantity
+            : product.stock - quantity;
 
         if (newStock < 0) {
           throw new BadRequestException(

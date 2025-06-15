@@ -30,9 +30,8 @@ export const productController = {
   ): Promise<void> {
     try {
       const body = createProductSchema.parse(req.body);
-      const userId = req.userId!;
 
-      const product = await productService.createProduct(body, userId);
+      const product = await productService.createProduct(body);
 
       res.status(STATUS_CODE.CREATED).json({
         message: 'Product created successfully',
@@ -55,10 +54,7 @@ export const productController = {
 
       res.status(STATUS_CODE.OK).json({
         message: 'Products retrieved successfully',
-        data: result.products,
-        meta: {
-          pagination: result.pagination,
-        },
+        data: result
       });
     } catch (error) {
       next(error);

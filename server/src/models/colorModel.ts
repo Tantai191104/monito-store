@@ -8,7 +8,6 @@ export interface ColorDocument extends Document {
   hexCode: string;
   description?: string;
   isActive: boolean;
-  createdBy: mongoose.Types.ObjectId;
 }
 
 const colorSchema = new Schema<ColorDocument>(
@@ -35,11 +34,6 @@ const colorSchema = new Schema<ColorDocument>(
     isActive: {
       type: Boolean,
       default: true,
-    },
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: [true, 'Creator is required'],
     },
   },
   {

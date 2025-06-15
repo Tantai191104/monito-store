@@ -4,6 +4,11 @@
 import { NextFunction, Request, Response } from 'express';
 
 /**
+ * Services
+ */
+import { petService } from '../services/petService';
+
+/**
  * Validations
  */
 import {
@@ -11,11 +16,6 @@ import {
   updatePetSchema,
   petFiltersSchema,
 } from '../validations/petValidation';
-
-/**
- * Services
- */
-import { petService } from '../services/petService';
 
 /**
  * Constants
@@ -30,9 +30,8 @@ export const petController = {
   ): Promise<void> {
     try {
       const body = createPetSchema.parse(req.body);
-      const userId = req.userId!;
 
-      const pet = await petService.createPet(body, userId);
+      const pet = await petService.createPet(body);
 
       res.status(STATUS_CODE.CREATED).json({
         message: 'Pet created successfully',
@@ -55,10 +54,7 @@ export const petController = {
 
       res.status(STATUS_CODE.OK).json({
         message: 'Pets retrieved successfully',
-        data: result.pets,
-        meta: {
-          pagination: result.pagination,
-        },
+        data: result,
       });
     } catch (error) {
       next(error);

@@ -87,7 +87,6 @@ export const seedPets = async () => {
         location: 'Vietnam',
         additionalInfo: 'Very friendly and good with children',
         isAvailable: true,
-        createdBy: adminUser._id,
       },
       {
         name: 'Poodle Tiny Yellow',
@@ -108,7 +107,6 @@ export const seedPets = async () => {
         location: 'Vietnam',
         additionalInfo: 'Very smart and easy to train',
         isAvailable: true,
-        createdBy: adminUser._id,
       },
       {
         name: 'Poodle Tiny Sepia',
@@ -130,7 +128,6 @@ export const seedPets = async () => {
         location: 'Vietnam',
         additionalInfo: 'Loves to play and very social',
         isAvailable: true,
-        createdBy: adminUser._id,
       },
       {
         name: 'Alaskan Malamute Grey',
@@ -152,7 +149,6 @@ export const seedPets = async () => {
         location: 'Vietnam',
         additionalInfo: 'Great for active families, needs lots of exercise',
         isAvailable: true,
-        createdBy: adminUser._id,
       },
       {
         name: 'Pembroke Corgi Cream',
@@ -173,7 +169,6 @@ export const seedPets = async () => {
         location: 'Vietnam',
         additionalInfo: 'Very loyal and great with kids',
         isAvailable: true,
-        createdBy: adminUser._id,
       },
       {
         name: 'Pembroke Corgi Tricolor',
@@ -194,7 +189,6 @@ export const seedPets = async () => {
         location: 'Vietnam',
         additionalInfo: 'Perfect family dog with great personality',
         isAvailable: true,
-        createdBy: adminUser._id,
       },
       {
         name: 'Pomeranian White Female',
@@ -215,7 +209,6 @@ export const seedPets = async () => {
         location: 'Vietnam',
         additionalInfo: 'Very gentle and loves attention',
         isAvailable: true,
-        createdBy: adminUser._id,
       },
       {
         name: 'Poodle Tiny Grey Cute',
@@ -236,7 +229,6 @@ export const seedPets = async () => {
         location: 'Vietnam',
         additionalInfo: 'Hypoallergenic and great for apartment living',
         isAvailable: true,
-        createdBy: adminUser._id,
       },
     ];
 

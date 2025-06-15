@@ -1,13 +1,7 @@
 /**
- * Node modules
- */
-import mongoose from 'mongoose';
-
-/**
  * Models
  */
 import ColorModel from '../models/colorModel';
-import UserModel from '../models/userModel';
 
 /**
  * Data
@@ -22,19 +16,7 @@ export const seedColors = async () => {
     await ColorModel.deleteMany({});
     console.log('🗑️  Cleared existing colors');
 
-    // Find admin user
-    const adminUser = await UserModel.findOne({ role: 'admin' });
-    if (!adminUser) {
-      throw new Error('Admin user not found. Please create admin user first.');
-    }
-
-    // Insert colors
-    const colorsWithCreator = colorsData.map((color) => ({
-      ...color,
-      createdBy: adminUser._id,
-    }));
-
-    const createdColors = await ColorModel.insertMany(colorsWithCreator);
+    const createdColors = await ColorModel.insertMany(colorsData);
     console.log(`✅ Successfully seeded ${createdColors.length} colors`);
 
     return createdColors;

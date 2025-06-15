@@ -7,7 +7,6 @@ export interface CategoryDocument extends Document {
   name: string;
   description?: string;
   isActive: boolean;
-  createdBy: mongoose.Types.ObjectId;
 }
 
 const categorySchema = new Schema<CategoryDocument>(
@@ -27,11 +26,6 @@ const categorySchema = new Schema<CategoryDocument>(
     isActive: {
       type: Boolean,
       default: true,
-    },
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: [true, 'Creator is required'],
     },
   },
   {
