@@ -38,7 +38,7 @@ const CategoriesManagement = () => {
   ]);
 
   return (
-    <div className="p-8">
+    <div className="container mx-auto p-8 py-0">
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Categories</h1>

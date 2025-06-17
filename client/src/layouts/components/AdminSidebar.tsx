@@ -6,64 +6,166 @@ import {
   Settings,
   Shield,
   LogOut,
+  ChevronUp,
+  User2,
+  Database,
+  Activity,
 } from 'lucide-react';
+
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarRail,
+} from '@/components/ui/sidebar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const AdminSidebar = () => {
   const location = useLocation();
 
-  const navigation = [
-    { name: 'Dashboard', href: '/admin', icon: BarChart3 },
-    { name: 'User Management', href: '/admin/users', icon: Users },
-    { name: 'Staff Management', href: '/admin/staff', icon: UserPlus },
-    { name: 'System Settings', href: '/admin/settings', icon: Settings },
+  const navigationGroups = [
+    {
+      label: 'Dashboard',
+      items: [
+        { name: 'Overview', href: '/admin', icon: BarChart3 },
+        { name: 'Analytics', href: '/admin/analytics', icon: Activity },
+      ],
+    },
+    {
+      label: 'User Management',
+      items: [
+        { name: 'All Users', href: '/admin/users', icon: Users },
+        { name: 'Staff Management', href: '/admin/staff', icon: UserPlus },
+      ],
+    },
+    {
+      label: 'System',
+      items: [
+        { name: 'Settings', href: '/admin/settings', icon: Settings },
+        { name: 'Database', href: '/admin/database', icon: Database },
+      ],
+    },
   ];
 
   return (
-    <div className="w-64 border-r border-red-200 bg-white shadow-lg">
-      <div className="p-6">
-        <div className="flex items-center space-x-2">
-          <Shield className="h-6 w-6 text-red-600" />
-          <h1 className="text-xl font-bold text-gray-900">Admin Portal</h1>
-        </div>
-      </div>
-
-      <nav className="mt-6">
-        <div className="px-3">
-          {navigation.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.href;
-            return (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={`group mb-1 flex items-center rounded-md px-3 py-2 text-sm font-medium ${
-                  isActive
-                    ? 'bg-red-100 text-red-700'
-                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                <Icon className="mr-3 h-5 w-5" />
-                {item.name}
+    <Sidebar collapsible="icon" className="border-r">
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg" asChild>
+              <Link to="/admin">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-red-600 text-white">
+                  <Shield className="size-4" />
+                </div>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-semibold">Admin Portal</span>
+                  <span className="text-muted-foreground truncate text-xs">
+                    System Control
+                  </span>
+                </div>
               </Link>
-            );
-          })}
-        </div>
-      </nav>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
 
-      <div className="absolute bottom-0 w-64 p-4">
-        <Link
-          to="/staff"
-          className="mb-2 flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
-        >
-          <Users className="mr-3 h-5 w-5" />
-          Switch to Staff
-        </Link>
-        <button className="flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">
-          <LogOut className="mr-3 h-5 w-5" />
-          Sign Out
-        </button>
-      </div>
-    </div>
+      <SidebarContent>
+        {navigationGroups.map((group, groupIndex) => (
+          <SidebarGroup key={groupIndex}>
+            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = location.pathname === item.href;
+
+                  return (
+                    <SidebarMenuItem key={item.name}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive}
+                        tooltip={item.name}
+                      >
+                        <Link to={item.href}>
+                          <Icon className="size-4" />
+                          <span>{item.name}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
+      </SidebarContent>
+
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton
+                  size="lg"
+                  className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                >
+                  <Avatar className="h-8 w-8 rounded-lg">
+                    <AvatarImage src="/avatars/admin-avatar.png" alt="Admin" />
+                    <AvatarFallback className="rounded-lg bg-red-100 text-red-600">
+                      AD
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-semibold">
+                      Administrator
+                    </span>
+                    <span className="text-muted-foreground truncate text-xs">
+                      admin@monito.com
+                    </span>
+                  </div>
+                  <ChevronUp className="ml-auto size-4" />
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                side="right"
+                align="end"
+                sideOffset={4}
+              >
+                <DropdownMenuItem asChild>
+                  <Link to="/staff">
+                    <Users className="mr-2 size-4" />
+                    Switch to Staff
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <User2 className="mr-2 size-4" />
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <LogOut className="mr-2 size-4" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+      <SidebarRail />
+    </Sidebar>
   );
 };
 

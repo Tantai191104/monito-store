@@ -8,57 +8,152 @@ import {
   ShoppingCart,
   LayoutDashboard,
   LogOut,
+  Users,
+  ChevronUp,
+  User2,
 } from 'lucide-react';
+
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarRail,
+} from '@/components/ui/sidebar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const StaffSidebar = () => {
   const location = useLocation();
 
-  const navigation = [
-    { name: 'Dashboard', href: '/staff', icon: LayoutDashboard },
-    { name: 'Products', href: '/staff/products', icon: Package },
-    { name: 'Pets', href: '/staff/pets', icon: Heart },
-    { name: 'Orders', href: '/staff/orders', icon: ShoppingCart },
-    { name: 'Categories', href: '/staff/categories', icon: Grid3X3 },
-    { name: 'Colors', href: '/staff/colors', icon: Palette },
-    { name: 'Breeds', href: '/staff/breeds', icon: Dog },
+  const navigationGroups = [
+    {
+      label: 'Overview',
+      items: [{ name: 'Dashboard', href: '/staff', icon: LayoutDashboard }],
+    },
+    {
+      label: 'Management',
+      items: [
+        { name: 'Products', href: '/staff/products', icon: Package },
+        { name: 'Pets', href: '/staff/pets', icon: Heart },
+        { name: 'Orders', href: '/staff/orders', icon: ShoppingCart },
+      ],
+    },
+    {
+      label: 'Configuration',
+      items: [
+        { name: 'Categories', href: '/staff/categories', icon: Grid3X3 },
+        { name: 'Colors', href: '/staff/colors', icon: Palette },
+        { name: 'Breeds', href: '/staff/breeds', icon: Dog },
+      ],
+    },
   ];
 
   return (
-    <div className="w-64 bg-white shadow-lg">
-      <div className="p-6">
-        <h1 className="text-xl font-bold text-gray-900">Staff Portal</h1>
-      </div>
-
-      <nav className="mt-6">
-        <div className="px-3">
-          {navigation.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.href;
-            return (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={`group mb-1 flex items-center rounded-md px-3 py-2 text-sm font-medium ${
-                  isActive
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                <Icon className="mr-3 h-5 w-5" />
-                {item.name}
+    <Sidebar collapsible="icon" className="border-r">
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg" asChild>
+              <Link to="/staff">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-blue-600 text-white">
+                  <Users className="size-4" />
+                </div>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-semibold">Staff Portal</span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    Monito Store
+                  </span>
+                </div>
               </Link>
-            );
-          })}
-        </div>
-      </nav>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
 
-      <div className="absolute bottom-0 w-64 p-4">
-        <button className="flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">
-          <LogOut className="mr-3 h-5 w-5" />
-          Sign Out
-        </button>
-      </div>
-    </div>
+      <SidebarContent>
+        {navigationGroups.map((group, groupIndex) => (
+          <SidebarGroup key={groupIndex}>
+            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = location.pathname === item.href;
+
+                  return (
+                    <SidebarMenuItem key={item.name}>
+                      <SidebarMenuButton asChild isActive={isActive} tooltip={item.name}>
+                        <Link to={item.href}>
+                          <Icon className="size-4" />
+                          <span>{item.name}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
+      </SidebarContent>
+
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton
+                  size="lg"
+                  className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                >
+                  <Avatar className="h-8 w-8 rounded-lg">
+                    <AvatarImage src="/avatars/staff-avatar.png" alt="Staff" />
+                    <AvatarFallback className="rounded-lg bg-blue-100 text-blue-600">
+                      ST
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-semibold">Staff Member</span>
+                    <span className="truncate text-xs text-muted-foreground">
+                      staff@monito.com
+                    </span>
+                  </div>
+                  <ChevronUp className="ml-auto size-4" />
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                side="bottom"
+                align="end"
+                sideOffset={4}
+              >
+                <DropdownMenuItem>
+                  <User2 className="mr-2 size-4" />
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <LogOut className="mr-2 size-4" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+      <SidebarRail />
+    </Sidebar>
   );
 };
 
