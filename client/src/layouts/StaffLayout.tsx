@@ -1,4 +1,11 @@
-import { Outlet } from 'react-router-dom';
+/**
+ * Node modules
+ */
+import { Link, Outlet } from 'react-router-dom';
+
+/**
+ * Components
+ */
 import {
   SidebarProvider,
   SidebarInset,
@@ -15,7 +22,13 @@ import {
 } from '@/components/ui/breadcrumb';
 import StaffSidebar from './components/StaffSidebar';
 
+/**
+ * Hooks
+ */
+import { useBreadcrumbs } from '@/hooks/useBreadcrumbs';
+
 const StaffLayout = () => {
+  const breadcrumbs = useBreadcrumbs('staff');
   return (
     <SidebarProvider>
       <StaffSidebar />
@@ -26,13 +39,22 @@ const StaffLayout = () => {
             <Separator orientation="vertical" className="mr-2 h-4" />
             <Breadcrumb>
               <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="/staff">Staff Portal</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Dashboard</BreadcrumbPage>
-                </BreadcrumbItem>
+                {breadcrumbs.map((breadcrumb, index) => (
+                  <div key={breadcrumb.href} className="flex items-center">
+                    {index > 0 && (
+                      <BreadcrumbSeparator className="mr-2 hidden md:block" />
+                    )}
+                    <BreadcrumbItem className="hidden md:block">
+                      {breadcrumb.isCurrentPage ? (
+                        <BreadcrumbPage>{breadcrumb.label}</BreadcrumbPage>
+                      ) : (
+                        <BreadcrumbLink>
+                          <Link to={breadcrumb.href}>{breadcrumb.label}</Link>
+                        </BreadcrumbLink>
+                      )}
+                    </BreadcrumbItem>
+                  </div>
+                ))}
               </BreadcrumbList>
             </Breadcrumb>
           </div>

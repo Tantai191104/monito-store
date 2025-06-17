@@ -9,6 +9,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import AuthLayout from '@/layouts/AuthLayout';
 import BaseLayout from '@/layouts/BaseLayout';
 import StaffLayout from '@/layouts/StaffLayout';
+import AdminLayout from '@/layouts/AdminLayout';
 
 /**
  * Components
@@ -36,10 +37,16 @@ import CategoriesManagement from '@/pages/staff/CategoriesManagement';
 import ColorsManagement from '@/pages/staff/ColorsManagement';
 import BreedsManagement from '@/pages/staff/BreedsManagement';
 
-const AppRoutes = () => {
-  const { user, isAuthenticated } = useAuth();
+import AdminDashboard from '@/pages/admin/AdminDashboard';
+import UserManagement from '@/pages/admin/UserManagement';
+import LoadingScreen from '@/pages/common/LoadingScreen';
 
-  console.log(user, isAuthenticated);
+const AppRoutes = () => {
+  const { user, isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
 
   if (!isAuthenticated) {
     return (
@@ -62,13 +69,14 @@ const AppRoutes = () => {
         <Route path="/login" element={<Navigate to={`/${user?.role}`} />} />
         <Route path="/register" element={<Navigate to={`/${user?.role}`} />} />
       </Route>
+
       <Route
         path="/customer/*"
         element={<ProtectedRoute allowedRoles={['customer']} />}
       />
       <Route
-        path="/staff"
-        element={<ProtectedRoute allowedRoles={['staff']} />}
+        path="/staff/*"
+        element={<ProtectedRoute allowedRoles={['staff', 'admin']} />}
       >
         <Route element={<StaffLayout />}>
           <Route index element={<StaffDashboard />} />
@@ -80,10 +88,22 @@ const AppRoutes = () => {
           <Route path="breeds" element={<BreedsManagement />} />
         </Route>
       </Route>
+
+      {/* Admin Routes */}
       <Route
         path="/admin/*"
         element={<ProtectedRoute allowedRoles={['admin']} />}
-      />
+      >
+        <Route element={<AdminLayout />}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="users" element={<UserManagement />} />
+          <Route path="staff" element={<div>Staff Management</div>} />
+          <Route path="settings" element={<div>Settings</div>} />
+          <Route path="database" element={<div>Database</div>} />
+          <Route path="analytics" element={<div>Analytics</div>} />
+        </Route>
+      </Route>
+
       <Route path="/" element={<Navigate to={`/${user?.role}`} />} />
       <Route path="*" element={<div>Page not found</div>} />
     </Routes>

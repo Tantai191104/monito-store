@@ -1,4 +1,11 @@
-import React from 'react';
+/**
+ * Node modules
+ */
+import { Outlet } from 'react-router-dom';
+
+/**
+ * Components
+ */
 import {
   SidebarProvider,
   SidebarInset,
@@ -15,11 +22,8 @@ import {
 } from '@/components/ui/breadcrumb';
 import AdminSidebar from './components/AdminSidebar';
 
-interface AdminLayoutProps {
-  children: React.ReactNode;
-}
 
-const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
+const AdminLayout = () => {
   return (
     <SidebarProvider>
       <AdminSidebar />
@@ -41,7 +45,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             </Breadcrumb>
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto p-4">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4">
+          <Outlet />
+        </main>
       </SidebarInset>
     </SidebarProvider>
   );

@@ -27,7 +27,7 @@ const ColorsManagement = () => {
           <p className="text-gray-600">Manage pet colors for classification</p>
         </div>
         <Button>
-          <Plus className="mr-2 h-4 w-4" />
+          <Plus className="h-4 w-4" />
           Add Color
         </Button>
       </div>
