@@ -46,6 +46,7 @@ import {
   PaginationEllipsis,
 } from '@/components/ui/pagination';
 import { cn } from '@/lib/utils';
+import { Link } from 'react-router-dom';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -57,7 +58,9 @@ export function ProductDataTable<TData, TValue>({
   columns,
   data,
   className,
-}: DataTableProps<TData, TValue>) {
+}: DataTableProps<TData, TValue> & {
+  onProductAdded?: (product: any) => void;
+}) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -178,15 +181,18 @@ export function ProductDataTable<TData, TValue>({
                         column.toggleVisibility(!!value)
                       }
                     >
-                      {column.id}
+                      {column.id.replace(/([A-Z])/g, ' $1').trim()}
                     </DropdownMenuCheckboxItem>
                   );
                 })}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button className="ml-2">
-            <Plus className="h-4 w-4" />
-            Add Product
+
+          <Button asChild>
+            <Link to="/staff/products/add">
+              <Plus className="h-4 w-4" />
+              Add Product
+            </Link>
           </Button>
         </div>
       </div>

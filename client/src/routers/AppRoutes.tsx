@@ -30,16 +30,17 @@ import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
 
 import StaffDashboard from '@/pages/staff/StaffDashboard';
-import ProductsManagement from '@/pages/staff/ProductsManagement';
-import PetsManagement from '@/pages/staff/PetsManagement';
-import OrdersManagement from '@/pages/staff/OrdersManagement';
+import ProductsManagement from '@/pages/staff/product/ProductsManagement';
+import PetsManagement from '@/pages/staff/pet/PetsManagement';
+import OrdersManagement from '@/pages/staff/order/OrdersManagement';
 import CategoriesManagement from '@/pages/staff/CategoriesManagement';
 import ColorsManagement from '@/pages/staff/ColorsManagement';
-import BreedsManagement from '@/pages/staff/BreedsManagement';
+import BreedsManagement from '@/pages/staff/breed/BreedsManagement';
 
 import AdminDashboard from '@/pages/admin/AdminDashboard';
 import UserManagement from '@/pages/admin/UserManagement';
 import LoadingScreen from '@/pages/common/LoadingScreen';
+import AddProduct from '@/pages/staff/product/AddProduct';
 
 const AppRoutes = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -81,6 +82,7 @@ const AppRoutes = () => {
         <Route element={<StaffLayout />}>
           <Route index element={<StaffDashboard />} />
           <Route path="products" element={<ProductsManagement />} />
+          <Route path="products/add" element={<AddProduct />} />
           <Route path="pets" element={<PetsManagement />} />
           <Route path="orders" element={<OrdersManagement />} />
           <Route path="categories" element={<CategoriesManagement />} />

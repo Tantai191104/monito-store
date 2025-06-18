@@ -1,5 +1,68 @@
 import type { Product } from '@/types/product';
 
+// Extract unique categories from mockProducts
+export const mockCategories = [
+  {
+    _id: 'cat1',
+    name: 'Food',
+    description: 'Pet food and nutrition products',
+  },
+  {
+    _id: 'cat2',
+    name: 'Toy',
+    description: 'Interactive toys and entertainment items',
+  },
+  {
+    _id: 'cat3',
+    name: 'Accessory',
+    description: 'Collars, leashes, and fashion accessories',
+  },
+  {
+    _id: 'cat4',
+    name: 'Healthcare',
+    description: 'Vitamins, supplements, and health products',
+  },
+  {
+    _id: 'cat5',
+    name: 'Grooming',
+    description: 'Brushes, shampoos, and grooming tools',
+  },
+  {
+    _id: 'cat6',
+    name: 'Other',
+    description: 'Beds, feeding bowls, and miscellaneous items',
+  },
+];
+
+// Extract unique brands from mockProducts
+export const mockBrands = [
+  'Royal Canin',
+  'KONG',
+  'Flexi',
+  'VetriScience',
+  'FURminator',
+  'BarksBar',
+  'Bonza',
+  "Hill's Science Diet",
+  'Purina Pro Plan',
+  'Blue Buffalo',
+  'Taste of the Wild',
+  'Orijen',
+  'Acana',
+  'Wellness',
+  'Merrick',
+  'Canidae',
+  'Fromm',
+  'Nutro',
+  'Iams',
+  'Eukanuba',
+  'Pedigree',
+  'Cesar',
+  'Beneful',
+  "Ol' Roy",
+  "Kibbles 'n Bits",
+];
+
 export const mockProducts: Product[] = [
   {
     _id: '1',

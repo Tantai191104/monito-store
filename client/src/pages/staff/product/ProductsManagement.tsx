@@ -1,10 +1,17 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ProductDataTable } from './components/ProductDataTable';
 import { productColumns } from './components/ProductColumns';
 import { mockProducts } from '@/data/mockProducts';
 
 const ProductsManagement = () => {
-  const [data] = useState(mockProducts);
+  const [data, setData] = useState(mockProducts);
+
+  useEffect(() => {
+    const newProducts = JSON.parse(localStorage.getItem('newProducts') || '[]');
+    if (newProducts.length > 0) {
+      setData([...newProducts, ...mockProducts]);
+    }
+  }, []);
 
   return (
     <div className="container mx-auto p-8 py-0">

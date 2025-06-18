@@ -1,7 +1,7 @@
 import { useState } from 'react';
+import { mockPets } from '@/data/mockPets';
 import { PetDataTable } from './components/PetDataTable';
 import { petColumns } from './components/PetColumns';
-import { mockPets } from '@/data/mockPets';
 
 const PetsManagement = () => {
   const [data] = useState(mockPets);
