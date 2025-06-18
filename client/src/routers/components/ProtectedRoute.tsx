@@ -1,7 +1,7 @@
 /**
  * Node modules
  */
-import { Navigate } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 
 /**
  * Hooks
@@ -9,10 +9,8 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
 export const ProtectedRoute = ({
-  children,
   allowedRoles,
 }: {
-  children: React.ReactNode;
   allowedRoles: string[];
 }) => {
   const { user, isAuthenticated } = useAuth();
@@ -25,5 +23,5 @@ export const ProtectedRoute = ({
     return <Navigate to="/unauthorized" />;
   }
 
-  return <>{children}</>;
+  return <Outlet />;
 };

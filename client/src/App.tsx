@@ -12,6 +12,7 @@ import AppRoutes from '@/routers/AppRoutes';
  * Providers
  */
 import { QueryProvider } from '@/providers/QueryProvider';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 
 /**
  * Components
@@ -22,8 +23,10 @@ const App = () => {
   return (
     <QueryProvider>
       <BrowserRouter>
-        <AppRoutes />
-        <Toaster richColors />
+        <ThemeProvider>
+          <AppRoutes />
+          <Toaster richColors />
+        </ThemeProvider>
       </BrowserRouter>
     </QueryProvider>
   );
