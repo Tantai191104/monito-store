@@ -27,7 +27,7 @@ productRoute.post(
   requireAdminOrStaff,
   productController.createProduct,
 );
-productRoute.put(
+productRoute.patch(
   '/:id',
   authenticate,
   requireAdminOrStaff,

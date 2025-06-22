@@ -27,7 +27,7 @@ categoryRoute.post(
   requireAdminOrStaff,
   categoryController.createCategory,
 );
-categoryRoute.put(
+categoryRoute.patch(
   '/:id',
   authenticate,
   requireAdminOrStaff,

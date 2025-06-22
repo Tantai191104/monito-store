@@ -22,7 +22,7 @@ petRoute.get('/:id', petController.getPetById);
 
 // Protected routes - Only admin and staff can manage pets
 petRoute.post('/', authenticate, requireAdminOrStaff, petController.createPet);
-petRoute.put(
+petRoute.patch(
   '/:id',
   authenticate,
   requireAdminOrStaff,

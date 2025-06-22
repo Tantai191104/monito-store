@@ -21,31 +21,42 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import AdminSidebar from './components/AdminSidebar';
-
+import { useBreadcrumbs } from '@/hooks/useBreadcrumbs';
 
 const AdminLayout = () => {
+  const breadcrumbs = useBreadcrumbs('admin');
+
   return (
     <SidebarProvider>
       <AdminSidebar />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-white shadow-sm transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
+            <SidebarTrigger className="" />
+            <Separator orientation="vertical" className="mr-2 !h-4" />
             <Breadcrumb>
               <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="/admin">Admin Portal</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Dashboard</BreadcrumbPage>
-                </BreadcrumbItem>
+                {breadcrumbs.map((breadcrumb, index) => (
+                  <div key={breadcrumb.href} className="flex items-center">
+                    {index > 0 && (
+                      <BreadcrumbSeparator className="mr-2 hidden md:block" />
+                    )}
+                    <BreadcrumbItem className="hidden md:block">
+                      {breadcrumb.isCurrentPage ? (
+                        <BreadcrumbPage>{breadcrumb.label}</BreadcrumbPage>
+                      ) : (
+                        <BreadcrumbLink href={breadcrumb.href}>
+                          {breadcrumb.label}
+                        </BreadcrumbLink>
+                      )}
+                    </BreadcrumbItem>
+                  </div>
+                ))}
               </BreadcrumbList>
             </Breadcrumb>
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto p-4">
+        <main className="flex-1 overflow-y-auto bg-white p-4">
           <Outlet />
         </main>
       </SidebarInset>

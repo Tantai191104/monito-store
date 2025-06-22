@@ -48,16 +48,20 @@ export const categoryService = {
 
   async updateCategory(categoryId: string, data: UpdateCategoryPayload) {
     try {
-      const category = await CategoryModel.findById(categoryId);
+      const updatedCategory = await CategoryModel.findByIdAndUpdate(
+        categoryId,
+        data,
+        {
+          new: true,
+          runValidators: true,
+        },
+      );
 
-      if (!category) {
+      if (!updatedCategory) {
         throw new NotFoundException('Category not found');
       }
 
-      Object.assign(category, data);
-      await category.save();
-
-      return category;
+      return updatedCategory;
     } catch (error: any) {
       if (error.code === 11000) {
         throw new BadRequestException('Category name already exists');
