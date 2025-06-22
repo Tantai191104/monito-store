@@ -49,6 +49,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { mockCategories, mockBrands } from '@/data/mockProducts';
+import { productService } from '@/services/productService';
 import { useActiveCategories } from '@/hooks/useCategories';
 
 // Validation schema
@@ -197,27 +198,16 @@ const AddProduct = () => {
     setIsSubmitting(true);
 
     try {
-      // In real app, you would upload images to server/cloud storage first
-      // For demo, we'll use the preview URLs
+      // TODO: Upload images to server/cloud storage and get URLs
+      // For now, use preview URLs as placeholders
       const imageUrls = imagePreviews.filter((preview) => preview !== '');
 
-      // Calculate discount
-      let discount = undefined;
-      if (data.originalPrice && data.originalPrice > data.price) {
-        discount = Math.round(
-          ((data.originalPrice - data.price) / data.originalPrice) * 100,
-        );
-      }
+      // Lấy tên category thay vì id
+      const selectedCategory = mockCategories.find(cat => cat._id === data.category);
 
-      const selectedCategory = mockCategories.find(
-        (cat) => cat._id === data.category,
-      );
-
-      const productData = {
+      const payload = {
         ...data,
-        _id: `product_${Date.now()}`,
-        category: selectedCategory || { _id: data.category, name: 'Unknown' },
-        discount,
+        category: selectedCategory ? selectedCategory.name : data.category, // Gửi name thay vì id
         images: imageUrls,
         tags,
         gifts,
@@ -225,31 +215,18 @@ const AddProduct = () => {
           ...data.specifications,
           ingredients: ingredients.length > 0 ? ingredients : undefined,
         },
-        isInStock: data.stock > 0,
-        rating: 0,
-        reviewCount: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
       };
 
-      console.log('Adding product:', productData);
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      const existingProducts = JSON.parse(
-        localStorage.getItem('newProducts') || '[]',
-      );
-      localStorage.setItem(
-        'newProducts',
-        JSON.stringify([productData, ...existingProducts]),
-      );
-
-      alert('Product has been added successfully!');
-      navigate('/staff/products');
-    } catch (error) {
+      const res = await productService.createProduct(payload);
+      if (res.success) {
+        alert('Product has been added successfully!');
+        navigate('/staff/products');
+      } else {
+        alert(res.message || 'Failed to add product.');
+      }
+    } catch (error: any) {
       console.error('Error adding product:', error);
-      alert('Failed to add product. Please try again.');
+      alert(error?.message || 'Failed to add product. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
