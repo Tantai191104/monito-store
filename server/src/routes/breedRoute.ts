@@ -27,7 +27,7 @@ breedRoute.post(
   requireAdminOrStaff,
   breedController.createBreed,
 );
-breedRoute.put(
+breedRoute.patch(
   '/:id',
   authenticate,
   requireAdminOrStaff,

@@ -33,7 +33,7 @@ import StaffDashboard from '@/pages/staff/StaffDashboard';
 import ProductsManagement from '@/pages/staff/product/ProductsManagement';
 import PetsManagement from '@/pages/staff/pet/PetsManagement';
 import OrdersManagement from '@/pages/staff/order/OrdersManagement';
-import CategoriesManagement from '@/pages/staff/CategoriesManagement';
+import CategoriesManagement from '@/pages/staff/category/CategoriesManagement';
 import ColorsManagement from '@/pages/staff/ColorsManagement';
 import BreedsManagement from '@/pages/staff/breed/BreedsManagement';
 
