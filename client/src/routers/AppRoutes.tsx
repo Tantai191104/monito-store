@@ -33,7 +33,7 @@ import StaffDashboard from '@/pages/staff/StaffDashboard';
 import ProductsManagement from '@/pages/staff/product/ProductsManagement';
 import PetsManagement from '@/pages/staff/pet/PetsManagement';
 import OrdersManagement from '@/pages/staff/order/OrdersManagement';
-import CategoriesManagement from '@/pages/staff/CategoriesManagement';
+import CategoriesManagement from '@/pages/staff/category/CategoriesManagement';
 import ColorsManagement from '@/pages/staff/ColorsManagement';
 import BreedsManagement from '@/pages/staff/breed/BreedsManagement';
 
@@ -41,6 +41,7 @@ import AdminDashboard from '@/pages/admin/AdminDashboard';
 import UserManagement from '@/pages/admin/UserManagement';
 import LoadingScreen from '@/pages/common/LoadingScreen';
 import AddProduct from '@/pages/staff/product/AddProduct';
+import StaffManagement from '@/pages/admin/StaffManagement';
 
 const AppRoutes = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -99,10 +100,7 @@ const AppRoutes = () => {
         <Route element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<UserManagement />} />
-          <Route path="staff" element={<div>Staff Management</div>} />
-          <Route path="settings" element={<div>Settings</div>} />
-          <Route path="database" element={<div>Database</div>} />
-          <Route path="analytics" element={<div>Analytics</div>} />
+          <Route path="staff" element={<StaffManagement />} />
         </Route>
       </Route>
 

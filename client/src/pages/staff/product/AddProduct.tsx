@@ -50,6 +50,7 @@ import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { mockCategories, mockBrands } from '@/data/mockProducts';
 import { productService } from '@/services/productService';
+import { useActiveCategories } from '@/hooks/useCategories';
 
 // Validation schema
 const addProductSchema = z.object({
@@ -106,6 +107,10 @@ const AddProduct = () => {
       isActive: true,
     },
   });
+
+  // Custom hook to fetch active categories
+  const { data: apiCategories = [], isLoading: categoriesLoading } =
+    useActiveCategories();
 
   // Handle file upload
   const handleFiles = useCallback(
@@ -373,11 +378,17 @@ const AddProduct = () => {
                             >
                               <FormControl>
                                 <SelectTrigger className="h-11 border-gray-300 focus:border-blue-500">
-                                  <SelectValue placeholder="Select a category" />
+                                  <SelectValue
+                                    placeholder={
+                                      categoriesLoading
+                                        ? 'Loading...'
+                                        : 'Select a category'
+                                    }
+                                  />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {mockCategories.map((category) => (
+                                {apiCategories.map((category) => (
                                   <SelectItem
                                     key={category._id}
                                     value={category._id}

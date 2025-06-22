@@ -10,6 +10,12 @@ import {
   User2,
   Database,
   Activity,
+  Package,
+  Heart,
+  ShoppingCart,
+  FileText,
+  Bell,
+  CreditCard,
 } from 'lucide-react';
 
 import {
@@ -29,9 +35,11 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 
 const AdminSidebar = () => {
   const location = useLocation();
@@ -42,13 +50,34 @@ const AdminSidebar = () => {
       items: [
         { name: 'Overview', href: '/admin', icon: BarChart3 },
         { name: 'Analytics', href: '/admin/analytics', icon: Activity },
+        { name: 'Reports', href: '/admin/reports', icon: FileText },
       ],
     },
     {
       label: 'User Management',
       items: [
-        { name: 'All Users', href: '/admin/users', icon: Users },
-        { name: 'Staff Management', href: '/admin/staff', icon: UserPlus },
+        {
+          name: 'All Users',
+          href: '/admin/users',
+          icon: Users,
+          badge: '2.8k',
+        },
+        {
+          name: 'Staff Management',
+          href: '/admin/staff',
+          icon: UserPlus,
+          badge: '23',
+        },
+        { name: 'Roles & Permissions', href: '/admin/roles', icon: Shield },
+      ],
+    },
+    {
+      label: 'Business Overview',
+      items: [
+        { name: 'Products', href: '/admin/products', icon: Package },
+        { name: 'Pets', href: '/admin/pets', icon: Heart },
+        { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
+        { name: 'Payments', href: '/admin/payments', icon: CreditCard },
       ],
     },
     {
@@ -56,12 +85,13 @@ const AdminSidebar = () => {
       items: [
         { name: 'Settings', href: '/admin/settings', icon: Settings },
         { name: 'Database', href: '/admin/database', icon: Database },
+        { name: 'Notifications', href: '/admin/notifications', icon: Bell },
       ],
     },
   ];
 
   return (
-    <Sidebar collapsible="icon" className="border-r">
+    <Sidebar collapsible="icon" className="border-r border-red-100">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -85,7 +115,9 @@ const AdminSidebar = () => {
       <SidebarContent>
         {navigationGroups.map((group, groupIndex) => (
           <SidebarGroup key={groupIndex}>
-            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+            <SidebarGroupLabel className="text-red-600">
+              {group.label}
+            </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {group.items.map((item) => {
@@ -98,10 +130,28 @@ const AdminSidebar = () => {
                         asChild
                         isActive={isActive}
                         tooltip={item.name}
+                        className={
+                          isActive
+                            ? 'border border-red-600 bg-red-50 text-red-700'
+                            : ''
+                        }
                       >
-                        <Link to={item.href}>
-                          <Icon className="size-4" />
-                          <span>{item.name}</span>
+                        <Link
+                          to={item.href}
+                          className="flex items-center justify-between"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Icon className="size-4 shrink-0" />
+                            <span>{item.name}</span>
+                          </div>
+                          {item.badge && (
+                            <Badge
+                              variant="secondary"
+                              className="bg-red-100 text-xs text-red-700"
+                            >
+                              {item.badge}
+                            </Badge>
+                          )}
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -148,14 +198,20 @@ const AdminSidebar = () => {
                 <DropdownMenuItem asChild>
                   <Link to="/staff">
                     <Users className="mr-2 size-4" />
-                    Switch to Staff
+                    Switch to Staff Portal
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <User2 className="mr-2 size-4" />
-                  Profile
+                  Profile Settings
                 </DropdownMenuItem>
                 <DropdownMenuItem>
+                  <Settings className="mr-2 size-4" />
+                  Admin Settings
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-red-600">
                   <LogOut className="mr-2 size-4" />
                   Sign Out
                 </DropdownMenuItem>

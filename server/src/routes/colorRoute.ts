@@ -27,7 +27,7 @@ colorRoute.post(
   requireAdminOrStaff,
   colorController.createColor,
 );
-colorRoute.put(
+colorRoute.patch(
   '/:id',
   authenticate,
   requireAdminOrStaff,
