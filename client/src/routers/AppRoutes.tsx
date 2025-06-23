@@ -36,6 +36,7 @@ import OrdersManagement from '@/pages/staff/order/OrdersManagement';
 import CategoriesManagement from '@/pages/staff/category/CategoriesManagement';
 import ColorsManagement from '@/pages/staff/ColorsManagement';
 import BreedsManagement from '@/pages/staff/breed/BreedsManagement';
+import AddPet from '@/pages/staff/pet/AddPet';
 
 import AdminDashboard from '@/pages/admin/AdminDashboard';
 import UserManagement from '@/pages/admin/UserManagement';
@@ -85,6 +86,7 @@ const AppRoutes = () => {
           <Route path="products" element={<ProductsManagement />} />
           <Route path="products/add" element={<AddProduct />} />
           <Route path="pets" element={<PetsManagement />} />
+          <Route path="pets/add" element={<AddPet />} />
           <Route path="orders" element={<OrdersManagement />} />
           <Route path="categories" element={<CategoriesManagement />} />
           <Route path="colors" element={<ColorsManagement />} />
