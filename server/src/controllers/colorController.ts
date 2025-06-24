@@ -9,6 +9,14 @@ import { NextFunction, Request, Response } from 'express';
 import { colorService } from '../services/colorService';
 
 /**
+ * Validations
+ */
+import {
+  createColorSchema,
+  updateColorSchema,
+} from '../validations/colorValidation';
+
+/**
  * Constants
  */
 import { STATUS_CODE } from '../constants';
@@ -20,13 +28,7 @@ export const colorController = {
     next: NextFunction,
   ): Promise<any> {
     try {
-      const { name, hexCode, description } = req.body;
-
-      if (!name) {
-        return res.status(STATUS_CODE.BAD_REQUEST).json({
-          message: 'Color name is required',
-        });
-      }
+      const { name, hexCode, description } = createColorSchema.parse(req.body);
 
       const color = await colorService.createColor({
         name,
@@ -86,7 +88,10 @@ export const colorController = {
   ): Promise<void> {
     try {
       const { id } = req.params;
-      const { name, hexCode, description, isActive } = req.body;
+
+      const { name, hexCode, description, isActive } = updateColorSchema.parse(
+        req.body,
+      );
 
       const color = await colorService.updateColor(id, {
         name,
