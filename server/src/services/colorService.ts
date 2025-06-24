@@ -1,4 +1,14 @@
 /**
+ * Node modules
+ */
+import mongoose from 'mongoose';
+
+/**
+ * Types
+ */
+import { CreateColorPayload, UpdateColorPayload } from '../types/color';
+
+/**
  * Models
  */
 import ColorModel from '../models/colorModel';
@@ -9,30 +19,46 @@ import ColorModel from '../models/colorModel';
 import { NotFoundException, BadRequestException } from '../utils/errors';
 
 export const colorService = {
-  async createColor(data: {
-    name: string;
-    hexCode?: string;
-    description?: string;
-  }) {
+  /**
+   * Create new color
+   */
+  async createColor(data: CreateColorPayload) {
+    const session = await mongoose.startSession();
     try {
-      const newColor = new ColorModel(data);
+      return await session.withTransaction(async () => {
+        const newColor = new ColorModel(data);
 
-      await newColor.save();
-      return newColor;
+        await newColor.save({ session });
+        return newColor;
+      });
     } catch (error: any) {
       if (error.code === 11000) {
-        throw new BadRequestException('Color name already exists');
+        // Check which field caused the duplicate
+        const duplicateField = Object.keys(error.keyPattern)[0];
+        if (duplicateField === 'name') {
+          throw new BadRequestException('Color name already exists');
+        } else if (duplicateField === 'hexCode') {
+          throw new BadRequestException('Hex code already exists');
+        }
+        throw new BadRequestException('Color already exists');
       }
       throw error;
+    } finally {
+      session.endSession();
     }
   },
 
+  /**
+   * Get all colors
+   */
   async getColors() {
     const colors = await ColorModel.find().sort({ name: 1 });
-
     return colors;
   },
 
+  /**
+   * Get color by ID
+   */
   async getColorById(colorId: string) {
     const color = await ColorModel.findById(colorId);
 
@@ -43,41 +69,68 @@ export const colorService = {
     return color;
   },
 
-  async updateColor(
-    colorId: string,
-    data: {
-      name?: string;
-      hexCode?: string;
-      description?: string;
-      isActive?: boolean;
-    },
-  ) {
+  /**
+   * Update color
+   */
+  async updateColor(colorId: string, data: UpdateColorPayload) {
+    const session = await mongoose.startSession();
     try {
-      const color = await ColorModel.findById(colorId);
+      return await session.withTransaction(async () => {
+        const color = await ColorModel.findById(colorId).session(session);
 
-      if (!color) {
-        throw new NotFoundException('Color not found');
-      }
+        if (!color) {
+          throw new NotFoundException('Color not found');
+        }
 
-      Object.assign(color, data);
-      await color.save();
+        // Use $set to only update provided fields
+        const updatedColor = await ColorModel.findByIdAndUpdate(
+          colorId,
+          { $set: data },
+          {
+            new: true,
+            runValidators: true,
+            session,
+          },
+        );
 
-      return color;
+        return updatedColor;
+      });
     } catch (error: any) {
       if (error.code === 11000) {
-        throw new BadRequestException('Color name already exists');
+        // Check which field caused the duplicate
+        const duplicateField = Object.keys(error.keyPattern)[0];
+        if (duplicateField === 'name') {
+          throw new BadRequestException('Color name already exists');
+        } else if (duplicateField === 'hexCode') {
+          throw new BadRequestException('Hex code already exists');
+        }
+        throw new BadRequestException('Color already exists');
       }
       throw error;
+    } finally {
+      session.endSession();
     }
   },
 
+  /**
+   * Delete color
+   */
   async deleteColor(colorId: string) {
-    const color = await ColorModel.findById(colorId);
+    const session = await mongoose.startSession();
+    try {
+      return await session.withTransaction(async () => {
+        const color = await ColorModel.findById(colorId).session(session);
 
-    if (!color) {
-      throw new NotFoundException('Color not found');
+        if (!color) {
+          throw new NotFoundException('Color not found');
+        }
+
+        await ColorModel.findByIdAndDelete(colorId).session(session);
+      });
+    } catch (error) {
+      throw error;
+    } finally {
+      session.endSession();
     }
-
-    await ColorModel.findByIdAndDelete(colorId);
   },
 };
