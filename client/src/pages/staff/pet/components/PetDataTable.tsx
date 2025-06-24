@@ -10,8 +10,9 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { ChevronDown, Plus, Search } from 'lucide-react';
+import { ChevronDown, Search, Plus } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -50,12 +51,14 @@ import { cn } from '@/lib/utils';
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  isLoading?: boolean;
   className?: string;
 }
 
 export function PetDataTable<TData, TValue>({
   columns,
   data,
+  isLoading = false,
   className,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -87,7 +90,7 @@ export function PetDataTable<TData, TValue>({
     },
   });
 
-  // Get unique values for filters
+
   const getBreedOptions = (data: Pet[]) => {
     const breeds = Array.from(new Set(data.map((pet) => pet.breed.name)));
     return breeds.sort();
@@ -98,7 +101,6 @@ export function PetDataTable<TData, TValue>({
   const breedOptions = getBreedOptions(data as Pet[]);
   const sizeOptions = getSizeOptions();
 
-  // Pagination helpers
   const currentPage = table.getState().pagination.pageIndex + 1;
   const totalPages = table.getPageCount();
   const pageSize = table.getState().pagination.pageSize;
@@ -126,9 +128,24 @@ export function PetDataTable<TData, TValue>({
     return pages;
   };
 
+  if (isLoading) {
+    return (
+      <div className={cn('w-full space-y-4', className)}>
+        <div className="w-full">
+          <div className="animate-pulse rounded-md bg-gray-100 p-6">
+            <div className="h-6 w-1/3 rounded bg-gray-200 mb-4" />
+            <div className="h-4 w-full rounded bg-gray-200 mb-2" />
+            <div className="h-4 w-full rounded bg-gray-200 mb-2" />
+            <div className="h-4 w-2/3 rounded bg-gray-200 mb-2" />
+            <div className="h-4 w-1/2 rounded bg-gray-200" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={cn('w-full space-y-4', className)}>
-      {/* Toolbar */}
       <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
         <div className="flex flex-col space-y-2 lg:flex-row lg:items-center lg:space-y-0 lg:space-x-2">
           <div className="relative">
@@ -142,10 +159,10 @@ export function PetDataTable<TData, TValue>({
                 table.getColumn('name')?.setFilterValue(event.target.value)
               }
               className="max-w-sm pl-8"
+              disabled={isLoading}
             />
           </div>
 
-          {/* Breed Filter */}
           <Select
             value={(table.getColumn('breed')?.getFilterValue() as string) ?? ''}
             onValueChange={(value) =>
@@ -167,7 +184,6 @@ export function PetDataTable<TData, TValue>({
             </SelectContent>
           </Select>
 
-          {/* Size Filter */}
           <Select
             value={(table.getColumn('size')?.getFilterValue() as string) ?? ''}
             onValueChange={(value) =>
@@ -189,7 +205,6 @@ export function PetDataTable<TData, TValue>({
             </SelectContent>
           </Select>
 
-          {/* Status Filter */}
           <Select
             value={
               (table.getColumn('isAvailable')?.getFilterValue() as string) ?? ''
@@ -238,14 +253,15 @@ export function PetDataTable<TData, TValue>({
                 })}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button className="">
-            <Plus className="h-4 w-4" />
-            Add Pet
+          <Button asChild>
+            <Link to="/staff/pets/add">
+              <Plus className="h-4 w-4" />
+              Add Pet
+            </Link>
           </Button>
         </div>
       </div>
 
-      {/* Selected items actions */}
       {table.getFilteredSelectedRowModel().rows.length > 0 && (
         <div className="bg-muted/50 flex items-center justify-between rounded-md border px-4 py-2">
           <div className="text-muted-foreground text-sm">
@@ -266,7 +282,6 @@ export function PetDataTable<TData, TValue>({
         </div>
       )}
 
-      {/* Table */}
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -319,7 +334,6 @@ export function PetDataTable<TData, TValue>({
         </Table>
       </div>
 
-      {/* Pagination */}
       <div className="flex items-center justify-between space-x-2 pb-4">
         <div className="text-muted-foreground text-sm">
           Showing {startItem} to {endItem} of {totalItems} results
