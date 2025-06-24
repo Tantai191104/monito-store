@@ -10,9 +10,10 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { ChevronDown, Search, Plus } from 'lucide-react';
+import { ChevronDown, Search, Plus, Download, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -45,8 +46,12 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-import type { Pet } from '@/types/pet';
 import { cn } from '@/lib/utils';
+import { TableSkeleton } from '@/components/ui/table-skeleton';
+import {
+  useBulkDeletePets,
+  useBulkUpdatePetAvailability,
+} from '@/hooks/usePets';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -65,6 +70,10 @@ export function PetDataTable<TData, TValue>({
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
+
+  // Bulk operations hooks
+  const bulkDeletePets = useBulkDeletePets();
+  const bulkUpdateAvailability = useBulkUpdatePetAvailability();
 
   const table = useReactTable({
     data,
@@ -90,17 +99,15 @@ export function PetDataTable<TData, TValue>({
     },
   });
 
+  // Get unique values for filters
+  const breedOptions = Array.from(
+    new Set(data.map((pet: any) => pet.breed?.name).filter(Boolean)),
+  );
+  const sizeOptions = Array.from(
+    new Set(data.map((pet: any) => pet.size).filter(Boolean)),
+  );
 
-  const getBreedOptions = (data: Pet[]) => {
-    const breeds = Array.from(new Set(data.map((pet) => pet.breed.name)));
-    return breeds.sort();
-  };
-
-  const getSizeOptions = () => ['Small', 'Medium', 'Large'];
-
-  const breedOptions = getBreedOptions(data as Pet[]);
-  const sizeOptions = getSizeOptions();
-
+  // Pagination helpers
   const currentPage = table.getState().pagination.pageIndex + 1;
   const totalPages = table.getPageCount();
   const pageSize = table.getState().pagination.pageSize;
@@ -108,6 +115,7 @@ export function PetDataTable<TData, TValue>({
   const startItem = (currentPage - 1) * pageSize + 1;
   const endItem = Math.min(currentPage * pageSize, totalItems);
 
+  // Generate page numbers for pagination
   const getPageNumbers = () => {
     const pages = [];
     const maxVisiblePages = 5;
@@ -124,28 +132,57 @@ export function PetDataTable<TData, TValue>({
         pages.push(i);
       }
     }
-
     return pages;
   };
 
+  // Bulk actions handlers
+  const selectedRows = table.getFilteredSelectedRowModel().rows;
+  const selectedPets = selectedRows.map((row) => row.original as any);
+  const selectedIds = selectedPets.map((pet) => pet._id);
+
+  const handleBulkDelete = async () => {
+    try {
+      await bulkDeletePets.mutateAsync(selectedIds);
+      setRowSelection({});
+    } catch (error) {
+      // Error handled in mutation
+    }
+  };
+
+  const handleBulkUpdateAvailability = async (isAvailable: boolean) => {
+    const targetIds = selectedPets
+      .filter((pet) => pet.isAvailable !== isAvailable)
+      .map((pet) => pet._id);
+
+    if (targetIds.length === 0) {
+      const statusText = isAvailable ? 'available' : 'sold';
+      toast.info(`All selected pets are already ${statusText}`);
+      return;
+    }
+
+    try {
+      await bulkUpdateAvailability.mutateAsync({
+        ids: targetIds,
+        isAvailable,
+      });
+      setRowSelection({});
+    } catch (error) {
+      // Error handled in mutation
+    }
+  };
+
+  // Show loading skeleton while loading
   if (isLoading) {
     return (
       <div className={cn('w-full space-y-4', className)}>
-        <div className="w-full">
-          <div className="animate-pulse rounded-md bg-gray-100 p-6">
-            <div className="h-6 w-1/3 rounded bg-gray-200 mb-4" />
-            <div className="h-4 w-full rounded bg-gray-200 mb-2" />
-            <div className="h-4 w-full rounded bg-gray-200 mb-2" />
-            <div className="h-4 w-2/3 rounded bg-gray-200 mb-2" />
-            <div className="h-4 w-1/2 rounded bg-gray-200" />
-          </div>
-        </div>
+        <TableSkeleton rows={10} columns={11} />
       </div>
     );
   }
 
   return (
     <div className={cn('w-full space-y-4', className)}>
+      {/* Toolbar */}
       <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
         <div className="flex flex-col space-y-2 lg:flex-row lg:items-center lg:space-y-0 lg:space-x-2">
           <div className="relative">
@@ -170,9 +207,10 @@ export function PetDataTable<TData, TValue>({
                 .getColumn('breed')
                 ?.setFilterValue(value === 'all' ? '' : value)
             }
+            disabled={isLoading}
           >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select breed" />
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Breed" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Breeds</SelectItem>
@@ -191,9 +229,10 @@ export function PetDataTable<TData, TValue>({
                 .getColumn('size')
                 ?.setFilterValue(value === 'all' ? '' : value)
             }
+            disabled={isLoading}
           >
             <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Select size" />
+              <SelectValue placeholder="Size" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Sizes</SelectItem>
@@ -214,6 +253,7 @@ export function PetDataTable<TData, TValue>({
                 .getColumn('isAvailable')
                 ?.setFilterValue(value === 'all' ? '' : value === 'available')
             }
+            disabled={isLoading}
           >
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Status" />
@@ -227,10 +267,19 @@ export function PetDataTable<TData, TValue>({
         </div>
 
         <div className="flex items-center space-x-2">
+          <Button variant="outline" size="sm" disabled={isLoading}>
+            <Download className="mr-2 h-4 w-4" />
+            Export
+          </Button>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="ml-auto">
-                Columns <ChevronDown className="h-4 w-4" />
+              <Button
+                variant="outline"
+                className="ml-auto"
+                disabled={isLoading}
+              >
+                Columns <ChevronDown className="ml-2 h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -247,41 +296,74 @@ export function PetDataTable<TData, TValue>({
                         column.toggleVisibility(!!value)
                       }
                     >
-                      {column.id}
+                      {column.id.replace(/([A-Z])/g, ' $1').trim()}
                     </DropdownMenuCheckboxItem>
                   );
                 })}
             </DropdownMenuContent>
           </DropdownMenu>
+
           <Button asChild>
             <Link to="/staff/pets/add">
-              <Plus className="h-4 w-4" />
+              <Plus className="mr-2 h-4 w-4" />
               Add Pet
             </Link>
           </Button>
         </div>
       </div>
 
-      {table.getFilteredSelectedRowModel().rows.length > 0 && (
+      {/* Selected items actions */}
+      {selectedRows.length > 0 && !isLoading && (
         <div className="bg-muted/50 flex items-center justify-between rounded-md border px-4 py-2">
           <div className="text-muted-foreground text-sm">
-            {table.getFilteredSelectedRowModel().rows.length} of{' '}
-            {table.getFilteredRowModel().rows.length} row(s) selected.
+            {selectedRows.length} of {table.getFilteredRowModel().rows.length}{' '}
+            row(s) selected.
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm">
-              Export Selected
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleBulkUpdateAvailability(true)}
+              disabled={
+                bulkUpdateAvailability.isPending ||
+                selectedPets.every((pet) => pet.isAvailable)
+              }
+            >
+              {bulkUpdateAvailability.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
+              Mark Available
             </Button>
-            <Button variant="outline" size="sm">
-              Bulk Update
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleBulkUpdateAvailability(false)}
+              disabled={
+                bulkUpdateAvailability.isPending ||
+                selectedPets.every((pet) => !pet.isAvailable)
+              }
+            >
+              {bulkUpdateAvailability.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
+              Mark as Sold
             </Button>
-            <Button variant="destructive" size="sm">
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleBulkDelete}
+              disabled={bulkDeletePets.isPending}
+            >
+              {bulkDeletePets.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
               Delete Selected
             </Button>
           </div>
         </div>
       )}
 
+      {/* Table */}
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -334,24 +416,28 @@ export function PetDataTable<TData, TValue>({
         </Table>
       </div>
 
+      {/* Pagination */}
       <div className="flex items-center justify-between space-x-2 pb-4">
         <div className="text-muted-foreground text-sm">
           Showing {startItem} to {endItem} of {totalItems} results
         </div>
         <div className="flex items-center gap-5">
-          <div className="flex items-center space-x-2">
-            <p className="text-sm font-medium">Rows per page</p>
+          <div className="flex items-center gap-3">
+            <p className="shrink-0 text-sm font-medium">Rows per page</p>
             <Select
-              value={`${pageSize}`}
+              value={`${table.getState().pagination.pageSize}`}
               onValueChange={(value) => {
                 table.setPageSize(Number(value));
               }}
+              disabled={isLoading}
             >
               <SelectTrigger className="h-8 w-[70px]">
-                <SelectValue placeholder={pageSize} />
+                <SelectValue
+                  placeholder={table.getState().pagination.pageSize}
+                />
               </SelectTrigger>
               <SelectContent side="top">
-                {[5, 10, 20, 30].map((pageSize) => (
+                {[5, 10, 20, 30, 50].map((pageSize) => (
                   <SelectItem key={pageSize} value={`${pageSize}`}>
                     {pageSize}
                   </SelectItem>
@@ -359,7 +445,7 @@ export function PetDataTable<TData, TValue>({
               </SelectContent>
             </Select>
           </div>
-          {totalPages > 1 && (
+          {totalPages > 1 && !isLoading && (
             <Pagination className="w-fit">
               <PaginationContent>
                 <PaginationItem>

@@ -43,6 +43,8 @@ import UserManagement from '@/pages/admin/UserManagement';
 import LoadingScreen from '@/pages/common/LoadingScreen';
 import AddProduct from '@/pages/staff/product/AddProduct';
 import StaffManagement from '@/pages/admin/StaffManagement';
+import PetDetail from '@/pages/staff/pet/PetDetail';
+import EditPet from '@/pages/staff/pet/EditPet';
 
 const AppRoutes = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -87,6 +89,8 @@ const AppRoutes = () => {
           <Route path="products/add" element={<AddProduct />} />
           <Route path="pets" element={<PetsManagement />} />
           <Route path="pets/add" element={<AddPet />} />
+          <Route path="pets/:id" element={<PetDetail />} />
+          <Route path="pets/:id/edit" element={<EditPet />} />
           <Route path="orders" element={<OrdersManagement />} />
           <Route path="categories" element={<CategoriesManagement />} />
           <Route path="colors" element={<ColorsManagement />} />

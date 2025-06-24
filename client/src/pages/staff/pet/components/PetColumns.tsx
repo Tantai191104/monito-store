@@ -1,5 +1,15 @@
+import { useState } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, MoreHorizontal, Eye, Edit, Trash2 } from 'lucide-react';
+import {
+  ArrowUpDown,
+  MoreHorizontal,
+  Eye,
+  Edit,
+  Trash2,
+  ToggleLeft,
+  ToggleRight,
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -12,7 +22,18 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import type { Pet } from '@/types/pet';
+import { useDeletePet, useUpdatePetAvailability } from '@/hooks/usePets';
 
 export const petColumns: ColumnDef<Pet>[] = [
   {
@@ -46,10 +67,10 @@ export const petColumns: ColumnDef<Pet>[] = [
             <img
               src={images[0]}
               alt={name}
-              className="h-12 w-12 rounded-full object-cover"
+              className="h-12 w-12 rounded-lg object-cover"
             />
           ) : (
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100">
               <span className="text-xs text-gray-400">No img</span>
             </div>
           )}
@@ -67,7 +88,7 @@ export const petColumns: ColumnDef<Pet>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
           Name
-          <ArrowUpDown className="h-4 w-4" />
+          <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
     },
@@ -88,7 +109,12 @@ export const petColumns: ColumnDef<Pet>[] = [
     header: 'Breed',
     cell: ({ row }) => {
       const breed = row.getValue('breed') as Pet['breed'];
-      return <Badge variant="secondary">{breed.name}</Badge>;
+      return <Badge variant="secondary">{breed?.name}</Badge>;
+    },
+    filterFn: (row, id, value) => {
+      if (value === 'all') return true;
+      const breed = row.getValue(id) as Pet['breed'];
+      return breed.name === value;
     },
   },
   {
@@ -120,6 +146,10 @@ export const petColumns: ColumnDef<Pet>[] = [
             : 'outline';
       return <Badge variant={variant}>{size}</Badge>;
     },
+    filterFn: (row, id, value) => {
+      if (value === 'all') return true;
+      return row.getValue(id) === value;
+    },
   },
   {
     accessorKey: 'price',
@@ -130,7 +160,7 @@ export const petColumns: ColumnDef<Pet>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
           Price
-          <ArrowUpDown className="h-4 w-4" />
+          <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
     },
@@ -184,23 +214,37 @@ export const petColumns: ColumnDef<Pet>[] = [
         </Badge>
       );
     },
+    filterFn: (row, id, value) => {
+      if (value === 'all') return true;
+      return value === 'available' ? row.getValue(id) : !row.getValue(id);
+    },
   },
   {
-    accessorKey: 'publishedDate',
+    accessorKey: 'createdAt',
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
-          Published
-          <ArrowUpDown className="h-4 w-4" />
+          Created
+          <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
     },
     cell: ({ row }) => {
-      const date = new Date(row.getValue('publishedDate'));
-      return <div className="text-sm">{date.toLocaleDateString('vi-VN')}</div>;
+      const date = new Date(row.getValue('createdAt'));
+      return (
+        <div className="text-sm">
+          <div>{date.toLocaleDateString('vi-VN')}</div>
+          <div className="text-xs text-gray-500">
+            {date.toLocaleTimeString('vi-VN', {
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </div>
+        </div>
+      );
     },
   },
   {
@@ -208,38 +252,118 @@ export const petColumns: ColumnDef<Pet>[] = [
     header: 'Actions',
     cell: ({ row }) => {
       const pet = row.original;
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(pet._id)}
-            >
-              Copy pet ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="flex items-center">
-              <Eye className="h-4 w-4" />
-              View details
-            </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center">
-              <Edit className="h-4 w-4" />
-              Edit pet
-            </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center text-red-600">
-              <Trash2 className="h-4 w-4" />
-              Delete pet
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
+      return <PetActionsCell pet={pet} />;
     },
   },
 ];
+
+// Separate component for actions to handle hooks properly
+function PetActionsCell({ pet }: { pet: Pet }) {
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const deletePet = useDeletePet();
+  const updateAvailability = useUpdatePetAvailability();
+
+  const handleToggleAvailability = async () => {
+    try {
+      await updateAvailability.mutateAsync({
+        id: pet._id,
+        isAvailable: !pet.isAvailable,
+      });
+    } catch (error) {
+      // Error handled in mutation
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deletePet.mutateAsync(pet._id);
+      setDeleteDialogOpen(false);
+    } catch (error) {
+      // Error handled in mutation
+    }
+  };
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuItem
+            onClick={() => navigator.clipboard.writeText(pet._id)}
+          >
+            Copy pet ID
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <Link to={`/staff/pets/${pet._id}`} className="flex items-center">
+              <Eye className="mr-2 h-4 w-4" />
+              View details
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link
+              to={`/staff/pets/${pet._id}/edit`}
+              className="flex items-center"
+            >
+              <Edit className="mr-2 h-4 w-4" />
+              Edit pet
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={handleToggleAvailability}
+            disabled={updateAvailability.isPending}
+          >
+            {pet.isAvailable ? (
+              <>
+                <ToggleLeft className="mr-2 h-4 w-4" />
+                Mark as Sold
+              </>
+            ) : (
+              <>
+                <ToggleRight className="mr-2 h-4 w-4" />
+                Mark as Available
+              </>
+            )}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => setDeleteDialogOpen(true)}
+            className="text-red-600"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete pet
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Delete Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Pet</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{pet.name}"? This action cannot
+              be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={deletePet.isPending}
+            >
+              {deletePet.isPending ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}

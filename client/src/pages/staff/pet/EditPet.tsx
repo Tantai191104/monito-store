@@ -1,9 +1,16 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Save, ArrowLeft, Package, ImageIcon, Info } from 'lucide-react';
+import {
+  Save,
+  ArrowLeft,
+  Package,
+  ImageIcon,
+  Info,
+  Loader2,
+} from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -32,11 +39,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { useCreatePet } from '@/hooks/usePets';
+import { Skeleton } from '@/components/ui/skeleton';
+import { usePet, useUpdatePet } from '@/hooks/usePets';
 import { useActiveBreeds } from '@/hooks/useBreeds';
 import { useActiveColors } from '@/hooks/useColors';
 
-const addPetSchema = z.object({
+const editPetSchema = z.object({
   name: z.string().min(1, 'Pet name is required').max(100),
   breed: z.string().min(1, 'Breed is required'),
   gender: z.enum(['Male', 'Female']),
@@ -57,19 +65,21 @@ const addPetSchema = z.object({
   isAvailable: z.boolean(),
 });
 
-type AddPetFormValues = z.infer<typeof addPetSchema>;
+type EditPetFormValues = z.infer<typeof editPetSchema>;
 
-const AddPet = () => {
+const EditPet = () => {
   const navigate = useNavigate();
-  const createPet = useCreatePet();
+  const { id } = useParams<{ id: string }>();
+  const updatePet = useUpdatePet();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Get active breeds and colors
+  // Get pet data and form options
+  const { data: pet, isLoading: petLoading, error: petError } = usePet(id!);
   const { data: breeds = [] } = useActiveBreeds();
   const { data: colors = [] } = useActiveColors();
 
-  const form = useForm<AddPetFormValues>({
-    resolver: zodResolver(addPetSchema),
+  const form = useForm<EditPetFormValues>({
+    resolver: zodResolver(editPetSchema),
     defaultValues: {
       name: '',
       breed: '',
@@ -90,13 +100,39 @@ const AddPet = () => {
     },
   });
 
-  const onSubmit = async (data: AddPetFormValues) => {
+  // Reset form when pet data loads
+  useEffect(() => {
+    if (pet) {
+      form.reset({
+        name: pet.name,
+        breed: typeof pet.breed === 'object' ? pet.breed._id : pet.breed,
+        gender: pet.gender,
+        age: pet.age,
+        size: pet.size,
+        color: typeof pet.color === 'object' ? pet.color._id : pet.color,
+        price: pet.price,
+        images: pet.images,
+        description: pet.description || '',
+        isVaccinated: pet.isVaccinated,
+        isDewormed: pet.isDewormed,
+        hasCert: pet.hasCert,
+        hasMicrochip: pet.hasMicrochip,
+        location: pet.location,
+        additionalInfo: pet.additionalInfo || '',
+        isAvailable: pet.isAvailable,
+      });
+    }
+  }, [pet, form]);
+
+  const onSubmit = async (data: EditPetFormValues) => {
+    if (!id) return;
+
     setIsSubmitting(true);
     try {
-      await createPet.mutateAsync(data);
+      await updatePet.mutateAsync({ id, data });
       navigate('/staff/pets');
     } catch (error: any) {
-      console.error('Failed to add pet:', error);
+      console.error('Failed to update pet:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -105,6 +141,44 @@ const AddPet = () => {
   const handleCancel = () => {
     navigate('/staff/pets');
   };
+
+  // Loading state
+  if (petLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="mx-auto max-w-7xl p-6">
+          <div className="space-y-6">
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-96 w-full" />
+            <Skeleton className="h-64 w-full" />
+            <Skeleton className="h-32 w-full" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (petError || !pet) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="mx-auto max-w-7xl p-6">
+          <div className="py-12 text-center">
+            <h2 className="mb-2 text-xl font-semibold text-gray-900">
+              Pet Not Found
+            </h2>
+            <p className="mb-4 text-gray-600">
+              The pet you're looking for doesn't exist.
+            </p>
+            <Button onClick={() => navigate('/staff/pets')}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Pets
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -123,11 +197,9 @@ const AddPet = () => {
                 Back to Pets
               </Button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  Add New Pet
-                </h1>
+                <h1 className="text-2xl font-bold text-gray-900">Edit Pet</h1>
                 <p className="text-sm text-gray-500">
-                  Create a new pet listing for your store
+                  Update {pet.name}'s information
                 </p>
               </div>
             </div>
@@ -145,7 +217,14 @@ const AddPet = () => {
                 className="bg-blue-600 shadow-md hover:bg-blue-700"
               >
                 <Save className="mr-2 h-4 w-4" />
-                {isSubmitting ? 'Adding Pet...' : 'Add Pet'}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Updating Pet...
+                  </>
+                ) : (
+                  'Update Pet'
+                )}
               </Button>
             </div>
           </div>
@@ -164,7 +243,7 @@ const AddPet = () => {
                   Pet Information
                 </CardTitle>
                 <CardDescription>
-                  Enter the basic details about your pet
+                  Update the basic details about your pet
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -191,7 +270,7 @@ const AddPet = () => {
                         <FormLabel>Breed *</FormLabel>
                         <Select
                           onValueChange={field.onChange}
-                          defaultValue={field.value}
+                          value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -219,7 +298,7 @@ const AddPet = () => {
                         <FormLabel>Color *</FormLabel>
                         <Select
                           onValueChange={field.onChange}
-                          defaultValue={field.value}
+                          value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -255,7 +334,7 @@ const AddPet = () => {
                         <FormLabel>Gender *</FormLabel>
                         <Select
                           onValueChange={field.onChange}
-                          defaultValue={field.value}
+                          value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -297,7 +376,7 @@ const AddPet = () => {
                         <FormLabel>Size *</FormLabel>
                         <Select
                           onValueChange={field.onChange}
-                          defaultValue={field.value}
+                          value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -384,8 +463,8 @@ const AddPet = () => {
                   Pet Images
                 </CardTitle>
                 <CardDescription>
-                  Add high-quality images. The first image will be the main pet
-                  image.
+                  Update high-quality images. The first image will be the main
+                  pet image.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -454,7 +533,7 @@ const AddPet = () => {
                   Health & Specifications
                 </CardTitle>
                 <CardDescription>
-                  Add health records and availability status
+                  Update health records and availability status
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -591,4 +670,4 @@ const AddPet = () => {
   );
 };
 
-export default AddPet;
+export default EditPet;

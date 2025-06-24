@@ -1,0 +1,212 @@
+import { toast } from 'sonner';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+import { breedService } from '@/services/breedService';
+import type {
+  CreateBreedPayload,
+  UpdateBreedPayload,
+  Breed,
+} from '@/types/breed';
+import type { ApiError } from '@/types/api';
+import { getErrorMessage } from '@/utils/errorHandler';
+
+export const breedKeys = {
+  all: ['breeds'] as const,
+  lists: () => [...breedKeys.all, 'list'] as const,
+  list: (filters: string) => [...breedKeys.lists(), { filters }] as const,
+  details: () => [...breedKeys.all, 'detail'] as const,
+  detail: (id: string) => [...breedKeys.details(), id] as const,
+};
+
+// Get all breeds
+export const useBreeds = () => {
+  return useQuery({
+    queryKey: breedKeys.lists(),
+    queryFn: async () => {
+      const response = await breedService.getBreeds();
+      return response.data || [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+// Get only active breeds for pet forms
+export const useActiveBreeds = () => {
+  return useQuery({
+    queryKey: [...breedKeys.lists(), 'active'],
+    queryFn: async () => {
+      const response = await breedService.getBreeds();
+      const breeds = response.data || [];
+      return breeds.filter((breed) => breed.isActive);
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+// Get single breed by ID
+export const useBreed = (id: string) => {
+  return useQuery({
+    queryKey: breedKeys.detail(id),
+    queryFn: async () => {
+      const response = await breedService.getBreedById(id);
+      return response.data?.breed;
+    },
+    enabled: !!id,
+  });
+};
+
+// Create breed mutation
+export const useCreateBreed = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateBreedPayload) => breedService.createBreed(data),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: breedKeys.all });
+      const newBreed = response.data?.breed;
+      if (newBreed) {
+        queryClient.setQueryData(breedKeys.lists(), (old: Breed[] = []) => [
+          newBreed,
+          ...old,
+        ]);
+      }
+      toast.success('Breed created successfully!');
+      return newBreed;
+    },
+    onError: (error: any) => {
+      const apiError = error.response?.data as ApiError;
+      const message = getErrorMessage(apiError?.errorCode, apiError?.message);
+      toast.error(message);
+    },
+  });
+};
+
+// Update breed mutation
+export const useUpdateBreed = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateBreedPayload }) =>
+      breedService.updateBreed(id, data),
+    onSuccess: (response, { id }) => {
+      queryClient.invalidateQueries({ queryKey: breedKeys.all });
+      const updatedBreed = response.data?.breed;
+      if (updatedBreed) {
+        queryClient.setQueryData(breedKeys.detail(id), updatedBreed);
+        queryClient.setQueryData(breedKeys.lists(), (old: Breed[] = []) =>
+          old.map((breed) => (breed._id === id ? updatedBreed : breed)),
+        );
+      }
+      toast.success('Breed updated successfully!');
+      return updatedBreed;
+    },
+    onError: (error: any) => {
+      const apiError = error.response?.data as ApiError;
+      const message = getErrorMessage(apiError?.errorCode, apiError?.message);
+      toast.error(message);
+    },
+  });
+};
+
+// Delete breed mutation
+export const useDeleteBreed = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => breedService.deleteBreed(id),
+    onSuccess: (_, deletedId) => {
+      queryClient.setQueryData(breedKeys.lists(), (old: Breed[] = []) =>
+        old.filter((breed) => breed._id !== deletedId),
+      );
+      queryClient.removeQueries({ queryKey: breedKeys.detail(deletedId) });
+      queryClient.invalidateQueries({ queryKey: breedKeys.all });
+      toast.success('Breed deleted successfully!');
+    },
+    onError: (error: any) => {
+      const apiError = error.response?.data as ApiError;
+      const message = getErrorMessage(apiError?.errorCode, apiError?.message);
+      toast.error(message);
+    },
+  });
+};
+
+// Bulk operations
+export const useBulkActivateBreeds = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      await Promise.all(
+        ids.map((id) => breedService.updateBreed(id, { isActive: true })),
+      );
+      return ids;
+    },
+    onSuccess: (activatedIds) => {
+      queryClient.setQueryData(breedKeys.lists(), (old: Breed[] = []) =>
+        old.map((breed) =>
+          activatedIds.includes(breed._id)
+            ? { ...breed, isActive: true }
+            : breed,
+        ),
+      );
+      queryClient.invalidateQueries({ queryKey: breedKeys.all });
+      toast.success(`${activatedIds.length} breeds activated successfully!`);
+    },
+    onError: (error: any) => {
+      const apiError = error.response?.data as ApiError;
+      const message = getErrorMessage(apiError?.errorCode, apiError?.message);
+      toast.error(message);
+    },
+  });
+};
+
+export const useBulkDeactivateBreeds = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      await Promise.all(
+        ids.map((id) => breedService.updateBreed(id, { isActive: false })),
+      );
+      return ids;
+    },
+    onSuccess: (deactivatedIds) => {
+      queryClient.setQueryData(breedKeys.lists(), (old: Breed[] = []) =>
+        old.map((breed) =>
+          deactivatedIds.includes(breed._id)
+            ? { ...breed, isActive: false }
+            : breed,
+        ),
+      );
+      queryClient.invalidateQueries({ queryKey: breedKeys.all });
+      toast.success(
+        `${deactivatedIds.length} breeds deactivated successfully!`,
+      );
+    },
+    onError: (error: any) => {
+      const apiError = error.response?.data as ApiError;
+      const message = getErrorMessage(apiError?.errorCode, apiError?.message);
+      toast.error(message);
+    },
+  });
+};
+
+export const useBulkDeleteBreeds = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      await Promise.all(ids.map((id) => breedService.deleteBreed(id)));
+      return ids;
+    },
+    onSuccess: (deletedIds) => {
+      queryClient.setQueryData(breedKeys.lists(), (old: Breed[] = []) =>
+        old.filter((breed) => !deletedIds.includes(breed._id)),
+      );
+      deletedIds.forEach((id) => {
+        queryClient.removeQueries({ queryKey: breedKeys.detail(id) });
+      });
+      queryClient.invalidateQueries({ queryKey: breedKeys.all });
+      toast.success(`${deletedIds.length} breeds deleted successfully!`);
+    },
+    onError: (error: any) => {
+      const apiError = error.response?.data as ApiError;
+      const message = getErrorMessage(apiError?.errorCode, apiError?.message);
+      toast.error(message);
+    },
+  });
+};
