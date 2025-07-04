@@ -43,6 +43,7 @@ import StaffManagement from '@/pages/admin/StaffManagement';
 import PetDetail from '@/pages/staff/pet/PetDetail';
 import EditPet from '@/pages/staff/pet/EditPet';
 import PetsPage from '@/pages/main/pets/PetsPage';
+import PetDetailPage from '@/pages/main/pets/PetDetailPage';
 
 const AppRoutes = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -61,6 +62,7 @@ const AppRoutes = () => {
         <Route element={<BaseLayout />}>
           <Route index element={<HomePage />} />
           <Route path="/pets" element={<PetsPage />} />
+          <Route path="/pets/:id" element={<PetDetailPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
