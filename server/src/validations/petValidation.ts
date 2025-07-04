@@ -51,12 +51,12 @@ export const petFiltersSchema = z.object({
   gender: z.string().optional(),
   size: z.string().optional(),
   color: z.string().optional(),
-  minPrice: z.number().min(0).optional(),
-  maxPrice: z.number().min(0).optional(),
+  minPrice: z.coerce.number().min(0).optional(),
+  maxPrice: z.coerce.number().min(0).optional(),
   location: z.string().optional(),
-  isAvailable: z.boolean().optional(),
-  page: z.number().min(1).default(1),
-  limit: z.number().min(1).max(100).default(10),
+  isAvailable: z.coerce.boolean().optional(),
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).max(100).default(10),
   sortBy: z
     .enum(['name', 'price', 'publishedDate', 'createdAt'])
     .default('createdAt'),

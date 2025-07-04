@@ -46,12 +46,12 @@ export const updateProductSchema = createProductSchema.partial();
 export const productFiltersSchema = z.object({
   category: z.string().optional(),
   brand: z.string().optional(),
-  minPrice: z.number().min(0).optional(),
-  maxPrice: z.number().min(0).optional(),
-  inStock: z.boolean().optional(),
-  isActive: z.boolean().optional(),
-  page: z.number().min(1).default(1),
-  limit: z.number().min(1).max(100).default(15),
+  minPrice: z.coerce.number().min(0).optional(),
+  maxPrice: z.coerce.number().min(0).optional(),
+  inStock: z.coerce.boolean().optional(),
+  isActive: z.coerce.boolean().optional(),
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).max(100).default(15),
   sortBy: z.enum(['name', 'price', 'rating', 'createdAt']).default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
 });

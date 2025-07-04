@@ -49,6 +49,8 @@ export interface CreateProductPayload {
   isActive?: boolean;
 }
 
+export interface UpdateProductPayload extends Partial<CreateProductPayload> {}
+
 export interface ProductsResponse {
   products: Product[];
   pagination: {

@@ -11,8 +11,12 @@ import type { Pet, CreatePetPayload, UpdatePetPayload } from '@/types/pet';
 
 export const petService = {
   // Get all pets
-  async getPets(): Promise<ApiResponse<Pet[]>> {
-    const response = await API.get<ApiResponse<{ pets: Pet[] }>>('/pets');
+  async getPets(
+    params: URLSearchParams = new URLSearchParams(),
+  ): Promise<ApiResponse<Pet[]>> {
+    const response = await API.get<ApiResponse<{ pets: Pet[] }>>(
+      `/pets?${params.toString()}`,
+    );
     return {
       ...response.data,
       data: response.data.data?.pets || [],

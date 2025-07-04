@@ -24,7 +24,7 @@ import { useAuth } from '@/hooks/useAuth';
 /**
  * Pages
  */
-import HomePage from '@/pages/home/HomePage';
+import HomePage from '@/pages/main/home/HomePage';
 
 import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
