@@ -21,7 +21,7 @@ export const usePets = (params: URLSearchParams = new URLSearchParams()) => {
     queryKey,
     queryFn: async () => {
       const response = await petService.getPets(params);
-      return response.data || [];
+      return response.data; // Return the data object { pets, pagination }
     },
     staleTime: 5 * 60 * 1000,
   });

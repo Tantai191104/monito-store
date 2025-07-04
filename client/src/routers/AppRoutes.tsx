@@ -25,10 +25,8 @@ import { useAuth } from '@/hooks/useAuth';
  * Pages
  */
 import HomePage from '@/pages/main/home/HomePage';
-
 import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
-
 import StaffDashboard from '@/pages/staff/StaffDashboard';
 import ProductsManagement from '@/pages/staff/product/ProductsManagement';
 import PetsManagement from '@/pages/staff/pet/PetsManagement';
@@ -37,7 +35,6 @@ import CategoriesManagement from '@/pages/staff/category/CategoriesManagement';
 import ColorsManagement from '@/pages/staff/color/ColorsManagement';
 import BreedsManagement from '@/pages/staff/breed/BreedsManagement';
 import AddPet from '@/pages/staff/pet/AddPet';
-
 import AdminDashboard from '@/pages/admin/AdminDashboard';
 import UserManagement from '@/pages/admin/UserManagement';
 import LoadingScreen from '@/pages/common/LoadingScreen';
@@ -45,6 +42,7 @@ import AddProduct from '@/pages/staff/product/AddProduct';
 import StaffManagement from '@/pages/admin/StaffManagement';
 import PetDetail from '@/pages/staff/pet/PetDetail';
 import EditPet from '@/pages/staff/pet/EditPet';
+import PetsPage from '@/pages/main/pets/PetsPage';
 
 const AppRoutes = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -62,6 +60,7 @@ const AppRoutes = () => {
         </Route>
         <Route element={<BaseLayout />}>
           <Route index element={<HomePage />} />
+          <Route path="/pets" element={<PetsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>

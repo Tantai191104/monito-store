@@ -68,6 +68,10 @@ export const petService = {
    */
   async getPets(filters: PetFilters) {
     const {
+      page = 1,
+      limit = 12,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
       breed,
       gender,
       size,
@@ -76,67 +80,77 @@ export const petService = {
       maxPrice,
       location,
       isAvailable,
-      page = 1,
-      limit = 10,
-      sortBy = 'createdAt',
-      sortOrder = 'desc',
     } = filters;
 
-    // Build query
     const query: any = {};
 
-    if (gender) query.gender = gender;
-    if (size) query.size = size;
+    if (isAvailable !== undefined) {
+      query.isAvailable = isAvailable;
+    }
+
+    if (breed && breed.length > 0) {
+      // Assuming breed filter uses breed names
+      const breedDocs = await BreedModel.find({ name: { $in: breed } }).select(
+        '_id',
+      );
+      if (breedDocs.length > 0) {
+        query.breed = { $in: breedDocs.map((b) => b._id) };
+      } else {
+        return {
+          pets: [],
+          pagination: {
+            page,
+            limit,
+            total: 0,
+            pages: 0,
+            hasPrevPage: false,
+            hasNextPage: false,
+          },
+        };
+      }
+    }
+
+    if (gender && gender.length > 0) {
+      query.gender = { $in: gender };
+    }
+
+    if (size && size.length > 0) {
+      query.size = { $in: size };
+    }
+
+    if (color && color.length > 0) {
+      const colorDocs = await ColorModel.find({ name: { $in: color } }).select(
+        '_id',
+      );
+      if (colorDocs.length > 0) {
+        query.color = { $in: colorDocs.map((c) => c._id) };
+      } else {
+        return {
+          pets: [],
+          pagination: {
+            page,
+            limit,
+            total: 0,
+            pages: 0,
+            hasPrevPage: false,
+            hasNextPage: false,
+          },
+        };
+      }
+    }
+
     if (minPrice !== undefined || maxPrice !== undefined) {
       query.price = {};
-      if (minPrice !== undefined) query.price.$gte = minPrice;
-      if (maxPrice !== undefined) query.price.$lte = maxPrice;
-    }
-    if (location) query.location = new RegExp(location, 'i');
-    if (isAvailable !== undefined) query.isAvailable = isAvailable;
-
-    // Handle breed filter (can be ObjectId or breed name)
-    if (breed) {
-      if (mongoose.Types.ObjectId.isValid(breed)) {
-        query.breed = breed;
-      } else {
-        // Find breed by name
-        const breedDoc = await BreedModel.findOne({
-          name: new RegExp(breed, 'i'),
-          isActive: true,
-        });
-        if (breedDoc) {
-          query.breed = breedDoc._id;
-        } else {
-          // If breed not found, return empty results
-          return {
-            pets: [],
-            pagination: { page, limit, total: 0, pages: 0 },
-          };
-        }
+      if (minPrice !== undefined) {
+        query.price.$gte = minPrice;
+      }
+      if (maxPrice !== undefined) {
+        query.price.$lte = maxPrice;
       }
     }
 
-    // Handle color filter (can be ObjectId or color name)
-    if (color) {
-      if (mongoose.Types.ObjectId.isValid(color)) {
-        query.color = color;
-      } else {
-        // Find color by name
-        const colorDoc = await ColorModel.findOne({
-          name: new RegExp(color, 'i'),
-          isActive: true,
-        });
-        if (colorDoc) {
-          query.color = colorDoc._id;
-        } else {
-          // If color not found, return empty results
-          return {
-            pets: [],
-            pagination: { page, limit, total: 0, pages: 0 },
-          };
-        }
-      }
+    if (location) {
+      query.location = new RegExp(location, 'i');
     }
 
     // Build sort
@@ -160,13 +174,17 @@ export const petService = {
       PetModel.countDocuments(query),
     ]);
 
+    const pages = Math.ceil(total / limit);
+
     return {
       pets,
       pagination: {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit),
+        pages,
+        hasPrevPage: page > 1,
+        hasNextPage: page < pages,
       },
     };
   },

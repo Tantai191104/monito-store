@@ -79,7 +79,7 @@ const ProductSection = () => {
                       }}
                     />
                   </div>
-                  <CardContent className="flex flex-1 flex-col px-2 pt-4 pb-2">
+                  <CardContent className="flex flex-1 flex-col px-2 pb-2">
                     <CardTitle className="mb-2 truncate text-base font-bold">
                       {product.name}
                     </CardTitle>

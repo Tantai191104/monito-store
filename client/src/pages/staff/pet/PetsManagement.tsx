@@ -5,7 +5,8 @@ import { usePets } from '@/hooks/usePets';
 import { Button } from '@/components/ui/button';
 
 const PetsManagement = () => {
-  const { data: pets = [], isLoading, error, refetch } = usePets();
+  const { data, isLoading, error, refetch } = usePets();
+  const pets = data?.pets || [];
 
   if (error) {
     return (

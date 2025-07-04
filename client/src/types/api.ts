@@ -11,6 +11,15 @@ export type ApiResponse<T = null> = {
   };
 };
 
+export interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  pages: number;
+  hasPrevPage: boolean;
+  hasNextPage: boolean;
+}
+
 export type ApiError = {
   success?: boolean;
   message?: string;

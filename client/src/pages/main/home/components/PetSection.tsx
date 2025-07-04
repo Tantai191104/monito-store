@@ -30,7 +30,8 @@ const PetSection = () => {
     return p;
   }, []);
 
-  const { data: pets = [], isLoading, error } = usePets(params);
+  const { data, isLoading, error } = usePets(params);
+  const pets = data?.pets || [];
 
   return (
     <section className="bg-white px-8 py-16">
