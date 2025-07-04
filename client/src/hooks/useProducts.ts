@@ -22,3 +22,16 @@ export const useProducts = (
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
+
+export const useProduct = (id: string) => {
+  const queryKey = productKeys.detail(id);
+  return useQuery({
+    queryKey,
+    queryFn: async () => {
+      const response = await productService.getProductById(id);
+      return response.data?.product;
+    },
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};

@@ -7,16 +7,14 @@ import API from '@/lib/axios';
  * Types
  */
 import type { ApiResponse } from '@/types/api';
-import type {
-  Category,
-  CreateCategoryPayload,
-  UpdateCategoryPayload,
-} from '@/types/category';
+import type { Category } from '@/types/category';
 
 export const categoryService = {
   // Get all categories
-  async getCategories(): Promise<ApiResponse<Category[]>> {
-    const response = await API.get<ApiResponse<Category[]>>('/categories');
+  async getCategories(
+    params: URLSearchParams = new URLSearchParams(),
+  ): Promise<ApiResponse<{ categories: Category[] }>> {
+    const response = await API.get(`/categories?${params.toString()}`);
     return response.data;
   },
 
