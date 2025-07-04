@@ -3,8 +3,8 @@
  */
 import HeroSection from './components/HeroSection';
 import PetBanner from './components/PetBanner';
-import PetSection from './components/PetSection';
 import ProductSection from './components/ProductSection';
+import PetSection from './components/PetSection';
 
 const HomePage = () => {
   return (

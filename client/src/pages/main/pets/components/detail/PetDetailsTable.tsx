@@ -20,16 +20,17 @@ const PetDetailsTable = ({ pet }: { pet: Pet }) => {
   ];
 
   return (
-    <div className="mt-8 border-t pt-6">
+    <div className="mt-5">
       <div className="space-y-3">
         {details.map(
           (detail) =>
             detail.value && (
-              <div key={detail.label} className="flex justify-between text-sm">
+              <div
+                key={detail.label}
+                className="flex justify-between border-b py-2 text-sm"
+              >
                 <span className="w-1/3 text-gray-500">{detail.label}</span>
-                <span className="w-2/3 font-medium text-gray-800">
-                  : {detail.value}
-                </span>
+                <span className="w-2/3 text-gray-500">: {detail.value}</span>
               </div>
             ),
         )}
