@@ -43,7 +43,9 @@ const ProductGrid = ({ searchParams, setSearchParams }: ProductGridProps) => {
     setSearchParams(newParams);
   };
 
-  const currentSort = `${searchParams.get('sortBy') || 'createdAt'}_${searchParams.get('sortOrder') || 'desc'}`;
+  const currentSort = `${searchParams.get('sortBy') || 'createdAt'}_${
+    searchParams.get('sortOrder') || 'desc'
+  }`;
 
   return (
     <div>

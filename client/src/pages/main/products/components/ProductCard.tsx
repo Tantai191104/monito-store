@@ -12,7 +12,7 @@ import { formatPrice } from '@/utils/formatter';
 
 const ProductCard = ({ product }: { product: Product }) => {
   return (
-    <Link to={`/products/${product._id}`} className="block">
+    <Link to={`/products/${product._id}`} className="block h-full">
       <Card className="flex h-full flex-col overflow-hidden rounded-lg p-2 shadow-sm transition-shadow hover:shadow-lg">
         <div className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-md bg-gray-100">
           <img
@@ -25,8 +25,8 @@ const ProductCard = ({ product }: { product: Product }) => {
             }}
           />
         </div>
-        <CardContent className="flex flex-1 flex-col p-2 pt-3">
-          <CardTitle className="mb-2 truncate text-base font-bold text-[#003459]">
+        <CardContent className="flex flex-1 flex-col px-2 pt-4 pb-2">
+          <CardTitle className="mb-2 truncate text-base font-bold">
             {product.name}
           </CardTitle>
           <CardDescription className="mb-2 flex-grow space-y-1 text-xs">
@@ -36,7 +36,7 @@ const ProductCard = ({ product }: { product: Product }) => {
               </span>
               {product.specifications.size && (
                 <>
-                  <span>•</span>
+                  <span>&#8226;</span>
                   <span>
                     Size: <strong>{product.specifications.size}</strong>
                   </span>
@@ -63,10 +63,11 @@ ProductCard.Skeleton = function ProductCardSkeleton() {
   return (
     <Card className="overflow-hidden rounded-lg p-2 shadow-sm">
       <Skeleton className="aspect-square w-full rounded-md" />
-      <CardContent className="p-2 pt-3">
-        <Skeleton className="mb-2 h-5 w-3/4" />
-        <Skeleton className="mb-1 h-4 w-full" />
-        <Skeleton className="h-4 w-1/3" />
+      <CardContent className="px-2 pt-4 pb-2">
+        <Skeleton className="mb-2 h-6 w-3/4" />
+        <Skeleton className="mb-2 h-4 w-full" />
+        <Skeleton className="h-5 w-1/3" />
+        <Skeleton className="mt-3 h-8 w-full" />
       </CardContent>
     </Card>
   );

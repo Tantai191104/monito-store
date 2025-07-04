@@ -17,7 +17,7 @@ export const useProducts = (
     queryKey,
     queryFn: async () => {
       const response = await productService.getProducts(params);
-      return response.data?.products || [];
+      return response.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

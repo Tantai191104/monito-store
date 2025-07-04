@@ -1,5 +1,5 @@
 import API from '@/lib/axios';
-import type { ApiResponse } from '@/types/api';
+import type { ApiResponse, Pagination } from '@/types/api';
 import type {
   Product,
   CreateProductPayload,
@@ -9,7 +9,7 @@ import type {
 export const productService = {
   async getProducts(
     params: URLSearchParams = new URLSearchParams(),
-  ): Promise<ApiResponse<{ products: Product[] }>> {
+  ): Promise<ApiResponse<{ products: Product[]; pagination: Pagination }>> {
     const response = await API.get(`/products?${params.toString()}`);
     return response.data;
   },

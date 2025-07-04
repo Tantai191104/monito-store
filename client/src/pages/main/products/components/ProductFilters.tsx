@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useDebounce } from 'use-debounce';
 import { useCategories } from '@/hooks/useCategories';
-import { useBrands } from '@/hooks/useBrands';
 import { formatPrice } from '@/utils/formatter';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -23,21 +22,24 @@ const ProductFilters = ({
 }: ProductFiltersProps) => {
   const { data: categories = [], isLoading: categoriesLoading } =
     useCategories();
-  const { data: brands = [], isLoading: brandsLoading } = useBrands();
 
   const [priceRange, setPriceRange] = useState<[number, number]>([
     Number(searchParams.get('minPrice') || MIN_PRICE),
     Number(searchParams.get('maxPrice') || MAX_PRICE),
   ]);
+
   const [debouncedPriceRange] = useDebounce(priceRange, 500);
 
   useEffect(() => {
     const newParams = new URLSearchParams(searchParams);
     const [min, max] = debouncedPriceRange;
+
     if (min > MIN_PRICE) newParams.set('minPrice', String(min));
     else newParams.delete('minPrice');
+
     if (max < MAX_PRICE) newParams.set('maxPrice', String(max));
     else newParams.delete('maxPrice');
+
     if (newParams.toString() !== searchParams.toString()) {
       newParams.set('page', '1');
       setSearchParams(newParams);
@@ -45,10 +47,9 @@ const ProductFilters = ({
   }, [debouncedPriceRange, searchParams, setSearchParams]);
 
   useEffect(() => {
-    setPriceRange([
-      Number(searchParams.get('minPrice') || MIN_PRICE),
-      Number(searchParams.get('maxPrice') || MAX_PRICE),
-    ]);
+    const min = Number(searchParams.get('minPrice') || MIN_PRICE);
+    const max = Number(searchParams.get('maxPrice') || MAX_PRICE);
+    setPriceRange([min, max]);
   }, [searchParams]);
 
   const handleMultiSelectChange = (
@@ -57,17 +58,22 @@ const ProductFilters = ({
     isChecked: boolean,
   ) => {
     const newParams = new URLSearchParams(searchParams);
-    const existing = newParams.getAll(key);
-    const updated = isChecked
-      ? [...existing, value]
-      : existing.filter((v) => v !== value);
+    const existingValues = newParams.getAll(key);
+    const updatedValues = isChecked
+      ? [...existingValues, value]
+      : existingValues.filter((v) => v !== value);
+
     newParams.delete(key);
-    if (updated.length) updated.forEach((v) => newParams.append(key, v));
+    if (updatedValues.length > 0) {
+      updatedValues.forEach((v) => newParams.append(key, v));
+    }
     newParams.set('page', '1');
     setSearchParams(newParams);
   };
 
-  const handleResetFilters = () => setSearchParams(new URLSearchParams());
+  const handleResetFilters = () => {
+    setSearchParams(new URLSearchParams());
+  };
 
   const filterParamKeys = new Set(Array.from(searchParams.keys()));
   ['page', 'limit', 'sortBy', 'sortOrder'].forEach((key) =>
@@ -86,9 +92,44 @@ const ProductFilters = ({
             onClick={handleResetFilters}
             className="text-xs text-blue-600 hover:bg-blue-50"
           >
-            <X className="mr-1 h-3 w-3" /> Reset
+            <X className="mr-1 h-3 w-3" />
+            Reset
           </Button>
         )}
+      </div>
+
+      {/* Category Filter */}
+      <div>
+        <h4 className="mb-2 font-semibold">Category</h4>
+        <div className="space-y-2">
+          {categoriesLoading
+            ? Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-6 w-full" />
+              ))
+            : categories.map((category) => (
+                <div key={category._id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`category-${category._id}`}
+                    checked={searchParams
+                      .getAll('category')
+                      .includes(category.name)}
+                    onCheckedChange={(checked) =>
+                      handleMultiSelectChange(
+                        'category',
+                        category.name,
+                        !!checked,
+                      )
+                    }
+                  />
+                  <label
+                    htmlFor={`category-${category._id}`}
+                    className="text-sm"
+                  >
+                    {category.name}
+                  </label>
+                </div>
+              ))}
+        </div>
       </div>
 
       {/* Price Filter */}
@@ -105,56 +146,6 @@ const ProductFilters = ({
         <div className="flex justify-between text-sm text-gray-600">
           <span>{formatPrice(priceRange[0])} ₫</span>
           <span>{formatPrice(priceRange[1])} ₫</span>
-        </div>
-      </div>
-
-      {/* Category Filter */}
-      <div>
-        <h4 className="mb-2 font-semibold">Category</h4>
-        <div className="space-y-2">
-          {categoriesLoading
-            ? Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-6 w-full" />
-              ))
-            : categories.map((cat) => (
-                <div key={cat._id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`cat-${cat._id}`}
-                    checked={searchParams.getAll('category').includes(cat.name)}
-                    onCheckedChange={(c) =>
-                      handleMultiSelectChange('category', cat.name, !!c)
-                    }
-                  />
-                  <label htmlFor={`cat-${cat._id}`} className="text-sm">
-                    {cat.name}
-                  </label>
-                </div>
-              ))}
-        </div>
-      </div>
-
-      {/* Brand Filter */}
-      <div>
-        <h4 className="mb-2 font-semibold">Brand</h4>
-        <div className="space-y-2">
-          {brandsLoading
-            ? Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-6 w-full" />
-              ))
-            : brands.map((brand) => (
-                <div key={brand._id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`brand-${brand._id}`}
-                    checked={searchParams.getAll('brand').includes(brand.name)}
-                    onCheckedChange={(c) =>
-                      handleMultiSelectChange('brand', brand.name, !!c)
-                    }
-                  />
-                  <label htmlFor={`brand-${brand._id}`} className="text-sm">
-                    {brand.name}
-                  </label>
-                </div>
-              ))}
         </div>
       </div>
     </div>
