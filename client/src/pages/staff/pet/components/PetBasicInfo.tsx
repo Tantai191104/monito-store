@@ -1,10 +1,11 @@
-// client/src/pages/staff/pet/components/PetBasicInfo.tsx
+import React from 'react'; // Thêm import React
 import {
   FormField,
   FormItem,
   FormLabel,
   FormControl,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -22,7 +23,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Package } from 'lucide-react';
 import { useActiveBreeds } from '@/hooks/useBreeds';
 import { useActiveColors } from '@/hooks/useColors';
 import type { Control } from 'react-hook-form';
@@ -33,16 +33,13 @@ interface PetBasicInfoProps {
 }
 
 const PetBasicInfo = ({ control }: PetBasicInfoProps) => {
-  const { data: breeds = [] } = useActiveBreeds();
-  const { data: colors = [] } = useActiveColors();
+  const { data: breeds = [], isLoading: breedsLoading } = useActiveBreeds();
+  const { data: colors = [], isLoading: colorsLoading } = useActiveColors();
 
   return (
-    <Card className="border-gray-200 shadow-sm">
+    <Card className="!rounded-sm shadow-none">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Package className="h-5 w-5 text-blue-600" />
-          Pet Information
-        </CardTitle>
+        <CardTitle>Pet Information</CardTitle>
         <CardDescription>
           Enter the basic details about your pet
         </CardDescription>
@@ -53,29 +50,33 @@ const PetBasicInfo = ({ control }: PetBasicInfoProps) => {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Pet Name *</FormLabel>
+              <FormLabel>Pet Name</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Max, Bella" {...field} />
+                <Input placeholder="e.g., Max, Bella, Luna" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <FormField
             control={control}
             name="breed"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Breed *</FormLabel>
+                <FormLabel>Breed</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select breed" />
+                    <SelectTrigger className="!w-full">
+                      <SelectValue
+                        placeholder={
+                          breedsLoading ? 'Loading breeds...' : 'Select breed'
+                        }
+                      />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -90,20 +91,23 @@ const PetBasicInfo = ({ control }: PetBasicInfoProps) => {
               </FormItem>
             )}
           />
-
           <FormField
             control={control}
             name="color"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Color *</FormLabel>
+                <FormLabel>Color</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select color" />
+                    <SelectTrigger className="!w-full">
+                      <SelectValue
+                        placeholder={
+                          colorsLoading ? 'Loading colors...' : 'Select color'
+                        }
+                      />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -111,7 +115,7 @@ const PetBasicInfo = ({ control }: PetBasicInfoProps) => {
                       <SelectItem key={color._id} value={color._id}>
                         <div className="flex items-center space-x-2">
                           <div
-                            className="h-4 w-4 rounded-full border"
+                            className="h-4 w-4 rounded-full border border-gray-300"
                             style={{ backgroundColor: color.hexCode }}
                           />
                           <span>{color.name}</span>
@@ -124,21 +128,18 @@ const PetBasicInfo = ({ control }: PetBasicInfoProps) => {
               </FormItem>
             )}
           />
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <FormField
             control={control}
             name="gender"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Gender *</FormLabel>
+                <FormLabel>Gender</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="!w-full">
                       <SelectValue placeholder="Select gender" />
                     </SelectTrigger>
                   </FormControl>
@@ -151,13 +152,15 @@ const PetBasicInfo = ({ control }: PetBasicInfoProps) => {
               </FormItem>
             )}
           />
+        </div>
 
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <FormField
             control={control}
             name="age"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Age *</FormLabel>
+                <FormLabel>Age</FormLabel>
                 <FormControl>
                   <Input placeholder="e.g., 2 months, 1 year" {...field} />
                 </FormControl>
@@ -171,20 +174,20 @@ const PetBasicInfo = ({ control }: PetBasicInfoProps) => {
             name="size"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Size *</FormLabel>
+                <FormLabel>Size</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="!w-full">
                       <SelectValue placeholder="Select size" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="Small">Small</SelectItem>
-                    <SelectItem value="Medium">Medium</SelectItem>
-                    <SelectItem value="Large">Large</SelectItem>
+                    <SelectItem value="Small">Small (&lt; 10kg)</SelectItem>
+                    <SelectItem value="Medium">Medium (10-25kg)</SelectItem>
+                    <SelectItem value="Large">Large (&gt; 25kg)</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -199,11 +202,12 @@ const PetBasicInfo = ({ control }: PetBasicInfoProps) => {
             name="price"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Price (VND) *</FormLabel>
+                <FormLabel>Price (VND)</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
                     min={0}
+                    placeholder="0"
                     {...field}
                     onChange={(e) =>
                       field.onChange(parseFloat(e.target.value) || 0)
@@ -220,7 +224,7 @@ const PetBasicInfo = ({ control }: PetBasicInfoProps) => {
             name="location"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Location *</FormLabel>
+                <FormLabel>Location</FormLabel>
                 <FormControl>
                   <Input placeholder="e.g., Ho Chi Minh City" {...field} />
                 </FormControl>
@@ -238,11 +242,14 @@ const PetBasicInfo = ({ control }: PetBasicInfoProps) => {
               <FormLabel>Description</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Describe the pet's personality, special features..."
+                  placeholder="Describe the pet's personality, special features, training level..."
                   className="min-h-[100px] resize-none"
                   {...field}
                 />
               </FormControl>
+              <FormDescription>
+                {field.value?.length || 0}/500 characters
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

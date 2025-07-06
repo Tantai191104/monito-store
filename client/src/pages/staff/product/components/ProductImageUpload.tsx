@@ -127,7 +127,7 @@ const ProductImageUpload = ({
               Drag images here or click to browse
             </p>
             <p className="text-muted-foreground text-xs">
-              PNG, JPG up to 10MB each
+              PNG, JPG up to 10MB each (max 5 images)
             </p>
           </div>
         </div>

@@ -36,8 +36,6 @@ const ProductBasicInfo = ({ control }: ProductBasicInfoProps) => {
   const { data: apiCategories = [], isLoading: categoriesLoading } =
     useActiveCategories();
 
-  console.log(apiCategories);
-
   return (
     <Card className="!rounded-sm shadow-none">
       <CardHeader>
