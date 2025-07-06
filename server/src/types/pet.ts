@@ -47,10 +47,10 @@ export type CreatePetPayload = {
 export type UpdatePetPayload = Partial<CreatePetPayload>;
 
 export type PetFilters = {
-  breed?: string;
-  gender?: string;
-  size?: string;
-  color?: string;
+  breed?: string[];
+  gender?: string[];
+  size?: string[];
+  color?: string[];
   minPrice?: number;
   maxPrice?: number;
   location?: string;

@@ -6,6 +6,13 @@ import type { CreatePetPayload, UpdatePetPayload, Pet } from '@/types/pet';
 import type { ApiError } from '@/types/api';
 import { getErrorMessage } from '@/utils/errorHandler';
 
+// Type for API errors
+interface ApiErrorResponse {
+  response?: {
+    data?: ApiError;
+  };
+}
+
 export const petKeys = {
   all: ['pets'] as const,
   lists: () => [...petKeys.all, 'list'] as const,
@@ -14,9 +21,22 @@ export const petKeys = {
   detail: (id: string) => [...petKeys.details(), id] as const,
 };
 
+// Hook to invalidate pet queries
+export const useInvalidatePetQueries = () => {
+  const queryClient = useQueryClient();
+  return () => {
+    queryClient.invalidateQueries({ queryKey: petKeys.all });
+    queryClient.removeQueries({ queryKey: petKeys.lists() });
+  };
+};
+
 // Get all pets
 export const usePets = (params: URLSearchParams = new URLSearchParams()) => {
-  const queryKey = [petKeys.lists(), params.toString()];
+  const hasFilters = params.toString().length > 0;
+  const queryKey = hasFilters 
+    ? [petKeys.lists(), params.toString()]
+    : [petKeys.lists(), 'all'];
+  
   return useQuery({
     queryKey,
     queryFn: async () => {
@@ -24,6 +44,7 @@ export const usePets = (params: URLSearchParams = new URLSearchParams()) => {
       return response.data; // Return the data object { pets, pagination }
     },
     staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -39,7 +60,7 @@ export const usePet = (id: string) => {
   });
 };
 
-// Create pet mutation
+  // Create pet mutation
 export const useCreatePet = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -56,8 +77,8 @@ export const useCreatePet = () => {
       toast.success('Pet created successfully!');
       return newPet;
     },
-    onError: (error: any) => {
-      const apiError = error.response?.data as ApiError;
+    onError: (error: unknown) => {
+      const apiError = (error as ApiErrorResponse)?.response?.data;
       const message = getErrorMessage(apiError?.errorCode, apiError?.message);
       toast.error(message);
     },
@@ -82,8 +103,8 @@ export const useUpdatePet = () => {
       toast.success('Pet updated successfully!');
       return updatedPet;
     },
-    onError: (error: any) => {
-      const apiError = error.response?.data as ApiError;
+    onError: (error: unknown) => {
+      const apiError = (error as ApiErrorResponse)?.response?.data;
       const message = getErrorMessage(apiError?.errorCode, apiError?.message);
       toast.error(message);
     },
@@ -108,8 +129,8 @@ export const useUpdatePetAvailability = () => {
       toast.success('Pet availability updated successfully!');
       return updatedPet;
     },
-    onError: (error: any) => {
-      const apiError = error.response?.data as ApiError;
+    onError: (error: unknown) => {
+      const apiError = (error as ApiErrorResponse)?.response?.data;
       const message = getErrorMessage(apiError?.errorCode, apiError?.message);
       toast.error(message);
     },
@@ -129,8 +150,8 @@ export const useDeletePet = () => {
       queryClient.invalidateQueries({ queryKey: petKeys.all });
       toast.success('Pet deleted successfully!');
     },
-    onError: (error: any) => {
-      const apiError = error.response?.data as ApiError;
+    onError: (error: unknown) => {
+      const apiError = (error as ApiErrorResponse)?.response?.data;
       const message = getErrorMessage(apiError?.errorCode, apiError?.message);
       toast.error(message);
     },
@@ -155,8 +176,8 @@ export const useBulkDeletePets = () => {
       queryClient.invalidateQueries({ queryKey: petKeys.all });
       toast.success(`${deletedIds.length} pets deleted successfully!`);
     },
-    onError: (error: any) => {
-      const apiError = error.response?.data as ApiError;
+    onError: (error: unknown) => {
+      const apiError = (error as ApiErrorResponse)?.response?.data;
       const message = getErrorMessage(apiError?.errorCode, apiError?.message);
       toast.error(message);
     },
@@ -204,8 +225,8 @@ export const useBulkUpdatePetAvailability = () => {
       const action = isAvailable ? 'made available' : 'marked as sold';
       toast.success(`${ids.length} pets ${action} successfully!`);
     },
-    onError: (error: any) => {
-      const apiError = error.response?.data as ApiError;
+    onError: (error: unknown) => {
+      const apiError = (error as ApiErrorResponse)?.response?.data;
       const message = getErrorMessage(apiError?.errorCode, apiError?.message);
       toast.error(message);
     },

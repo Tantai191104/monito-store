@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useDebounce } from 'use-debounce';
 import { useCategories } from '@/hooks/useCategories';
+import { useInvalidateProductQueries } from '@/hooks/useProducts';
 import { formatPrice } from '@/utils/formatter';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -22,6 +23,7 @@ const ProductFilters = ({
 }: ProductFiltersProps) => {
   const { data: categories = [], isLoading: categoriesLoading } =
     useCategories();
+  const invalidateProductQueries = useInvalidateProductQueries();
 
   const [priceRange, setPriceRange] = useState<[number, number]>([
     Number(searchParams.get('minPrice') || MIN_PRICE),
@@ -30,9 +32,21 @@ const ProductFilters = ({
 
   console.log(categories);
 
-  const [debouncedPriceRange] = useDebounce(priceRange, 500);
+  const [debouncedPriceRange] = useDebounce(priceRange, 100);
+  const [isResetting, setIsResetting] = useState(false);
+  const [lastResetTime, setLastResetTime] = useState(0);
 
   useEffect(() => {
+    if (isResetting) {
+      setIsResetting(false);
+      return;
+    }
+    
+    // Don't run if we just reset (within 200ms)
+    if (Date.now() - lastResetTime < 200) {
+      return;
+    }
+    
     const newParams = new URLSearchParams(searchParams);
     const [min, max] = debouncedPriceRange;
 
@@ -46,7 +60,7 @@ const ProductFilters = ({
       newParams.set('page', '1');
       setSearchParams(newParams);
     }
-  }, [debouncedPriceRange, searchParams, setSearchParams]);
+  }, [debouncedPriceRange, searchParams, setSearchParams, isResetting, lastResetTime]);
 
   useEffect(() => {
     const min = Number(searchParams.get('minPrice') || MIN_PRICE);
@@ -74,7 +88,15 @@ const ProductFilters = ({
   };
 
   const handleResetFilters = () => {
+    setIsResetting(true);
+    setLastResetTime(Date.now());
     setSearchParams(new URLSearchParams());
+    setPriceRange([MIN_PRICE, MAX_PRICE]);
+    invalidateProductQueries();
+    // Force a refetch after a short delay to ensure the cache is cleared
+    setTimeout(() => {
+      invalidateProductQueries();
+    }, 100);
   };
 
   const filterParamKeys = new Set(Array.from(searchParams.keys()));
@@ -139,7 +161,7 @@ const ProductFilters = ({
         <h4 className="mb-2 font-semibold">Price</h4>
         <Slider
           value={priceRange}
-          onValueChange={setPriceRange}
+          onValueChange={(value) => setPriceRange(value as [number, number])}
           min={MIN_PRICE}
           max={MAX_PRICE}
           step={50000}

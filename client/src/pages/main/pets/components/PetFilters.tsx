@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useDebounce } from 'use-debounce';
 import { useActiveColors } from '@/hooks/useColors';
+import { useInvalidatePetQueries } from '@/hooks/usePets';
 import { formatPrice } from '@/utils/formatter';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -18,17 +19,40 @@ const MAX_PRICE = 20000000; // 20 million
 
 const PetFilters = ({ searchParams, setSearchParams }: PetFiltersProps) => {
   const { data: colors = [], isLoading: colorsLoading } = useActiveColors();
+  const invalidatePetQueries = useInvalidatePetQueries();
 
   const [priceRange, setPriceRange] = useState<[number, number]>([
     Number(searchParams.get('minPrice') || MIN_PRICE),
     Number(searchParams.get('maxPrice') || MAX_PRICE),
   ]);
 
-  const [debouncedPriceRange] = useDebounce(priceRange, 500);
+  const [debouncedPriceRange] = useDebounce(priceRange, 100);
+  const [isResetting, setIsResetting] = useState(false);
+  const [lastResetTime, setLastResetTime] = useState(0);
 
   useEffect(() => {
+    if (isResetting) {
+      setIsResetting(false);
+      return;
+    }
+    
+    // Don't run if we just reset (within 200ms)
+    if (Date.now() - lastResetTime < 200) {
+      return;
+    }
+    
+    // Use non-debounced value if we're at default values to avoid debounce delay
+    const currentPriceRange = (priceRange[0] === MIN_PRICE && priceRange[1] === MAX_PRICE) 
+      ? priceRange 
+      : debouncedPriceRange;
+    
+    // If we're at default values, don't update URL
+    if (currentPriceRange[0] === MIN_PRICE && currentPriceRange[1] === MAX_PRICE) {
+      return;
+    }
+    
     const newParams = new URLSearchParams(searchParams);
-    const [min, max] = debouncedPriceRange;
+    const [min, max] = currentPriceRange;
 
     // Only set params if they are not the default values
     if (min > MIN_PRICE) {
@@ -47,14 +71,23 @@ const PetFilters = ({ searchParams, setSearchParams }: PetFiltersProps) => {
       newParams.set('page', '1');
       setSearchParams(newParams);
     }
-  }, [debouncedPriceRange, searchParams, setSearchParams]);
+  }, [debouncedPriceRange, priceRange, searchParams, setSearchParams, isResetting, lastResetTime]);
 
   // Sync state with URL on back/forward navigation
   useEffect(() => {
+    if (isResetting) {
+      return;
+    }
+    
+    // Don't run if we just reset (within 200ms)
+    if (Date.now() - lastResetTime < 200) {
+      return;
+    }
+    
     const min = Number(searchParams.get('minPrice') || MIN_PRICE);
     const max = Number(searchParams.get('maxPrice') || MAX_PRICE);
     setPriceRange([min, max]);
-  }, [searchParams]);
+  }, [searchParams, isResetting, lastResetTime]);
 
   const handleMultiSelectChange = (
     key: string,
@@ -78,7 +111,20 @@ const PetFilters = ({ searchParams, setSearchParams }: PetFiltersProps) => {
   };
 
   const handleResetFilters = () => {
-    setSearchParams(new URLSearchParams());
+    setIsResetting(true);
+    setLastResetTime(Date.now());
+    
+    // Clear URL params including price params
+    const newParams = new URLSearchParams();
+    setSearchParams(newParams);
+    
+    setPriceRange([MIN_PRICE, MAX_PRICE]);
+    
+    invalidatePetQueries();
+    // Force a refetch after a longer delay to ensure the debounced value has updated
+    setTimeout(() => {
+      invalidatePetQueries();
+    }, 200); // Increased from 100ms to 200ms
   };
 
   // Check if any actual filters are applied, ignoring pagination/sorting params
@@ -163,7 +209,7 @@ const PetFilters = ({ searchParams, setSearchParams }: PetFiltersProps) => {
         <h4 className="mb-2 font-semibold">Price</h4>
         <Slider
           value={priceRange}
-          onValueChange={setPriceRange}
+          onValueChange={(value) => setPriceRange(value as [number, number])}
           min={MIN_PRICE}
           max={MAX_PRICE}
           step={100000}

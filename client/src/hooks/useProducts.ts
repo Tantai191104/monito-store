@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { productService } from '@/services/productService';
 
 export const productKeys = {
@@ -9,10 +9,23 @@ export const productKeys = {
   detail: (id: string) => [...productKeys.details(), id] as const,
 };
 
+// Hook to invalidate product queries
+export const useInvalidateProductQueries = () => {
+  const queryClient = useQueryClient();
+  return () => {
+    queryClient.invalidateQueries({ queryKey: productKeys.all });
+    queryClient.removeQueries({ queryKey: productKeys.lists() });
+  };
+};
+
 export const useProducts = (
   params: URLSearchParams = new URLSearchParams(),
 ) => {
-  const queryKey = productKeys.list(params.toString());
+  const hasFilters = params.toString().length > 0;
+  const queryKey = hasFilters 
+    ? productKeys.list(params.toString())
+    : productKeys.list('all');
+  
   return useQuery({
     queryKey,
     queryFn: async () => {
@@ -20,6 +33,7 @@ export const useProducts = (
       return response.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
   });
 };
 

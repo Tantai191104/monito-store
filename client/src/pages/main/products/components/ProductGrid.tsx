@@ -27,6 +27,9 @@ const ProductGrid = ({ searchParams, setSearchParams }: ProductGridProps) => {
   const products = data?.products || [];
   const pagination = data?.pagination;
 
+  // Force re-render when search params change
+  const searchParamsKey = searchParams.toString() || 'default';
+
   const handleSortChange = (value: string) => {
     const [sortBy, sortOrder] = value.split('_');
     const newParams = new URLSearchParams(searchParams);
@@ -48,7 +51,7 @@ const ProductGrid = ({ searchParams, setSearchParams }: ProductGridProps) => {
   }`;
 
   return (
-    <div>
+    <div key={searchParamsKey}>
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-xl font-bold text-[#003459]">
           All Products{' '}

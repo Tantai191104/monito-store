@@ -27,6 +27,9 @@ const PetGrid = ({ searchParams, setSearchParams }: PetGridProps) => {
   const pets = data?.pets || [];
   const pagination = data?.pagination;
 
+  // Force re-render when search params change
+  const searchParamsKey = searchParams.toString() || 'default';
+
   const handleSortChange = (value: string) => {
     const [sortBy, sortOrder] = value.split('_');
     const newParams = new URLSearchParams(searchParams);
@@ -46,7 +49,7 @@ const PetGrid = ({ searchParams, setSearchParams }: PetGridProps) => {
   const currentSort = `${searchParams.get('sortBy') || 'createdAt'}_${searchParams.get('sortOrder') || 'desc'}`;
 
   return (
-    <div>
+    <div key={searchParamsKey}>
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-xl font-bold text-[#003459]">
           Small Dog{' '}

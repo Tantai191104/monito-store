@@ -131,7 +131,7 @@ const EditPet = () => {
     try {
       await updatePet.mutateAsync({ id, data });
       navigate('/staff/pets');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to update pet:', error);
     } finally {
       setIsSubmitting(false);
