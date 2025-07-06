@@ -24,11 +24,9 @@ import { useAuth } from '@/hooks/useAuth';
 /**
  * Pages
  */
-import HomePage from '@/pages/home/HomePage';
-
+import HomePage from '@/pages/main/home/HomePage';
 import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
-
 import StaffDashboard from '@/pages/staff/StaffDashboard';
 import ProductsManagement from '@/pages/staff/product/ProductsManagement';
 import PetsManagement from '@/pages/staff/pet/PetsManagement';
@@ -37,7 +35,6 @@ import CategoriesManagement from '@/pages/staff/category/CategoriesManagement';
 import ColorsManagement from '@/pages/staff/color/ColorsManagement';
 import BreedsManagement from '@/pages/staff/breed/BreedsManagement';
 import AddPet from '@/pages/staff/pet/AddPet';
-
 import AdminDashboard from '@/pages/admin/AdminDashboard';
 import UserManagement from '@/pages/admin/UserManagement';
 import LoadingScreen from '@/pages/common/LoadingScreen';
@@ -45,6 +42,11 @@ import AddProduct from '@/pages/staff/product/AddProduct';
 import StaffManagement from '@/pages/admin/StaffManagement';
 import PetDetail from '@/pages/staff/pet/PetDetail';
 import EditPet from '@/pages/staff/pet/EditPet';
+import PetsPage from '@/pages/main/pets/PetsPage';
+import PetDetailPage from '@/pages/main/pets/PetDetailPage';
+import ProductsPage from '@/pages/main/products/ProductsPage';
+import ProductDetailPage from '@/pages/main/products/ProductDetailPage';
+import NotFoundPage from '@/pages/common/NotFoundPage';
 
 const AppRoutes = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -62,8 +64,12 @@ const AppRoutes = () => {
         </Route>
         <Route element={<BaseLayout />}>
           <Route index element={<HomePage />} />
+          <Route path="/pets" element={<PetsPage />} />
+          <Route path="/pets/:id" element={<PetDetailPage />} />
+          <Route path="/products" element={<ProductsPage />} />
+          <Route path="/products/:id" element={<ProductDetailPage />} />
         </Route>
-        <Route path="*" element={<Navigate to="/login" />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     );
   }
@@ -95,6 +101,7 @@ const AppRoutes = () => {
           <Route path="categories" element={<CategoriesManagement />} />
           <Route path="colors" element={<ColorsManagement />} />
           <Route path="breeds" element={<BreedsManagement />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Route>
 
@@ -107,11 +114,12 @@ const AppRoutes = () => {
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<UserManagement />} />
           <Route path="staff" element={<StaffManagement />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Route>
 
       <Route path="/" element={<Navigate to={`/${user?.role}`} />} />
-      <Route path="*" element={<div>Page not found</div>} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 };

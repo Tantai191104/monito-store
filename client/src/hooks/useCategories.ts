@@ -31,14 +31,27 @@ export const categoryKeys = {
 };
 
 // Get all categories
-export const useCategories = () => {
+// export const useCategories = () => {
+//   return useQuery({
+//     queryKey: categoryKeys.lists(),
+//     queryFn: async () => {
+//       const response = await categoryService.getCategories();
+//       return response.data || [];
+//     },
+//     staleTime: 5 * 60 * 1000, // 5 minutes
+//   });
+// };
+
+export const useCategories = (
+  params: URLSearchParams = new URLSearchParams(),
+) => {
   return useQuery({
-    queryKey: categoryKeys.lists(),
+    queryKey: ['categories', params.toString()],
     queryFn: async () => {
-      const response = await categoryService.getCategories();
-      return response.data || [];
+      const response = await categoryService.getCategories(params);
+      return response.data?.categories || [];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: Infinity,
   });
 };
 
@@ -340,3 +353,4 @@ export const useActiveCategories = () => {
     staleTime: 10 * 60 * 1000, // 10 minutes (active categories change less frequently)
   });
 };
+

@@ -1,26 +1,41 @@
 import API from '@/lib/axios';
-import type { ApiResponse } from '@/types/api';
-import type { Product, CreateProductPayload } from '@/types/product';
+import type { ApiResponse, Pagination } from '@/types/api';
+import type {
+  Product,
+  CreateProductPayload,
+  UpdateProductPayload,
+} from '@/types/product';
 
 export const productService = {
-  async createProduct(data: CreateProductPayload): Promise<ApiResponse<Product>> {
-    const response = await API.post<ApiResponse<Product>>('/products', data);
+  async getProducts(
+    params: URLSearchParams = new URLSearchParams(),
+  ): Promise<ApiResponse<{ products: Product[]; pagination: Pagination }>> {
+    const response = await API.get(`/products?${params.toString()}`);
     return response.data;
   },
-  async getProducts(): Promise<ApiResponse<Product[]>> {
-    const response = await API.get<ApiResponse<Product[]>>('/products');
+
+  async getProductById(id: string): Promise<ApiResponse<{ product: Product }>> {
+    const response = await API.get(`/products/${id}`);
     return response.data;
   },
-  async getProductById(id: string): Promise<ApiResponse<Product>> {
-    const response = await API.get<ApiResponse<Product>>(`/products/${id}`);
+
+  async createProduct(
+    data: CreateProductPayload,
+  ): Promise<ApiResponse<{ product: Product }>> {
+    const response = await API.post('/products', data);
     return response.data;
   },
-  async updateProduct(id: string, data: Partial<CreateProductPayload>): Promise<ApiResponse<Product>> {
-    const response = await API.put<ApiResponse<Product>>(`/products/${id}`, data);
+
+  async updateProduct(
+    id: string,
+    data: UpdateProductPayload,
+  ): Promise<ApiResponse<{ product: Product }>> {
+    const response = await API.patch(`/products/${id}`, data);
     return response.data;
   },
-  async deleteProduct(id: string): Promise<ApiResponse<null>> {
-    const response = await API.delete<ApiResponse<null>>(`/products/${id}`);
+
+  async deleteProduct(id: string): Promise<ApiResponse> {
+    const response = await API.delete(`/products/${id}`);
     return response.data;
   },
-}; 
+};

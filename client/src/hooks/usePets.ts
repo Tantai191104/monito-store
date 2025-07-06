@@ -15,12 +15,13 @@ export const petKeys = {
 };
 
 // Get all pets
-export const usePets = () => {
+export const usePets = (params: URLSearchParams = new URLSearchParams()) => {
+  const queryKey = [petKeys.lists(), params.toString()];
   return useQuery({
-    queryKey: petKeys.lists(),
+    queryKey,
     queryFn: async () => {
-      const response = await petService.getPets();
-      return response.data || [];
+      const response = await petService.getPets(params);
+      return response.data; // Return the data object { pets, pagination }
     },
     staleTime: 5 * 60 * 1000,
   });

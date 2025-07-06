@@ -1,7 +1,7 @@
 /**
  * Node modules
  */
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { SearchIcon } from 'lucide-react';
 
 /**
@@ -10,37 +10,38 @@ import { SearchIcon } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
+
+const navLinks = [
+  { href: '/', label: 'Home' },
+  { href: '/pets', label: 'Pets' },
+  { href: '/products', label: 'Products' },
+  { href: '/about', label: 'About' },
+  { href: '/contact', label: 'Contact' },
+];
 
 export const Header = () => {
+  const location = useLocation();
+
   return (
-    <header className="sticky top-0 z-100 bg-gradient-to-r from-[#FCEED5] to-[#FFE7BA]">
-      <div className="container mx-auto flex items-center justify-between gap-13 py-4">
+    <header className="sticky top-0 z-50 bg-gradient-to-r from-[#FCEED5] to-[#FFE7BA]">
+      <div className="container mx-auto flex items-center justify-between gap-12 py-4">
         <Logo />
-        <nav className="flex-1 items-center space-x-8">
-          <Link
-            to="#"
-            className="font-semibold text-[#003459] hover:text-[#003459]/80"
-          >
-            Home
-          </Link>
-          <Link
-            to="#"
-            className="font-semibold text-[#003459] hover:text-[#003459]/80"
-          >
-            Category
-          </Link>
-          <Link
-            to="#"
-            className="font-semibold text-[#003459] hover:text-[#003459]/80"
-          >
-            About
-          </Link>
-          <Link
-            to="#"
-            className="font-semibold text-[#003459] hover:text-[#003459]/80"
-          >
-            Contact
-          </Link>
+        <nav className="flex flex-1 items-center space-x-8">
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              to={link.href}
+              className={cn(
+                'font-semibold text-[#003459] transition-colors hover:text-[#003459]/80',
+                location.pathname === link.href
+                  ? 'underline underline-offset-4'
+                  : '',
+              )}
+            >
+              {link.label}
+            </Link>
+          ))}
         </nav>
 
         <div className="flex items-center space-x-4">

@@ -7,16 +7,16 @@ import API from '@/lib/axios';
  * Types
  */
 import type { ApiResponse } from '@/types/api';
-import type { Pet, CreatePetPayload, UpdatePetPayload } from '@/types/pet';
+import type { CreatePetPayload, Pet, UpdatePetPayload } from '@/types/pet';
+import type { Pagination } from '@/types/api';
 
 export const petService = {
   // Get all pets
-  async getPets(): Promise<ApiResponse<Pet[]>> {
-    const response = await API.get<ApiResponse<{ pets: Pet[] }>>('/pets');
-    return {
-      ...response.data,
-      data: response.data.data?.pets || [],
-    };
+  async getPets(
+    params: URLSearchParams = new URLSearchParams(),
+  ): Promise<ApiResponse<{ pets: Pet[]; pagination: Pagination }>> {
+    const response = await API.get(`/pets?${params.toString()}`);
+    return response.data;
   },
 
   // Get pet by ID
