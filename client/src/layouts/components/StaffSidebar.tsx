@@ -2,15 +2,15 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   Package,
   Heart,
-  Palette,
-  Grid3X3,
-  Dog,
   ShoppingCart,
-  LayoutDashboard,
-  LogOut,
+  Grid3X3,
+  Palette,
+  Dog,
   Users,
+  BarChart3,
   ChevronUp,
   User2,
+  LogOut,
 } from 'lucide-react';
 
 import {
@@ -37,25 +37,72 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 const StaffSidebar = () => {
   const location = useLocation();
 
+  // 🔧 Helper function để check active state
+  const isMenuActive = (basePath: string): boolean => {
+    const currentPath = location.pathname;
+
+    // Exact match cho dashboard
+    if (basePath === '/staff' && currentPath === '/staff') {
+      return true;
+    }
+
+    // Cho các menu khác, check nếu path bắt đầu với basePath
+    if (basePath !== '/staff' && currentPath.startsWith(basePath)) {
+      return true;
+    }
+
+    return false;
+  };
+
   const navigationGroups = [
     {
-      label: 'Overview',
-      items: [{ name: 'Dashboard', href: '/staff', icon: LayoutDashboard }],
+      label: 'Dashboard',
+      items: [
+        {
+          name: 'Overview',
+          href: '/staff',
+          icon: BarChart3,
+        },
+      ],
     },
     {
       label: 'Management',
       items: [
-        { name: 'Products', href: '/staff/products', icon: Package },
-        { name: 'Pets', href: '/staff/pets', icon: Heart },
-        { name: 'Orders', href: '/staff/orders', icon: ShoppingCart },
+        {
+          name: 'Products',
+          href: '/staff/products',
+          icon: Package,
+        },
+        {
+          name: 'Pets',
+          href: '/staff/pets',
+          icon: Heart,
+        },
+        {
+          name: 'Orders',
+          href: '/staff/orders',
+          icon: ShoppingCart,
+        },
       ],
     },
     {
       label: 'Configuration',
       items: [
-        { name: 'Categories', href: '/staff/categories', icon: Grid3X3 },
-        { name: 'Colors', href: '/staff/colors', icon: Palette },
-        { name: 'Breeds', href: '/staff/breeds', icon: Dog },
+        {
+          name: 'Categories',
+          href: '/staff/categories',
+          icon: Grid3X3,
+        },
+        {
+          name: 'Colors',
+          href: '/staff/colors',
+          icon: Palette,
+        },
+        {
+          name: 'Breeds',
+          href: '/staff/breeds',
+          icon: Dog,
+        },
       ],
     },
   ];
@@ -72,7 +119,7 @@ const StaffSidebar = () => {
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">Staff Portal</span>
-                  <span className="truncate text-xs text-muted-foreground">
+                  <span className="text-muted-foreground truncate text-xs">
                     Monito Store
                   </span>
                 </div>
@@ -90,11 +137,16 @@ const StaffSidebar = () => {
               <SidebarMenu>
                 {group.items.map((item) => {
                   const Icon = item.icon;
-                  const isActive = location.pathname === item.href;
+                  // 🔧 Sử dụng helper function thay vì exact match
+                  const isActive = isMenuActive(item.href);
 
                   return (
                     <SidebarMenuItem key={item.name}>
-                      <SidebarMenuButton asChild isActive={isActive} tooltip={item.name}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive}
+                        tooltip={item.name}
+                      >
                         <Link to={item.href}>
                           <Icon className="size-4" />
                           <span>{item.name}</span>
@@ -126,7 +178,7 @@ const StaffSidebar = () => {
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold">Staff Member</span>
-                    <span className="truncate text-xs text-muted-foreground">
+                    <span className="text-muted-foreground truncate text-xs">
                       staff@monito.com
                     </span>
                   </div>

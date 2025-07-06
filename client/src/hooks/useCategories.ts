@@ -348,9 +348,13 @@ export const useActiveCategories = () => {
     queryKey: [...categoryKeys.lists(), 'active'],
     queryFn: async () => {
       const response = await categoryService.getCategories();
-      return (response.data || []).filter((cat) => cat.isActive);
+
+      const allCategories = response.data?.categories || [];
+      const activeCategories = allCategories.filter((cat: any) => cat.isActive);
+
+      return activeCategories;
     },
-    staleTime: 10 * 60 * 1000, // 10 minutes (active categories change less frequently)
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    enabled: true, // Ensure query is enabled
   });
 };
-

@@ -44,6 +44,23 @@ import { Badge } from '@/components/ui/badge';
 const AdminSidebar = () => {
   const location = useLocation();
 
+  // 🔧 Helper function để check active state
+  const isMenuActive = (basePath: string): boolean => {
+    const currentPath = location.pathname;
+
+    // Exact match cho dashboard
+    if (basePath === '/admin' && currentPath === '/admin') {
+      return true;
+    }
+
+    // Cho các menu khác, check nếu path bắt đầu với basePath
+    if (basePath !== '/admin' && currentPath.startsWith(basePath)) {
+      return true;
+    }
+
+    return false;
+  };
+
   const navigationGroups = [
     {
       label: 'Dashboard',
@@ -122,7 +139,8 @@ const AdminSidebar = () => {
               <SidebarMenu>
                 {group.items.map((item) => {
                   const Icon = item.icon;
-                  const isActive = location.pathname === item.href;
+                  // 🔧 Sử dụng helper function
+                  const isActive = isMenuActive(item.href);
 
                   return (
                     <SidebarMenuItem key={item.name}>
