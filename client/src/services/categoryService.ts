@@ -7,7 +7,7 @@ import API from '@/lib/axios';
  * Types
  */
 import type { ApiResponse } from '@/types/api';
-import type { Category } from '@/types/category';
+import type { Category, CreateCategoryPayload, UpdateCategoryPayload } from '@/types/category';
 
 export const categoryService = {
   // Get all categories

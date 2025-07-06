@@ -1,7 +1,7 @@
 /**
  * Node modules
  */
-import { Outlet } from 'react-router-dom';
+import { Link, Outlet, useLocation } from 'react-router-dom';
 
 /**
  * Components
@@ -21,10 +21,43 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import AdminSidebar from './components/AdminSidebar';
-import { useBreadcrumbs } from '@/hooks/useBreadcrumbs';
+
+interface BreadcrumbItem {
+  label: string;
+  href?: string;
+  isCurrentPage?: boolean;
+}
 
 const AdminLayout = () => {
-  const breadcrumbs = useBreadcrumbs('admin');
+  const location = useLocation();
+
+  const getBreadcrumbItems = (pathname: string): BreadcrumbItem[] => {
+    const breadcrumbMap: Record<string, BreadcrumbItem[]> = {
+      '/admin': [{ label: 'Admin Dashboard', isCurrentPage: true }],
+      '/admin/users': [
+        { label: 'Admin Dashboard', href: '/admin' },
+        { label: 'User Management', isCurrentPage: true },
+      ],
+      '/admin/staff': [
+        { label: 'Admin Dashboard', href: '/admin' },
+        { label: 'Staff Management', isCurrentPage: true },
+      ],
+      '/admin/settings': [
+        { label: 'Admin Dashboard', href: '/admin' },
+        { label: 'Settings', isCurrentPage: true },
+      ],
+      '/admin/analytics': [
+        { label: 'Admin Dashboard', href: '/admin' },
+        { label: 'Analytics', isCurrentPage: true },
+      ],
+    };
+
+    return (
+      breadcrumbMap[pathname] || [{ label: 'Admin Dashboard', href: '/admin' }]
+    );
+  };
+
+  const breadcrumbItems = getBreadcrumbItems(location.pathname);
 
   return (
     <SidebarProvider>
@@ -32,25 +65,25 @@ const AdminLayout = () => {
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-white shadow-sm transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="" />
+            <SidebarTrigger />
             <Separator orientation="vertical" className="mr-2 !h-4" />
             <Breadcrumb>
               <BreadcrumbList>
-                {breadcrumbs.map((breadcrumb, index) => (
-                  <div key={breadcrumb.href} className="flex items-center">
+                {breadcrumbItems.map((item, index) => (
+                  <React.Fragment key={item.href || item.label}>
                     {index > 0 && (
-                      <BreadcrumbSeparator className="mr-2 hidden md:block" />
+                      <BreadcrumbSeparator className="hidden md:block" />
                     )}
                     <BreadcrumbItem className="hidden md:block">
-                      {breadcrumb.isCurrentPage ? (
-                        <BreadcrumbPage>{breadcrumb.label}</BreadcrumbPage>
+                      {item.isCurrentPage ? (
+                        <BreadcrumbPage>{item.label}</BreadcrumbPage>
                       ) : (
-                        <BreadcrumbLink href={breadcrumb.href}>
-                          {breadcrumb.label}
+                        <BreadcrumbLink asChild>
+                          <Link to={item.href!}>{item.label}</Link>
                         </BreadcrumbLink>
                       )}
                     </BreadcrumbItem>
-                  </div>
+                  </React.Fragment>
                 ))}
               </BreadcrumbList>
             </Breadcrumb>

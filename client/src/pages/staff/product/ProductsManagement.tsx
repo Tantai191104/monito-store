@@ -14,8 +14,8 @@ const ProductsManagement = () => {
   }, []);
 
   return (
-    <div className="container mx-auto p-8 py-0">
-      <div className="mb-8">
+    <div className="container mx-auto py-0">
+      <div className="mb-3 border-b p-6">
         <h1 className="text-3xl font-bold text-gray-900">
           Products Management
         </h1>
@@ -27,7 +27,7 @@ const ProductsManagement = () => {
       <ProductDataTable
         columns={productColumns}
         data={data}
-        className="rounded-lg bg-white p-6 shadow"
+        className="p-6"
       />
     </div>
   );

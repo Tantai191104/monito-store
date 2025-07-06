@@ -52,8 +52,8 @@ export const Header = () => {
               placeholder="Search something here!"
             />
           </div>
-          <Button className="bg-[#003459] hover:bg-[#003459]/90">
-            Join the community
+          <Button className="bg-[#003459] hover:bg-[#003459]/90" asChild>
+            <Link to="/login">Join the community</Link>
           </Button>
         </div>
       </div>
