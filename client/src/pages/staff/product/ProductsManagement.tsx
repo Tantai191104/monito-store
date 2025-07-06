@@ -1,17 +1,28 @@
 import { useEffect, useState } from 'react';
 import { ProductDataTable } from './components/ProductDataTable';
 import { productColumns } from './components/ProductColumns';
-import { mockProducts } from '@/data/mockProducts';
+import { useProducts } from '@/hooks/useProducts';
 
 const ProductsManagement = () => {
-  const [data, setData] = useState(mockProducts);
+  const { data, isLoading, error, refetch } = useProducts();
+  const products = data?.products || [];
 
-  useEffect(() => {
-    const newProducts = JSON.parse(localStorage.getItem('newProducts') || '[]');
-    if (newProducts.length > 0) {
-      setData([...newProducts, ...mockProducts]);
-    }
-  }, []);
+  if (error) {
+    return (
+      <div className="container mx-auto py-0">
+        <div className="py-12 text-center">
+          <Package className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+          <h3 className="mb-2 text-lg font-medium text-gray-900">
+            Failed to load products
+          </h3>
+          <p className="mb-4 text-gray-600">
+            There was an error loading the pets. Please try again.
+          </p>
+          <Button onClick={() => refetch()}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-0">
@@ -24,11 +35,7 @@ const ProductsManagement = () => {
         </p>
       </div>
 
-      <ProductDataTable
-        columns={productColumns}
-        data={data}
-        className="p-6"
-      />
+      <ProductDataTable columns={productColumns} data={products} className="p-6" />
     </div>
   );
 };

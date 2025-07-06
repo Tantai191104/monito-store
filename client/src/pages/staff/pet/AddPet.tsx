@@ -3,38 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Save, ArrowLeft, Package, ImageIcon, Info } from 'lucide-react';
+import { Save, ArrowLeft } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  FormDescription,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Form } from '@/components/ui/form';
 import { useCreatePet } from '@/hooks/usePets';
-import { useActiveBreeds } from '@/hooks/useBreeds';
-import { useActiveColors } from '@/hooks/useColors';
+
+// Import components
+import PetBasicInfo from './components/PetBasicInfo';
+import PetImageUpload from './components/PetImageUpload';
+import PetHealthInfo from './components/PetHealthInfo';
 
 const addPetSchema = z.object({
   name: z.string().min(1, 'Pet name is required').max(100),
@@ -57,16 +35,12 @@ const addPetSchema = z.object({
   isAvailable: z.boolean(),
 });
 
-type AddPetFormValues = z.infer<typeof addPetSchema>;
+export type AddPetFormValues = z.infer<typeof addPetSchema>;
 
 const AddPet = () => {
   const navigate = useNavigate();
   const createPet = useCreatePet();
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Get active breeds and colors
-  const { data: breeds = [] } = useActiveBreeds();
-  const { data: colors = [] } = useActiveColors();
 
   const form = useForm<AddPetFormValues>({
     resolver: zodResolver(addPetSchema),
@@ -107,483 +81,33 @@ const AddPet = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="container mx-auto py-0">
       {/* Header */}
-      <div className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleCancel}
-                className="text-gray-600 hover:text-gray-900"
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Pets
-              </Button>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  Add New Pet
-                </h1>
-                <p className="text-sm text-gray-500">
-                  Create a new pet listing for your store
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <Button
-                variant="outline"
-                onClick={handleCancel}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={form.handleSubmit(onSubmit)}
-                disabled={isSubmitting}
-                className="bg-blue-600 shadow-md hover:bg-blue-700"
-              >
-                <Save className="mr-2 h-4 w-4" />
-                {isSubmitting ? 'Adding Pet...' : 'Add Pet'}
-              </Button>
-            </div>
-          </div>
+      <div className="mb-3 flex items-start justify-between border-b p-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Add New Pet</h1>
+          <p className="text-muted-foreground">
+            Create a new pet listing for your store
+          </p>
         </div>
+        <Button onClick={form.handleSubmit(onSubmit)} disabled={isSubmitting}>
+          <Save className="mr-2 h-4 w-4" />
+          {isSubmitting ? 'Adding Pet...' : 'Add Pet'}
+        </Button>
       </div>
 
       {/* Content */}
-      <div className="mx-auto max-w-7xl p-6">
+      <div className="p-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Pet Information */}
-            <Card className="border-gray-200 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Package className="h-5 w-5 text-blue-600" />
-                  Pet Information
-                </CardTitle>
-                <CardDescription>
-                  Enter the basic details about your pet
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Pet Name *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Max, Bella" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <FormField
-                    control={form.control}
-                    name="breed"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Breed *</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select breed" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {breeds.map((breed) => (
-                              <SelectItem key={breed._id} value={breed._id}>
-                                {breed.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="color"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Color *</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select color" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {colors.map((color) => (
-                              <SelectItem key={color._id} value={color._id}>
-                                <div className="flex items-center space-x-2">
-                                  <div
-                                    className="h-4 w-4 rounded-full border"
-                                    style={{ backgroundColor: color.hexCode }}
-                                  />
-                                  <span>{color.name}</span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                  <FormField
-                    control={form.control}
-                    name="gender"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Gender *</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select gender" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Male">Male</SelectItem>
-                            <SelectItem value="Female">Female</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="age"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Age *</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="e.g., 2 months, 1 year"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="size"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Size *</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select size" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Small">Small</SelectItem>
-                            <SelectItem value="Medium">Medium</SelectItem>
-                            <SelectItem value="Large">Large</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <FormField
-                    control={form.control}
-                    name="price"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Price (VND) *</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min={0}
-                            {...field}
-                            onChange={(e) =>
-                              field.onChange(parseFloat(e.target.value) || 0)
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="location"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Location *</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="e.g., Ho Chi Minh City"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Describe the pet's personality, special features..."
-                          className="min-h-[100px] resize-none"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
+            {/* Pet Basic Information */}
+            <PetBasicInfo control={form.control} />
 
             {/* Pet Images */}
-            <Card className="border-gray-200 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <ImageIcon className="h-5 w-5 text-green-600" />
-                  Pet Images
-                </CardTitle>
-                <CardDescription>
-                  Add high-quality images. The first image will be the main pet
-                  image.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="images"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Image URLs *</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Enter image URLs, one per line"
-                          value={field.value.join('\n')}
-                          onChange={(e) =>
-                            field.onChange(
-                              e.target.value.split('\n').filter(Boolean),
-                            )
-                          }
-                          className="min-h-[120px] resize-none"
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Enter each image URL on a new line
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Image Previews */}
-                {form.watch('images').length > 0 && (
-                  <div>
-                    <h4 className="mb-3 text-sm font-medium">Image Previews</h4>
-                    <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-                      {form.watch('images').map((url, index) => (
-                        <div key={index} className="group relative">
-                          <div className="aspect-square overflow-hidden rounded-lg border-2 border-gray-200 bg-gray-100">
-                            <img
-                              src={url}
-                              alt={`Pet ${index + 1}`}
-                              className="h-full w-full object-cover"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src =
-                                  'https://via.placeholder.com/300x300?text=Invalid+URL';
-                              }}
-                            />
-                          </div>
-                          {index === 0 && (
-                            <div className="absolute -top-2 -right-2 rounded-full bg-blue-600 px-2 py-1 text-xs text-white">
-                              Main
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <PetImageUpload control={form.control} watch={form.watch} />
 
             {/* Pet Health & Specifications */}
-            <Card className="border-gray-200 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Info className="h-5 w-5 text-purple-600" />
-                  Health & Specifications
-                </CardTitle>
-                <CardDescription>
-                  Add health records and availability status
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                  <FormField
-                    control={form.control}
-                    name="isVaccinated"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-y-0 space-x-3 rounded-md border p-4">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Vaccinated</FormLabel>
-                          <FormDescription className="text-xs">
-                            Has received vaccinations
-                          </FormDescription>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="isDewormed"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-y-0 space-x-3 rounded-md border p-4">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Dewormed</FormLabel>
-                          <FormDescription className="text-xs">
-                            Has been dewormed
-                          </FormDescription>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="hasCert"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-y-0 space-x-3 rounded-md border p-4">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Certificate</FormLabel>
-                          <FormDescription className="text-xs">
-                            Has health certificate
-                          </FormDescription>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="hasMicrochip"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-y-0 space-x-3 rounded-md border p-4">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Microchip</FormLabel>
-                          <FormDescription className="text-xs">
-                            Has microchip implanted
-                          </FormDescription>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="isAvailable"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-y-0 space-x-3 rounded-md border p-4">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>Available for Sale</FormLabel>
-                        <FormDescription>
-                          Check if this pet is currently available for purchase
-                        </FormDescription>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="additionalInfo"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Additional Information</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Any additional notes about the pet..."
-                          className="min-h-[80px] resize-none"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
+            <PetHealthInfo control={form.control} />
           </form>
         </Form>
       </div>
