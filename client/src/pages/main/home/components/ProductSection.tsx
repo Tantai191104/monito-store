@@ -1,9 +1,8 @@
 import { useMemo } from 'react';
 import { ArrowRightIcon, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useProducts } from '@/hooks/useProducts';
-import ProductCard from '../../products/components/ProductCard';
+import ProductCard from '@/pages/main/products/components/ProductCard';
 
 const ProductSection = () => {
   const params = useMemo(() => {

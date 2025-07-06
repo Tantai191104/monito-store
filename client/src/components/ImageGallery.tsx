@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Package } from 'lucide-react';
 
-interface PetImageGalleryProps {
+interface ImageGalleryProps {
   images: string[];
-  petName: string;
+  name: string;
 }
 
-const PetImageGallery = ({ images, petName }: PetImageGalleryProps) => {
+const ImageGallery = ({ images, name }: ImageGalleryProps) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   if (!images || images.length === 0) {
@@ -33,7 +33,7 @@ const PetImageGallery = ({ images, petName }: PetImageGalleryProps) => {
       <div className="group relative aspect-square w-full overflow-hidden rounded-lg">
         <img
           src={images[selectedIndex]}
-          alt={`${petName} - Image ${selectedIndex + 1}`}
+          alt={`${name} - Image ${selectedIndex + 1}`}
           className="h-full w-full object-cover"
           onError={(e) => {
             (e.target as HTMLImageElement).src =
@@ -78,7 +78,7 @@ const PetImageGallery = ({ images, petName }: PetImageGalleryProps) => {
             >
               <img
                 src={image}
-                alt={`${petName} thumbnail ${index + 1}`}
+                alt={`${name} thumbnail ${index + 1}`}
                 className="h-full w-full object-cover"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src =
@@ -93,4 +93,4 @@ const PetImageGallery = ({ images, petName }: PetImageGalleryProps) => {
   );
 };
 
-export default PetImageGallery;
+export default ImageGallery;

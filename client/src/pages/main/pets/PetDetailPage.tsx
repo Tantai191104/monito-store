@@ -4,11 +4,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 import PetBreadcrumb from './components/detail/PetBreadcrumb';
-import PetImageGallery from './components/detail/PetImageGallery';
 import PetInfo from './components/detail/PetInfo';
 import PetDetailsTable from './components/detail/PetDetailsTable';
 import { DogHeartIcon } from '@/components/icons/DogHeartIcon';
 import { DogAndCatIcon } from '@/components/icons/DogAndCatIcon';
+import ImageGallery from '@/components/ImageGallery';
 
 const PetDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -39,7 +39,7 @@ const PetDetailPage = () => {
         <div className="grid grid-cols-1 gap-12 rounded-xl border p-5 lg:grid-cols-2">
           {/* Left Column */}
           <div>
-            <PetImageGallery images={pet.images} petName={pet.name} />
+            <ImageGallery images={pet.images} name={pet.name} />
             <div className="mt-5 flex items-center justify-between rounded-lg bg-[#FFE7BA] p-2 px-4">
               <div className="flex items-center gap-2">
                 <DogHeartIcon />

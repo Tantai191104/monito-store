@@ -8,6 +8,7 @@ import ProductBreadcrumb from './components/detail/ProductBreadcrumb';
 import ProductImageGallery from './components/detail/ProductImageGallery';
 import ProductInfo from './components/detail/ProductInfo';
 import ProductSpecifications from './components/detail/ProductSpecifications';
+import ImageGallery from '@/components/ImageGallery';
 
 const ProductDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -36,10 +37,7 @@ const ProductDetailPage = () => {
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
           {/* Left Column */}
           <div>
-            <ProductImageGallery
-              images={product.images}
-              productName={product.name}
-            />
+            <ImageGallery images={product.images} name={product.name} />
           </div>
 
           {/* Right Column */}

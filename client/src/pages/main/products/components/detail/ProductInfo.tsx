@@ -9,7 +9,7 @@ const ProductInfo = ({ product }: { product: Product }) => {
       <div className="space-y-2">
         <h1 className="text-3xl font-bold text-[#003459]">{product.name}</h1>
         <p className="text-2xl font-bold text-gray-800">
-          {formatPrice(product.price)} ₫
+          {formatPrice(product.price)} VND
         </p>
       </div>
       <p className="text-gray-600">{product.description}</p>
