@@ -1,6 +1,7 @@
 import { useSearchParams } from 'react-router-dom';
 import ProductFilters from './components/ProductFilters';
 import ProductGrid from './components/ProductGrid';
+import ProductBanner from './components/ProductBanner';
 
 const ProductsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -8,6 +9,8 @@ const ProductsPage = () => {
   return (
     <div className="bg-[#FDFDFD]">
       <div className="container mx-auto py-8">
+        {/* Pet Banner */}
+        <ProductBanner />
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
           <aside className="lg:col-span-1">
             <ProductFilters

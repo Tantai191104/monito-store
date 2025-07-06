@@ -1,10 +1,13 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useProduct } from '@/hooks/useProducts';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle, ChevronRight, ShoppingCart, Gift } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { formatPrice } from '@/utils/formatter';
+import { AlertTriangle } from 'lucide-react';
+
+import ProductBreadcrumb from './components/detail/ProductBreadcrumb';
+import ProductImageGallery from './components/detail/ProductImageGallery';
+import ProductInfo from './components/detail/ProductInfo';
+import ProductSpecifications from './components/detail/ProductSpecifications';
 
 const ProductDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -29,91 +32,20 @@ const ProductDetailPage = () => {
   return (
     <div className="bg-white py-8">
       <div className="container mx-auto">
-        <nav className="mb-6 flex items-center space-x-2 text-sm text-gray-500">
-          <Link to="/" className="hover:text-blue-600">
-            Home
-          </Link>
-          <ChevronRight className="h-4 w-4" />
-          <Link to="/products" className="hover:text-blue-600">
-            Products
-          </Link>
-          <ChevronRight className="h-4 w-4" />
-          <span className="font-medium text-gray-700">{product.name}</span>
-        </nav>
-
+        <ProductBreadcrumb product={product} />
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
+          {/* Left Column */}
           <div>
-            <div className="aspect-square w-full overflow-hidden rounded-lg bg-gray-100">
-              <img
-                src={product.images[0]}
-                alt={product.name}
-                className="h-full w-full object-cover"
-              />
-            </div>
+            <ProductImageGallery
+              images={product.images}
+              productName={product.name}
+            />
           </div>
+
+          {/* Right Column */}
           <div className="space-y-6">
-            <div className="space-y-2">
-              <h1 className="text-3xl font-bold text-[#003459]">
-                {product.name}
-              </h1>
-              <p className="text-2xl font-bold text-gray-800">
-                {formatPrice(product.price)} ₫
-              </p>
-            </div>
-            <p className="text-gray-600">{product.description}</p>
-
-            <Button
-              size="lg"
-              className="w-full bg-[#003459] hover:bg-[#003459]/90"
-            >
-              <ShoppingCart className="mr-2 h-5 w-5" />
-              Add to Cart
-            </Button>
-
-            {product.gifts && product.gifts.length > 0 && (
-              <div className="flex items-center gap-2 rounded-md bg-[#FFF1E4] p-3 text-sm font-bold text-[#003459]">
-                <Gift className="size-5 text-red-500" />
-                <span>Free Gift: {product.gifts.join(' & ')}</span>
-              </div>
-            )}
-
-            <div className="space-y-3 border-t pt-6">
-              <h3 className="text-lg font-semibold">Specifications</h3>
-              <ul className="list-inside list-disc space-y-1 text-gray-700">
-                <li>
-                  <strong>Brand:</strong> {product.brand}
-                </li>
-                <li>
-                  <strong>Category:</strong> {product.category.name}
-                </li>
-                {product.specifications.weight && (
-                  <li>
-                    <strong>Weight:</strong> {product.specifications.weight}
-                  </li>
-                )}
-                {product.specifications.size && (
-                  <li>
-                    <strong>Size:</strong> {product.specifications.size}
-                  </li>
-                )}
-                {product.specifications.material && (
-                  <li>
-                    <strong>Material:</strong> {product.specifications.material}
-                  </li>
-                )}
-                {product.specifications.color && (
-                  <li>
-                    <strong>Color:</strong> {product.specifications.color}
-                  </li>
-                )}
-                {product.specifications.ingredients && (
-                  <li>
-                    <strong>Ingredients:</strong>{' '}
-                    {product.specifications.ingredients.join(', ')}
-                  </li>
-                )}
-              </ul>
-            </div>
+            <ProductInfo product={product} />
+            <ProductSpecifications product={product} />
           </div>
         </div>
       </div>

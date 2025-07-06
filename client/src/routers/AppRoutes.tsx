@@ -46,6 +46,7 @@ import PetsPage from '@/pages/main/pets/PetsPage';
 import PetDetailPage from '@/pages/main/pets/PetDetailPage';
 import ProductsPage from '@/pages/main/products/ProductsPage';
 import ProductDetailPage from '@/pages/main/products/ProductDetailPage';
+import NotFoundPage from '@/pages/common/NotFoundPage';
 
 const AppRoutes = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -68,7 +69,7 @@ const AppRoutes = () => {
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/products/:id" element={<ProductDetailPage />} />
         </Route>
-        <Route path="*" element={<Navigate to="/login" />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     );
   }
@@ -100,6 +101,7 @@ const AppRoutes = () => {
           <Route path="categories" element={<CategoriesManagement />} />
           <Route path="colors" element={<ColorsManagement />} />
           <Route path="breeds" element={<BreedsManagement />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Route>
 
@@ -112,11 +114,12 @@ const AppRoutes = () => {
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<UserManagement />} />
           <Route path="staff" element={<StaffManagement />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Route>
 
       <Route path="/" element={<Navigate to={`/${user?.role}`} />} />
-      <Route path="*" element={<div>Page not found</div>} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 };

@@ -18,17 +18,20 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
  * Components
  */
 import { Toaster } from '@/components/ui/sonner';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 const App = () => {
   return (
-    <QueryProvider>
-      <BrowserRouter>
-        <ThemeProvider>
-          <AppRoutes />
-          <Toaster richColors />
-        </ThemeProvider>
-      </BrowserRouter>
-    </QueryProvider>
+    <ErrorBoundary>
+      <QueryProvider>
+        <BrowserRouter>
+          <ThemeProvider>
+            <AppRoutes />
+            <Toaster richColors />
+          </ThemeProvider>
+        </BrowserRouter>
+      </QueryProvider>
+    </ErrorBoundary>
   );
 };
 

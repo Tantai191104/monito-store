@@ -52,7 +52,7 @@ export const categoryController = {
 
       res.status(STATUS_CODE.OK).json({
         message: 'Categories retrieved successfully',
-        data: categories,
+        data: { categories },
       });
     } catch (error) {
       next(error);

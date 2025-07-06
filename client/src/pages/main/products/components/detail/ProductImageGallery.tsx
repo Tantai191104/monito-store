@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Package } from 'lucide-react';
 
-interface PetImageGalleryProps {
+interface ProductImageGalleryProps {
   images: string[];
-  petName: string;
+  productName: string;
 }
 
-const PetImageGallery = ({ images, petName }: PetImageGalleryProps) => {
+const ProductImageGallery = ({
+  images,
+  productName,
+}: ProductImageGalleryProps) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   if (!images || images.length === 0) {
@@ -33,7 +36,7 @@ const PetImageGallery = ({ images, petName }: PetImageGalleryProps) => {
       <div className="group relative aspect-square w-full overflow-hidden rounded-lg">
         <img
           src={images[selectedIndex]}
-          alt={`${petName} - Image ${selectedIndex + 1}`}
+          alt={`${productName} - Image ${selectedIndex + 1}`}
           className="h-full w-full object-cover"
           onError={(e) => {
             (e.target as HTMLImageElement).src =
@@ -63,6 +66,7 @@ const PetImageGallery = ({ images, petName }: PetImageGalleryProps) => {
           </div>
         )}
       </div>
+
       {/* Thumbnail navigation - only show if more than 1 image */}
       {images.length > 1 && (
         <div className="grid grid-cols-5 gap-3">
@@ -78,7 +82,7 @@ const PetImageGallery = ({ images, petName }: PetImageGalleryProps) => {
             >
               <img
                 src={image}
-                alt={`${petName} thumbnail ${index + 1}`}
+                alt={`${productName} thumbnail ${index + 1}`}
                 className="h-full w-full object-cover"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src =
@@ -93,4 +97,4 @@ const PetImageGallery = ({ images, petName }: PetImageGalleryProps) => {
   );
 };
 
-export default PetImageGallery;
+export default ProductImageGallery;

@@ -28,6 +28,8 @@ const ProductFilters = ({
     Number(searchParams.get('maxPrice') || MAX_PRICE),
   ]);
 
+  console.log(categories);
+
   const [debouncedPriceRange] = useDebounce(priceRange, 500);
 
   useEffect(() => {
@@ -82,9 +84,9 @@ const ProductFilters = ({
   const hasFilters = filterParamKeys.size > 0;
 
   return (
-    <div className="space-y-6 rounded-lg border bg-white p-6 shadow-sm">
+    <div className="space-y-6 bg-white">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-[#003459]">Filter</h3>
+        <h3 className="text-xl font-bold text-[#003459]">Filter</h3>
         {hasFilters && (
           <Button
             variant="ghost"
