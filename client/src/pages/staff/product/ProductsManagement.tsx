@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
 import { ProductDataTable } from './components/ProductDataTable';
 import { productColumns } from './components/ProductColumns';
 import { useProducts } from '@/hooks/useProducts';
+import { Button } from '@/components/ui/button';
+import { Package } from 'lucide-react';
 
 const ProductsManagement = () => {
   const { data, isLoading, error, refetch } = useProducts();

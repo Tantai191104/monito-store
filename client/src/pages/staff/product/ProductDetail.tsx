@@ -169,92 +169,75 @@ const ProductDetail = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="container mx-auto py-0">
       {/* Header */}
-      <div className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleBack}
-                className="text-gray-600 hover:text-gray-900"
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Products
-              </Button>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  {product.name}
-                </h1>
-                <p className="text-sm text-gray-500">
-                  Product Details • SKU: #{product._id.slice(-8).toUpperCase()}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <Button
-                variant={product.isActive ? 'outline' : 'default'}
-                onClick={handleToggleStatus}
-                disabled={toggleProductStatus.isPending}
-              >
-                {toggleProductStatus.isPending ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : product.isActive ? (
-                  <EyeOff className="mr-2 h-4 w-4" />
-                ) : (
-                  <Eye className="mr-2 h-4 w-4" />
-                )}
-                {product.isActive ? 'Deactivate' : 'Activate'}
-              </Button>
+      <div className="mb-3 flex items-center justify-between border-b p-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
+          <p className="text-muted-foreground">
+            Product Details • SKU: #{product._id.slice(-8).toUpperCase()}
+          </p>
+        </div>
+        <div className="flex items-center space-x-3">
+          <Button
+            variant={product.isActive ? 'outline' : 'default'}
+            onClick={handleToggleStatus}
+            disabled={toggleProductStatus.isPending}
+          >
+            {toggleProductStatus.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : product.isActive ? (
+              <EyeOff className="mr-2 h-4 w-4" />
+            ) : (
+              <Eye className="mr-2 h-4 w-4" />
+            )}
+            {product.isActive ? 'Deactivate' : 'Activate'}
+          </Button>
 
-              <Button variant="outline" asChild>
-                <Link to={`/staff/products/${id}/edit`}>
-                  <Edit className="mr-2 h-4 w-4" />
-                  Edit
-                </Link>
-              </Button>
+          <Button variant="outline" asChild>
+            <Link to={`/staff/products/${id}/edit`}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit
+            </Link>
+          </Button>
 
-              <AlertDialog
-                open={showDeleteDialog}
-                onOpenChange={setShowDeleteDialog}
-              >
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive">
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Product</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Are you sure you want to delete "{product.name}"? This
-                      action cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleDelete}
-                      className="bg-red-600 hover:bg-red-700"
-                      disabled={deleteProduct.isPending}
-                    >
-                      {deleteProduct.isPending ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Deleting...
-                        </>
-                      ) : (
-                        'Delete Product'
-                      )}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          </div>
+          <AlertDialog
+            open={showDeleteDialog}
+            onOpenChange={setShowDeleteDialog}
+          >
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Product</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete "{product.name}"? This action
+                  cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDelete}
+                  className="bg-red-600 hover:bg-red-700"
+                  disabled={deleteProduct.isPending}
+                >
+                  {deleteProduct.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    'Delete Product'
+                  )}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 
@@ -264,12 +247,9 @@ const ProductDetail = () => {
           {/* Left Column - Main Content */}
           <div className="space-y-6 lg:col-span-2">
             {/* Product Images */}
-            <Card>
+            <Card className="!rounded-sm shadow-none">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Package className="h-5 w-5 text-blue-600" />
-                  Product Images
-                </CardTitle>
+                <CardTitle>Product Images</CardTitle>
                 <CardDescription>
                   {product.images.length} image(s) uploaded
                 </CardDescription>
@@ -280,115 +260,22 @@ const ProductDetail = () => {
             </Card>
 
             {/* Product Description */}
-            <Card>
+            <Card className="!gap-2 !rounded-sm shadow-none">
               <CardHeader>
                 <CardTitle>Description</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="leading-relaxed text-gray-700">
+                <p className="text-sm text-gray-600">
                   {product.description || 'No description provided.'}
                 </p>
               </CardContent>
             </Card>
-
-            {/* Specifications */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Specifications</CardTitle>
-                <CardDescription>
-                  Technical details and features
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  {specifications.map(
-                    (spec) =>
-                      spec.value && (
-                        <div
-                          key={spec.label}
-                          className="flex justify-between border-b pb-2"
-                        >
-                          <span className="font-medium text-gray-600">
-                            {spec.label}
-                          </span>
-                          <span className="text-gray-900">{spec.value}</span>
-                        </div>
-                      ),
-                  )}
-                </div>
-
-                {product.specifications.ingredients &&
-                  product.specifications.ingredients.length > 0 && (
-                    <div className="mt-6">
-                      <h4 className="mb-3 font-medium text-gray-900">
-                        Ingredients
-                      </h4>
-                      <div className="flex flex-wrap gap-2">
-                        {product.specifications.ingredients.map(
-                          (ingredient, index) => (
-                            <Badge key={index} variant="secondary">
-                              {ingredient}
-                            </Badge>
-                          ),
-                        )}
-                      </div>
-                    </div>
-                  )}
-              </CardContent>
-            </Card>
-
-            {/* Tags and Gifts */}
-            {(product.tags?.length > 0 || product.gifts?.length > 0) && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Tags & Gifts</CardTitle>
-                  <CardDescription>
-                    Product tags and included gifts
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {product.tags && product.tags.length > 0 && (
-                    <div>
-                      <div className="mb-2 flex items-center gap-2">
-                        <Tag className="h-4 w-4 text-blue-600" />
-                        <h4 className="font-medium text-gray-900">Tags</h4>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {product.tags.map((tag, index) => (
-                          <Badge key={index} variant="outline">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {product.gifts && product.gifts.length > 0 && (
-                    <div>
-                      <div className="mb-2 flex items-center gap-2">
-                        <Gift className="h-4 w-4 text-green-600" />
-                        <h4 className="font-medium text-gray-900">
-                          Free Gifts
-                        </h4>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {product.gifts.map((gift, index) => (
-                          <Badge key={index} variant="default">
-                            {gift}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
           </div>
 
           {/* Right Column - Sidebar */}
           <div className="space-y-6">
             {/* Status & Price */}
-            <Card>
+            <Card className="!rounded-sm shadow-none">
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   Product Status
@@ -416,11 +303,13 @@ const ProductDetail = () => {
                   )}
                 </div>
 
-                <Separator />
+                <Separator className="!h-[1px]" />
 
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Stock Status</span>
+                    <span className="text-muted-foreground text-sm">
+                      Stock Status
+                    </span>
                     <Badge
                       variant={product.isInStock ? 'default' : 'destructive'}
                     >
@@ -428,9 +317,12 @@ const ProductDetail = () => {
                     </Badge>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Available Units</span>
+                    <span className="text-muted-foreground text-sm">
+                      Available Units
+                    </span>
                     <span className="font-medium">{product.stock}</span>
                   </div>
+
                   {product.rating && (
                     <div className="flex justify-between">
                       <span className="text-gray-600">Rating</span>
@@ -448,17 +340,17 @@ const ProductDetail = () => {
             </Card>
 
             {/* Product Information */}
-            <Card>
+            <Card className="!gap-2 !rounded-sm shadow-none">
               <CardHeader>
                 <CardTitle>Product Information</CardTitle>
                 <CardDescription>Basic details and metadata</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className="">
                   {productInfo.map((info) => (
                     <div
                       key={info.label}
-                      className="flex justify-between text-sm"
+                      className="flex justify-between border-b py-3 text-sm"
                     >
                       <span className="text-gray-600">{info.label}</span>
                       <span className="font-medium text-gray-900">
@@ -470,43 +362,98 @@ const ProductDetail = () => {
               </CardContent>
             </Card>
 
-            {/* Quick Actions */}
-            <Card>
+            {/* Specifications */}
+            <Card className="!gap-2 !rounded-sm shadow-none">
               <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
+                <CardTitle>Specifications</CardTitle>
+                <CardDescription>
+                  Technical details and features
+                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  asChild
-                >
-                  <Link to={`/staff/products/${id}/edit`}>
-                    <Edit className="mr-2 h-4 w-4" />
-                    Edit Product
-                  </Link>
-                </Button>
-
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={handleToggleStatus}
-                  disabled={toggleProductStatus.isPending}
-                >
-                  {product.isActive ? (
-                    <EyeOff className="mr-2 h-4 w-4" />
-                  ) : (
-                    <Eye className="mr-2 h-4 w-4" />
+              <CardContent>
+                <div className="gap-4">
+                  {specifications.map(
+                    (spec) =>
+                      spec.value && (
+                        <div
+                          key={spec.label}
+                          className="flex justify-between border-b py-3 text-sm"
+                        >
+                          <span className="text-gray-600">{spec.label}</span>
+                          <span className="font-medium text-gray-900">
+                            {spec.value}
+                          </span>
+                        </div>
+                      ),
                   )}
-                  {product.isActive ? 'Deactivate' : 'Activate'} Product
-                </Button>
+                </div>
 
-                <Button variant="outline" className="w-full justify-start">
-                  <ShoppingCart className="mr-2 h-4 w-4" />
-                  View in Store
-                </Button>
+                {product.specifications.ingredients &&
+                  product.specifications.ingredients.length > 0 && (
+                    <div className="mt-6">
+                      <h4 className="mb-3 font-medium text-gray-900">
+                        Ingredients
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {product.specifications.ingredients.map(
+                          (ingredient, index) => (
+                            <Badge key={index} variant="secondary">
+                              {ingredient}
+                            </Badge>
+                          ),
+                        )}
+                      </div>
+                    </div>
+                  )}
               </CardContent>
             </Card>
+
+            {/* Tags and Gifts */}
+            {(product.tags?.length > 0 || product.gifts?.length > 0) && (
+              <Card className="!gap-2 !rounded-sm shadow-none">
+                <CardHeader>
+                  <CardTitle>Tags & Gifts</CardTitle>
+                  <CardDescription>
+                    Product tags and included gifts
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {product.tags && product.tags.length > 0 && (
+                    <div>
+                      <div className="mb-2 flex items-center gap-2">
+                        <h4 className="text-sm font-medium text-gray-900">
+                          Tags
+                        </h4>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {product.tags.map((tag, index) => (
+                          <Badge key={index} variant="outline">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {product.gifts && product.gifts.length > 0 && (
+                    <div>
+                      <div className="mb-2 flex items-center gap-2">
+                        <h4 className="text-sm font-medium text-gray-900">
+                          Free Gifts
+                        </h4>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {product.gifts.map((gift, index) => (
+                          <Badge key={index} variant="default">
+                            {gift}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </div>

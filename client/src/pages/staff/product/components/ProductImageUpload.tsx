@@ -144,12 +144,9 @@ const ProductImageUpload = ({
   };
 
   return (
-    <Card className="border-gray-200 shadow-sm">
+    <Card className="!rounded-sm shadow-none">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Package className="h-5 w-5 text-green-600" />
-          Product Images
-        </CardTitle>
+        <CardTitle>Product Images</CardTitle>
         <CardDescription>
           Add up to 5 high-quality images. Images will be uploaded to
           Cloudinary.
