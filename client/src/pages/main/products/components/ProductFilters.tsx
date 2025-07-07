@@ -30,43 +30,59 @@ const ProductFilters = ({
     Number(searchParams.get('maxPrice') || MAX_PRICE),
   ]);
 
-  console.log(categories);
-
   const [debouncedPriceRange] = useDebounce(priceRange, 100);
   const [isResetting, setIsResetting] = useState(false);
   const [lastResetTime, setLastResetTime] = useState(0);
 
   useEffect(() => {
     if (isResetting) {
+      console.log('Skipping price range effect due to reset');
       setIsResetting(false);
       return;
     }
-    
     // Don't run if we just reset (within 200ms)
     if (Date.now() - lastResetTime < 200) {
+      console.log('Skipping price range effect due to recent reset');
       return;
     }
-    
+    // Use non-debounced value if we're at default values to avoid debounce delay
+    const currentPriceRange = (priceRange[0] === MIN_PRICE && priceRange[1] === MAX_PRICE)
+      ? priceRange
+      : debouncedPriceRange;
+    console.log('Product price range effect running - min:', currentPriceRange[0], 'max:', currentPriceRange[1], 'using debounced:', currentPriceRange === debouncedPriceRange);
+    // If we're at default values, don't update URL
+    if (currentPriceRange[0] === MIN_PRICE && currentPriceRange[1] === MAX_PRICE) {
+      console.log('At default values, skipping URL update');
+      return;
+    }
     const newParams = new URLSearchParams(searchParams);
-    const [min, max] = debouncedPriceRange;
-
+    const [min, max] = currentPriceRange;
     if (min > MIN_PRICE) newParams.set('minPrice', String(min));
     else newParams.delete('minPrice');
-
     if (max < MAX_PRICE) newParams.set('maxPrice', String(max));
     else newParams.delete('maxPrice');
-
     if (newParams.toString() !== searchParams.toString()) {
       newParams.set('page', '1');
+      console.log('Updating product URL params:', newParams.toString());
       setSearchParams(newParams);
     }
-  }, [debouncedPriceRange, searchParams, setSearchParams, isResetting, lastResetTime]);
+  }, [debouncedPriceRange, priceRange, searchParams, setSearchParams, isResetting, lastResetTime]);
 
   useEffect(() => {
+    if (isResetting) {
+      console.log('Skipping product URL sync effect due to reset');
+      return;
+    }
+    // Don't run if we just reset (within 200ms)
+    if (Date.now() - lastResetTime < 200) {
+      console.log('Skipping product URL sync effect due to recent reset');
+      return;
+    }
     const min = Number(searchParams.get('minPrice') || MIN_PRICE);
     const max = Number(searchParams.get('maxPrice') || MAX_PRICE);
+    console.log('Product URL sync effect - min:', min, 'max:', max, 'searchParams:', searchParams.toString());
     setPriceRange([min, max]);
-  }, [searchParams]);
+  }, [searchParams, isResetting, lastResetTime]);
 
   const handleMultiSelectChange = (
     key: string,
@@ -78,7 +94,6 @@ const ProductFilters = ({
     const updatedValues = isChecked
       ? [...existingValues, value]
       : existingValues.filter((v) => v !== value);
-
     newParams.delete(key);
     if (updatedValues.length > 0) {
       updatedValues.forEach((v) => newParams.append(key, v));
@@ -88,15 +103,16 @@ const ProductFilters = ({
   };
 
   const handleResetFilters = () => {
+    console.log('=== PRODUCT RESET START ===');
     setIsResetting(true);
     setLastResetTime(Date.now());
     setSearchParams(new URLSearchParams());
     setPriceRange([MIN_PRICE, MAX_PRICE]);
     invalidateProductQueries();
-    // Force a refetch after a short delay to ensure the cache is cleared
     setTimeout(() => {
+      console.log('=== PRODUCT RESET COMPLETE ===');
       invalidateProductQueries();
-    }, 100);
+    }, 200);
   };
 
   const filterParamKeys = new Set(Array.from(searchParams.keys()));

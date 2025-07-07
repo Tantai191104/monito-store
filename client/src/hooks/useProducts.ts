@@ -21,15 +21,20 @@ export const useInvalidateProductQueries = () => {
 export const useProducts = (
   params: URLSearchParams = new URLSearchParams(),
 ) => {
-  const hasFilters = params.toString().length > 0;
+  // Always add isActive=true unless already set
+  const paramsWithActive = new URLSearchParams(params.toString());
+  if (!paramsWithActive.has('isActive')) {
+    paramsWithActive.set('isActive', 'true');
+  }
+  const hasFilters = paramsWithActive.toString().length > 0;
   const queryKey = hasFilters 
-    ? productKeys.list(params.toString())
+    ? productKeys.list(paramsWithActive.toString())
     : productKeys.list('all');
   
   return useQuery({
     queryKey,
     queryFn: async () => {
-      const response = await productService.getProducts(params);
+      const response = await productService.getProducts(paramsWithActive);
       return response.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
