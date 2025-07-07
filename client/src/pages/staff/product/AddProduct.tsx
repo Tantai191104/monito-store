@@ -4,11 +4,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { ArrowLeft, Save } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { Separator } from '@/components/ui/separator';
-import { mockCategories } from '@/data/mockProducts';
 import { productService } from '@/services/productService';
 
 // Import components
@@ -45,8 +45,7 @@ const AddProduct = () => {
   const navigate = useNavigate();
 
   // Form state
-  const [images, setImages] = useState<File[]>([]);
-  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [images, setImages] = useState<string[]>([]); // Changed to string array (URLs)
   const [tags, setTags] = useState<string[]>([]);
   const [currentTag, setCurrentTag] = useState('');
   const [gifts, setGifts] = useState<string[]>([]);
@@ -75,29 +74,18 @@ const AddProduct = () => {
     },
   });
 
-  const handleImagesChange = (newImages: File[], newPreviews: string[]) => {
-    setImages(newImages);
-    setImagePreviews(newPreviews);
-  };
-
   const onSubmit = async (data: AddProductFormValues) => {
     if (images.length === 0) {
-      alert('Please add at least one product image.');
+      toast.error('Please add at least one product image.');
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const imageUrls = imagePreviews.filter((preview) => preview !== '');
-      const selectedCategory = mockCategories.find(
-        (cat) => cat._id === data.category,
-      );
-
       const payload = {
         ...data,
-        category: selectedCategory ? selectedCategory.name : data.category,
-        images: imageUrls,
+        images, // Now this is an array of URLs
         tags,
         gifts,
         specifications: {
@@ -106,16 +94,17 @@ const AddProduct = () => {
         },
       };
 
-      const res = await productService.createProduct(payload);
-      if (res.success) {
-        alert('Product has been added successfully!');
+      const response = await productService.createProduct(payload);
+
+      if (response) {
+        toast.success('Product has been added successfully!');
         navigate('/staff/products');
       } else {
-        alert(res.message || 'Failed to add product.');
+        toast.error(response.message || 'Failed to add product.');
       }
     } catch (error: any) {
       console.error('Error adding product:', error);
-      alert(error?.message || 'Failed to add product. Please try again.');
+      toast.error(error?.message || 'Failed to add product. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -126,13 +115,16 @@ const AddProduct = () => {
       {/* Header */}
       <div className="mb-3 flex items-start justify-between border-b p-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Add Product</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Add Product</h1>
           <p className="text-muted-foreground">
             Create a new product for your store
           </p>
         </div>
 
-        <Button onClick={form.handleSubmit(onSubmit)} disabled={isSubmitting}>
+        <Button
+          onClick={form.handleSubmit(onSubmit)}
+          disabled={isSubmitting || images.length === 0}
+        >
           <Save className="mr-2 h-4 w-4" />
           {isSubmitting ? 'Creating...' : 'Create Product'}
         </Button>
@@ -149,8 +141,7 @@ const AddProduct = () => {
 
                 <ProductImageUpload
                   images={images}
-                  imagePreviews={imagePreviews}
-                  onImagesChange={handleImagesChange}
+                  onImagesChange={setImages}
                 />
 
                 <ProductSpecifications

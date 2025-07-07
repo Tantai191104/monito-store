@@ -69,7 +69,7 @@ const ProductBasicInfo = ({ control }: ProductBasicInfoProps) => {
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="!w-full">
                       <SelectValue
                         placeholder={
                           categoriesLoading ? 'Loading...' : 'Select category'
@@ -101,7 +101,7 @@ const ProductBasicInfo = ({ control }: ProductBasicInfoProps) => {
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="!w-full">
                       <SelectValue placeholder="Select brand" />
                     </SelectTrigger>
                   </FormControl>
