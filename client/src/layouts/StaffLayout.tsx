@@ -49,6 +49,11 @@ const StaffLayout = () => {
         { label: 'Products Management', href: '/staff/products' },
         { label: 'Add Product', isCurrentPage: true },
       ],
+      '/staff/products/:id': [
+        { label: 'Dashboard', href: '/staff' },
+        { label: 'Products Management', href: '/staff/products' },
+        { label: 'Product Details', isCurrentPage: true },
+      ],
       '/staff/pets': [
         { label: 'Dashboard', href: '/staff' },
         { label: 'Pets Management', isCurrentPage: true },
@@ -79,6 +84,30 @@ const StaffLayout = () => {
       return [
         ...baseItems.map((item) => ({ ...item, isCurrentPage: false })),
         { label: 'Edit', isCurrentPage: true },
+      ];
+    }
+
+    // Handle dynamic routes (view details)
+    if (
+      pathname.match(/\/staff\/(products|pets|colors|breeds)\/[^/]+$/) &&
+      !pathname.includes('/add') &&
+      !pathname.includes('/edit')
+    ) {
+      const basePath = pathname.replace(/\/[^/]+$/, '');
+      const baseItems = breadcrumbMap[basePath] || [];
+      const resourceName = pathname.includes('/products')
+        ? 'Product Details'
+        : pathname.includes('/pets')
+          ? 'Pet Details'
+          : pathname.includes('/colors')
+            ? 'Color Details'
+            : pathname.includes('/breeds')
+              ? 'Breed Details'
+              : 'Details';
+
+      return [
+        ...baseItems.map((item) => ({ ...item, isCurrentPage: false })),
+        { label: resourceName, isCurrentPage: true },
       ];
     }
 

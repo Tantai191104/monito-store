@@ -54,7 +54,7 @@ export const productController = {
 
       res.status(STATUS_CODE.OK).json({
         message: 'Products retrieved successfully',
-        data: result
+        data: result,
       });
     } catch (error) {
       next(error);
@@ -107,6 +107,16 @@ export const productController = {
   ): Promise<void> {
     try {
       const { id } = req.params;
+
+      // Check if product exists
+      const product = await Product.findById(id);
+      if (!product) {
+        res.status(STATUS_CODE.NOT_FOUND).json({
+          success: false,
+          message: 'Product not found',
+        });
+        return;
+      }
 
       await productService.deleteProduct(id);
 

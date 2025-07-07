@@ -1,6 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import { ArrowUpDown, MoreHorizontal, Eye, Edit, Trash2 } from 'lucide-react';
-
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -221,14 +221,25 @@ export const productColumns: ColumnDef<Product>[] = [
               Copy product ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="flex items-center">
-              <Eye className="h-4 w-4" />
-              View details
+            <DropdownMenuItem asChild>
+              <Link
+                to={`/staff/products/${product._id}`}
+                className="flex cursor-pointer items-center"
+              >
+                <Eye className="h-4 w-4" />
+                View details
+              </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center">
-              <Edit className="h-4 w-4" />
-              Edit product
+            <DropdownMenuItem asChild>
+              <Link
+                to={`/staff/products/${product._id}/edit`}
+                className="flex cursor-pointer items-center"
+              >
+                <Edit className="mr-2 h-4 w-4" />
+                Edit product
+              </Link>
             </DropdownMenuItem>
+
             <DropdownMenuItem className="flex items-center text-red-600">
               <Trash2 className="h-4 w-4" />
               Delete product
