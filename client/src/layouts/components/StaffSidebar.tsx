@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Package,
   Heart,
@@ -12,6 +12,7 @@ import {
   ChevronUp,
   User2,
 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 import {
   Sidebar,
@@ -36,6 +37,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const StaffSidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const handleSignOut = () => {
+    logout.mutate();
+  };
 
   const navigationGroups = [
     {
@@ -143,7 +150,7 @@ const StaffSidebar = () => {
                   <User2 className="mr-2 size-4" />
                   Profile
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 size-4" />
                   Sign Out
                 </DropdownMenuItem>

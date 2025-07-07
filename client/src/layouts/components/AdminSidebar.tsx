@@ -40,9 +40,15 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/hooks/useAuth';
 
 const AdminSidebar = () => {
   const location = useLocation();
+  const { logout } = useAuth();
+
+  const handleSignOut = () => {
+    logout.mutate();
+  };
 
   const navigationGroups = [
     {
@@ -211,7 +217,7 @@ const AdminSidebar = () => {
                   Admin Settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-red-600">
+                <DropdownMenuItem className="text-red-600" onClick={handleSignOut}>
                   <LogOut className="mr-2 size-4" />
                   Sign Out
                 </DropdownMenuItem>

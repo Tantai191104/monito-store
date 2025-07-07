@@ -47,6 +47,7 @@ import PetDetailPage from '@/pages/main/pets/PetDetailPage';
 import ProductsPage from '@/pages/main/products/ProductsPage';
 import ProductDetailPage from '@/pages/main/products/ProductDetailPage';
 import NotFoundPage from '@/pages/common/NotFoundPage';
+import AboutPage from '@/pages/main/about/AboutPage';
 
 const AppRoutes = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -68,6 +69,7 @@ const AppRoutes = () => {
           <Route path="/pets/:id" element={<PetDetailPage />} />
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/products/:id" element={<ProductDetailPage />} />
+          <Route path="/about" element={<AboutPage />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
