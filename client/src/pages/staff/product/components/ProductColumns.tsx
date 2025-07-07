@@ -235,7 +235,7 @@ export const productColumns: ColumnDef<Product>[] = [
                 to={`/staff/products/${product._id}/edit`}
                 className="flex cursor-pointer items-center"
               >
-                <Edit className="mr-2 h-4 w-4" />
+                <Edit className="h-4 w-4" />
                 Edit product
               </Link>
             </DropdownMenuItem>
