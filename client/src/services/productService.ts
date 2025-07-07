@@ -37,6 +37,7 @@ export const productService = {
     data: UpdateProductPayload,
   ): Promise<ApiResponse<{ product: Product }>> {
     const response = await API.patch(`/products/${id}`, data);
+
     return response.data;
   },
 };

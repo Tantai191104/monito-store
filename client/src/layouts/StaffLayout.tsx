@@ -58,7 +58,6 @@ const StaffLayout = () => {
   };
 
   const getBreadcrumbItems = (pathname: string): BreadcrumbItem[] => {
-
     // Handle exact matches first
     if (baseBreadcrumbs[pathname]) {
       return baseBreadcrumbs[pathname];

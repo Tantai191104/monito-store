@@ -75,3 +75,30 @@ export const useToggleProductStatus = () => {
     },
   });
 };
+
+export const useUpdateProduct = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const response = await productService.updateProduct(id, data);
+      return response;
+    },
+    onSuccess: (data, variables) => {
+
+      // Invalidate and refetch queries
+      queryClient.invalidateQueries({ queryKey: productKeys.lists() });
+      queryClient.invalidateQueries({
+        queryKey: productKeys.detail(variables.id),
+      });
+      queryClient.invalidateQueries({ queryKey: productKeys.all });
+
+      // Update cache cho product detail
+      queryClient.setQueryData(productKeys.detail(variables.id), data);
+    },
+    onError: (error: any) => {
+      console.error('❌ Update product error:', error);
+      throw error;
+    },
+  });
+};

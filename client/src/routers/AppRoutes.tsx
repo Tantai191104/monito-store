@@ -46,6 +46,7 @@ import PetsPage from '@/pages/main/pets/PetsPage';
 import PetDetailPage from '@/pages/main/pets/PetDetailPage';
 import ProductsPage from '@/pages/main/products/ProductsPage';
 import ProductDetail from '@/pages/staff/product/ProductDetail';
+import EditProduct from '@/pages/staff/product/EditProduct';
 import ProductDetailPage from '@/pages/main/products/ProductDetailPage';
 import NotFoundPage from '@/pages/common/NotFoundPage';
 
@@ -95,6 +96,7 @@ const AppRoutes = () => {
           <Route path="products" element={<ProductsManagement />} />
           <Route path="products/add" element={<AddProduct />} />
           <Route path="products/:id" element={<ProductDetail />} />
+          <Route path="products/:id/edit" element={<EditProduct />} />
           <Route path="pets" element={<PetsManagement />} />
           <Route path="pets/add" element={<AddPet />} />
           <Route path="pets/:id" element={<PetDetail />} />
