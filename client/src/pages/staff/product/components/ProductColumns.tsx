@@ -89,10 +89,11 @@ export const productColumns: ColumnDef<Product>[] = [
     },
   },
   {
-    accessorKey: 'category',
+    id: 'category',
+    accessorFn: (row) => row.category?.name, // ✅ FIX: Truy cập vào tên category để lọc
     header: 'Category',
     cell: ({ row }) => {
-      const category = row.getValue('category') as Product['category'];
+      const category = row.original.category;
       return <Badge variant="secondary">{category.name}</Badge>;
     },
   },
