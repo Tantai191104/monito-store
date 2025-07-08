@@ -15,11 +15,12 @@ import { Progress } from '@/components/ui/progress';
 import { uploadService } from '@/services/uploadService'; // ✅ Sử dụng service đã có
 import type { Control, UseFormWatch, UseFormSetValue } from 'react-hook-form';
 import type { AddPetFormValues } from '../AddPet';
+import type { EditPetFormValues } from '../EditPet';
 
 interface PetImageUploadProps {
-  control: Control<AddPetFormValues>;
-  watch: UseFormWatch<AddPetFormValues>;
-  setValue: UseFormSetValue<AddPetFormValues>; // ✅ Thêm setValue để cập nhật form
+  control: Control<AddPetFormValues | EditPetFormValues>;
+  watch: UseFormWatch<AddPetFormValues | EditPetFormValues>;
+  setValue: UseFormSetValue<AddPetFormValues | EditPetFormValues>;
 }
 
 const PetImageUpload = ({ control, watch, setValue }: PetImageUploadProps) => {

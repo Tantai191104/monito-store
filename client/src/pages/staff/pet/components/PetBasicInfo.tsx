@@ -23,13 +23,15 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useActiveBreeds } from '@/hooks/useBreeds';
 import { useActiveColors } from '@/hooks/useColors';
 import type { Control } from 'react-hook-form';
 import type { AddPetFormValues } from '../AddPet';
+import type { EditPetFormValues } from '../EditPet';
 
 interface PetBasicInfoProps {
-  control: Control<AddPetFormValues>;
+  control: Control<AddPetFormValues | EditPetFormValues>;
 }
 
 const PetBasicInfo = ({ control }: PetBasicInfoProps) => {
@@ -66,27 +68,32 @@ const PetBasicInfo = ({ control }: PetBasicInfoProps) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Breed</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger className="!w-full">
-                      <SelectValue
-                        placeholder={
-                          breedsLoading ? 'Loading breeds...' : 'Select breed'
-                        }
-                      />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {breeds.map((breed) => (
-                      <SelectItem key={breed._id} value={breed._id}>
-                        {breed.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {breedsLoading ? (
+                  <Skeleton className="h-10 w-full" />
+                ) : (
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    disabled={breedsLoading}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="!w-full">
+                        <SelectValue
+                          placeholder={
+                            breedsLoading ? 'Loading breeds...' : 'Select breed'
+                          }
+                        />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {breeds.map((breed) => (
+                        <SelectItem key={breed._id} value={breed._id}>
+                          {breed.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
                 <FormMessage />
               </FormItem>
             )}
@@ -97,33 +104,38 @@ const PetBasicInfo = ({ control }: PetBasicInfoProps) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Color</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger className="!w-full">
-                      <SelectValue
-                        placeholder={
-                          colorsLoading ? 'Loading colors...' : 'Select color'
-                        }
-                      />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {colors.map((color) => (
-                      <SelectItem key={color._id} value={color._id}>
-                        <div className="flex items-center space-x-2">
-                          <div
-                            className="h-4 w-4 rounded-full border border-gray-300"
-                            style={{ backgroundColor: color.hexCode }}
-                          />
-                          <span>{color.name}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {colorsLoading ? (
+                  <Skeleton className="h-10 w-full" />
+                ) : (
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    disabled={colorsLoading}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="!w-full">
+                        <SelectValue
+                          placeholder={
+                            colorsLoading ? 'Loading colors...' : 'Select color'
+                          }
+                        />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {colors.map((color) => (
+                        <SelectItem key={color._id} value={color._id}>
+                          <div className="flex items-center space-x-2">
+                            <div
+                              className="h-4 w-4 rounded-full border border-gray-300"
+                              style={{ backgroundColor: color.hexCode }}
+                            />
+                            <span>{color.name}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
                 <FormMessage />
               </FormItem>
             )}

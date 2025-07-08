@@ -19,9 +19,10 @@ import {
 import { Heart, Shield, Award, Zap } from 'lucide-react';
 import type { Control } from 'react-hook-form';
 import type { AddPetFormValues } from '../AddPet';
+import type { EditPetFormValues } from '../EditPet';
 
 interface PetHealthInfoProps {
-  control: Control<AddPetFormValues>;
+  control: Control<AddPetFormValues | EditPetFormValues>;
 }
 
 const PetHealthInfo = ({ control }: PetHealthInfoProps) => {
