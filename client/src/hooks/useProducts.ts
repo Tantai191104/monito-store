@@ -85,16 +85,18 @@ export const useUpdateProduct = () => {
       return response;
     },
     onSuccess: (data, variables) => {
+      // 💡 FIX: Use the `data` parameter, which is the response from the mutation function.
+      const updatedProduct = data.data.product;
 
       // Invalidate and refetch queries
       queryClient.invalidateQueries({ queryKey: productKeys.lists() });
-      queryClient.invalidateQueries({
-        queryKey: productKeys.detail(variables.id),
-      });
       queryClient.invalidateQueries({ queryKey: productKeys.all });
 
-      // Update cache cho product detail
-      queryClient.setQueryData(productKeys.detail(variables.id), data);
+      // Update cache for product detail to provide an instant UI update
+      queryClient.setQueryData(
+        productKeys.detail(variables.id),
+        updatedProduct,
+      );
     },
     onError: (error: any) => {
       console.error('❌ Update product error:', error);

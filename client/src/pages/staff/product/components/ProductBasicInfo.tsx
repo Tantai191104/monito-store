@@ -23,10 +23,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { mockBrands } from '@/data/mockProducts';
 import { useActiveCategories } from '@/hooks/useCategories';
 import type { Control } from 'react-hook-form';
 import type { AddProductFormValues } from '../AddProduct';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ProductBasicInfoProps {
   control: Control<AddProductFormValues>;
@@ -64,55 +64,39 @@ const ProductBasicInfo = ({ control }: ProductBasicInfoProps) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Category</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger className="!w-full">
-                      <SelectValue
-                        placeholder={
-                          categoriesLoading ? 'Loading...' : 'Select category'
-                        }
-                      />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {apiCategories.map((category) => (
-                      <SelectItem key={category._id} value={category._id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {categoriesLoading ? (
+                  <Skeleton className="h-10 w-full" />
+                ) : (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="!w-full">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {apiCategories.map((category) => (
+                        <SelectItem key={category._id} value={category._id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
                 <FormMessage />
               </FormItem>
             )}
           />
 
+          {/* Changed brand from Select to Input */}
           <FormField
             control={control}
             name="brand"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Brand</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger className="!w-full">
-                      <SelectValue placeholder="Select brand" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {mockBrands.map((brand) => (
-                      <SelectItem key={brand} value={brand}>
-                        {brand}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <Input placeholder="Enter brand name" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
