@@ -10,8 +10,16 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { ChevronDown, Plus, Search } from 'lucide-react';
-import { useState } from 'react';
+import {
+  ChevronDown,
+  Plus,
+  Search,
+  Trash2,
+  ToggleLeft,
+  ToggleRight,
+  Loader2,
+} from 'lucide-react';
+import { useState, useMemo } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -45,26 +53,47 @@ import {
   PaginationPrevious,
   PaginationEllipsis,
 } from '@/components/ui/pagination';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
+import { TableSkeleton } from '@/components/ui/table-skeleton';
 import { Link } from 'react-router-dom';
+import {
+  useBulkDeleteProducts,
+  useBulkUpdateProductStatus,
+} from '@/hooks/useProducts';
+import type { Product } from '@/types/product';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  isLoading?: boolean;
   className?: string;
 }
 
-export function ProductDataTable<TData, TValue>({
+export function ProductDataTable<TData extends Product, TValue>({
   columns,
   data,
+  isLoading = false,
   className,
-}: DataTableProps<TData, TValue> & {
-  onProductAdded?: (product: any) => void;
-}) {
+}: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  // Bulk operations hooks
+  const bulkDeleteProducts = useBulkDeleteProducts();
+  const bulkUpdateStatus = useBulkUpdateProductStatus();
 
   const table = useReactTable({
     data,
@@ -90,12 +119,17 @@ export function ProductDataTable<TData, TValue>({
     },
   });
 
+  // Memoized selected products
+  const selectedProducts = useMemo(() => {
+    return table.getFilteredSelectedRowModel().rows.map((row) => row.original);
+  }, [rowSelection, table]);
+
   // Pagination helpers
   const currentPage = table.getState().pagination.pageIndex + 1;
   const totalPages = table.getPageCount();
   const pageSize = table.getState().pagination.pageSize;
   const totalItems = table.getFilteredRowModel().rows.length;
-  const startItem = (currentPage - 1) * pageSize + 1;
+  const startItem = totalItems > 0 ? (currentPage - 1) * pageSize + 1 : 0;
   const endItem = Math.min(currentPage * pageSize, totalItems);
 
   // Generate page numbers for pagination
@@ -117,6 +151,31 @@ export function ProductDataTable<TData, TValue>({
     }
     return pages;
   };
+
+  const handleBulkDelete = async () => {
+    const idsToDelete = selectedProducts.map((p) => p._id);
+    await bulkDeleteProducts.mutateAsync(idsToDelete);
+    table.resetRowSelection();
+    setDeleteDialogOpen(false);
+  };
+
+  const handleBulkUpdateStatus = async (isActive: boolean) => {
+    const idsToUpdate = selectedProducts
+      .filter((p) => p.isActive !== isActive)
+      .map((p) => p._id);
+    if (idsToUpdate.length > 0) {
+      await bulkUpdateStatus.mutateAsync({ ids: idsToUpdate, isActive });
+    }
+    table.resetRowSelection();
+  };
+
+  if (isLoading) {
+    return (
+      <div className={cn('w-full space-y-4', className)}>
+        <TableSkeleton rows={10} columns={11} />
+      </div>
+    );
+  }
 
   return (
     <div className={cn('w-full space-y-4', className)}>
@@ -205,10 +264,45 @@ export function ProductDataTable<TData, TValue>({
             {table.getFilteredRowModel().rows.length} row(s) selected.
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm">
-              Bulk Edit
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleBulkUpdateStatus(true)}
+              disabled={
+                bulkUpdateStatus.isPending ||
+                selectedProducts.every((p) => p.isActive)
+              }
+            >
+              {bulkUpdateStatus.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <ToggleRight className="mr-2 h-4 w-4" />
+              )}
+              Activate
             </Button>
-            <Button variant="destructive" size="sm">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleBulkUpdateStatus(false)}
+              disabled={
+                bulkUpdateStatus.isPending ||
+                selectedProducts.every((p) => !p.isActive)
+              }
+            >
+              {bulkUpdateStatus.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <ToggleLeft className="mr-2 h-4 w-4" />
+              )}
+              Deactivate
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setDeleteDialogOpen(true)}
+              disabled={bulkDeleteProducts.isPending}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
               Delete Selected
             </Button>
           </div>
@@ -375,6 +469,36 @@ export function ProductDataTable<TData, TValue>({
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action will permanently delete {selectedProducts.length}{' '}
+              product(s). This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkDelete}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={bulkDeleteProducts.isPending}
+            >
+              {bulkDeleteProducts.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

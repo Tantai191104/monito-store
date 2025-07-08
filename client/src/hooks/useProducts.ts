@@ -1,5 +1,7 @@
+import { toast } from 'sonner';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { productService } from '@/services/productService';
+import { getErrorMessage } from '@/utils/errorHandler';
 
 export const productKeys = {
   all: ['products'] as const,
@@ -101,6 +103,93 @@ export const useUpdateProduct = () => {
     onError: (error: any) => {
       console.error('❌ Update product error:', error);
       throw error;
+    },
+  });
+};
+
+// ✅ Bulk operations
+export const useBulkDeleteProducts = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      await Promise.all(ids.map((id) => productService.deleteProduct(id)));
+      return ids;
+    },
+    onSuccess: (deletedIds) => {
+      queryClient.setQueryData(
+        productKeys.lists(),
+        (oldData: { products: Product[] } | undefined) => {
+          if (!oldData) return { products: [] };
+          return {
+            ...oldData,
+            products: oldData.products.filter(
+              (p) => !deletedIds.includes(p._id),
+            ),
+          };
+        },
+      );
+      deletedIds.forEach((id) => {
+        queryClient.removeQueries({ queryKey: productKeys.detail(id) });
+      });
+      queryClient.invalidateQueries({ queryKey: productKeys.all });
+      toast.success(`${deletedIds.length} products deleted successfully!`);
+    },
+    onError: (error: any) => {
+      const apiError = error.response?.data as ApiError;
+      const message = getErrorMessage(apiError?.errorCode, apiError?.message);
+      toast.error(message);
+    },
+  });
+};
+
+export const useBulkUpdateProductStatus = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      ids,
+      isActive,
+    }: {
+      ids: string[];
+      isActive: boolean;
+    }) => {
+      const results = await Promise.all(
+        ids.map((id) => productService.updateProduct(id, { isActive })),
+      );
+      return {
+        updatedProducts: results.map((r) => r.data.product),
+        isActive,
+      };
+    },
+    onSuccess: ({ updatedProducts, isActive }) => {
+      const updatedIds = updatedProducts.map((p) => p._id);
+      queryClient.setQueryData(
+        productKeys.lists(),
+        (oldData: { products: Product[] } | undefined) => {
+          if (!oldData) return { products: [] };
+          return {
+            ...oldData,
+            products: oldData.products.map((p) =>
+              updatedIds.includes(p._id) ? { ...p, isActive } : p,
+            ),
+          };
+        },
+      );
+      updatedProducts.forEach((product) => {
+        queryClient.setQueryData(productKeys.detail(product._id), product);
+      });
+      queryClient.invalidateQueries({ queryKey: productKeys.all });
+      toast.success(
+        `${updatedIds.length} products ${
+          isActive ? 'activated' : 'deactivated'
+        } successfully!`,
+      );
+    },
+    onError: (error: any) => {
+      const apiError = error.response?.data as ApiError;
+      const message = getErrorMessage(apiError?.errorCode, apiError?.message);
+      toast.error(message);
     },
   });
 };
