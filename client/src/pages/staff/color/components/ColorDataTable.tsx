@@ -13,7 +13,6 @@ import {
 import { ChevronDown, Search, Download, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -222,11 +221,6 @@ export function ColorDataTable<TData, TValue>({
         </div>
 
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" disabled={isLoading}>
-            <Download className="mr-2 h-4 w-4" />
-            Export
-          </Button>
-
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button

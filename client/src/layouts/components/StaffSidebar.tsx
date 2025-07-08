@@ -1,16 +1,17 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth'; // ← import hook
 import {
   Package,
   Heart,
   ShoppingCart,
-  Grid3X3,
+  BarChart3,
   Palette,
   Dog,
   Users,
-  BarChart3,
   ChevronUp,
   User2,
   LogOut,
+  Grid3X3,
 } from 'lucide-react';
 
 import {
@@ -30,12 +31,19 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const StaffSidebar = () => {
   const location = useLocation();
+  const { user, logout } = useAuth(); // ← get user & logout
+
+  const initials = user?.name
+    .split(' ')
+    .map((n) => n[0])
+    .join('');
 
   // 🔧 Helper function để check active state
   const isMenuActive = (basePath: string): boolean => {
@@ -108,7 +116,7 @@ const StaffSidebar = () => {
   ];
 
   return (
-    <Sidebar collapsible="icon" className="border-r">
+    <Sidebar collapsible="icon">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -171,15 +179,18 @@ const StaffSidebar = () => {
                   className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 >
                   <Avatar className="h-8 w-8 rounded-lg">
-                    <AvatarImage src="/avatars/staff-avatar.png" alt="Staff" />
-                    <AvatarFallback className="rounded-lg bg-blue-100 text-blue-600">
-                      ST
-                    </AvatarFallback>
+                    <AvatarImage
+                      src={user?.avatarUrl || '/avatars/staff-avatar.png'}
+                      alt={user?.name || 'Staff'}
+                    />
+                    <AvatarFallback>{initials || 'ST'}</AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">Staff Member</span>
+                    <span className="truncate font-semibold">
+                      {user?.name || 'Staff Member'}
+                    </span>
                     <span className="text-muted-foreground truncate text-xs">
-                      staff@monito.com
+                      {user?.email || '—'}
                     </span>
                   </div>
                   <ChevronUp className="ml-auto size-4" />
@@ -191,11 +202,17 @@ const StaffSidebar = () => {
                 align="end"
                 sideOffset={4}
               >
-                <DropdownMenuItem>
-                  <User2 className="mr-2 size-4" />
-                  Profile
+                <DropdownMenuItem asChild>
+                  <Link to="/staff/profile">
+                    <User2 className="mr-2 size-4" />
+                    Profile
+                  </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-red-600"
+                  onClick={() => logout.mutate()}
+                >
                   <LogOut className="mr-2 size-4" />
                   Sign Out
                 </DropdownMenuItem>

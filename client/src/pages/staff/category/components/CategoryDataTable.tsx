@@ -222,11 +222,6 @@ export function CategoryDataTable<TData, TValue>({
         </div>
 
         <div className="flex items-center space-x-2">
-          <Button variant="outline" disabled={isLoading}>
-            <Download className="h-4 w-4" />
-            Export
-          </Button>
-
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button

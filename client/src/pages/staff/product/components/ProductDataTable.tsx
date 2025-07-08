@@ -206,9 +206,6 @@ export function ProductDataTable<TData, TValue>({
           </div>
           <div className="flex items-center space-x-2">
             <Button variant="outline" size="sm">
-              Export Selected
-            </Button>
-            <Button variant="outline" size="sm">
               Bulk Edit
             </Button>
             <Button variant="destructive" size="sm">

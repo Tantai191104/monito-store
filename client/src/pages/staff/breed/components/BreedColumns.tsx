@@ -143,10 +143,6 @@ export const breedColumns: ColumnDef<Breed>[] = [
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="flex items-center">
-              <Eye className="h-4 w-4" />
-              View pets
-            </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center">
               <Edit className="h-4 w-4" />
               Edit breed
             </DropdownMenuItem>
