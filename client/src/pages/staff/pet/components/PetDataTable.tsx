@@ -10,18 +10,10 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { ChevronDown, Search, Plus, Download, Loader2 } from 'lucide-react';
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { toast } from 'sonner';
+import { Search, Trash2, Loader2, ToggleLeft, ToggleRight } from 'lucide-react';
+import { useState, useMemo } from 'react';
 
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import {
   Table,
@@ -32,26 +24,33 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination';
 import { cn } from '@/lib/utils';
 import { TableSkeleton } from '@/components/ui/table-skeleton';
 import {
   useBulkDeletePets,
   useBulkUpdatePetAvailability,
+  useDeletePet,
 } from '@/hooks/usePets';
+import { useActiveBreeds } from '@/hooks/useBreeds';
+import type { Pet } from '@/types/pet';
+import { DataTableToolbar } from '@/components/ui/data-table/DataTableToolbar';
+import { DataTablePagination } from '@/components/ui/data-table/DataTablePagination';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -60,7 +59,7 @@ interface DataTableProps<TData, TValue> {
   className?: string;
 }
 
-export function PetDataTable<TData, TValue>({
+export function PetDataTable<TData extends Pet, TValue>({
   columns,
   data,
   isLoading = false,
@@ -70,10 +69,14 @@ export function PetDataTable<TData, TValue>({
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [petToDelete, setPetToDelete] = useState<TData | null>(null);
 
-  // Bulk operations hooks
+  // Hooks for bulk and single actions
   const bulkDeletePets = useBulkDeletePets();
   const bulkUpdateAvailability = useBulkUpdatePetAvailability();
+  const deletePet = useDeletePet();
+  const { data: breeds = [] } = useActiveBreeds(); // Lấy danh sách breeds
 
   const table = useReactTable({
     data,
@@ -97,222 +100,129 @@ export function PetDataTable<TData, TValue>({
         pageSize: 10,
       },
     },
+    meta: {
+      // Pass a function to the table meta to allow columns to trigger deletion
+      requestDelete: (pet: TData) => {
+        setPetToDelete(pet);
+      },
+    },
   });
 
-  // Get unique values for filters
-  const breedOptions = Array.from(
-    new Set(data.map((pet: any) => pet.breed?.name).filter(Boolean)),
+  const selectedPets = useMemo(
+    () => table.getFilteredSelectedRowModel().rows.map((row) => row.original),
+    [rowSelection, table],
   );
-  const sizeOptions = Array.from(
-    new Set(data.map((pet: any) => pet.size).filter(Boolean)),
-  );
-
-  // Pagination helpers
-  const currentPage = table.getState().pagination.pageIndex + 1;
-  const totalPages = table.getPageCount();
-  const pageSize = table.getState().pagination.pageSize;
-  const totalItems = table.getFilteredRowModel().rows.length;
-  const startItem = (currentPage - 1) * pageSize + 1;
-  const endItem = Math.min(currentPage * pageSize, totalItems);
-
-  // Generate page numbers for pagination
-  const getPageNumbers = () => {
-    const pages = [];
-    const maxVisiblePages = 5;
-
-    if (totalPages <= maxVisiblePages) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      const startPage = Math.max(1, currentPage - 2);
-      const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-      for (let i = startPage; i <= endPage; i++) {
-        pages.push(i);
-      }
-    }
-    return pages;
-  };
-
-  // Bulk actions handlers
-  const selectedRows = table.getFilteredSelectedRowModel().rows;
-  const selectedPets = selectedRows.map((row) => row.original as any);
-  const selectedIds = selectedPets.map((pet) => pet._id);
 
   const handleBulkDelete = async () => {
-    try {
-      await bulkDeletePets.mutateAsync(selectedIds);
-      setRowSelection({});
-    } catch (error) {
-      // Error handled in mutation
-    }
+    const idsToDelete = selectedPets.map((p) => p._id);
+    await bulkDeletePets.mutateAsync(idsToDelete);
+    table.resetRowSelection();
+    setBulkDeleteDialogOpen(false);
+  };
+
+  const handleSingleDelete = async () => {
+    if (!petToDelete) return;
+    await deletePet.mutateAsync(petToDelete._id);
+    setPetToDelete(null);
   };
 
   const handleBulkUpdateAvailability = async (isAvailable: boolean) => {
-    const targetIds = selectedPets
-      .filter((pet) => pet.isAvailable !== isAvailable)
-      .map((pet) => pet._id);
-
-    if (targetIds.length === 0) {
-      const statusText = isAvailable ? 'available' : 'sold';
-      toast.info(`All selected pets are already ${statusText}`);
-      return;
-    }
-
-    try {
+    const idsToUpdate = selectedPets
+      .filter((p) => p.isAvailable !== isAvailable)
+      .map((p) => p._id);
+    if (idsToUpdate.length > 0) {
       await bulkUpdateAvailability.mutateAsync({
-        ids: targetIds,
+        ids: idsToUpdate,
         isAvailable,
       });
-      setRowSelection({});
-    } catch (error) {
-      // Error handled in mutation
     }
+    table.resetRowSelection();
   };
 
-  // Show loading skeleton while loading
   if (isLoading) {
     return (
       <div className={cn('w-full space-y-4', className)}>
-        <TableSkeleton rows={10} columns={11} />
+        <TableSkeleton rows={10} columns={columns.length} />
       </div>
     );
   }
 
   return (
     <div className={cn('w-full space-y-4', className)}>
-      {/* Toolbar */}
-      <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
-        <div className="flex flex-col space-y-2 lg:flex-row lg:items-center lg:space-y-0 lg:space-x-2">
-          <div className="relative">
-            <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
-            <Input
-              placeholder="Search pets..."
+      <DataTableToolbar
+        table={table}
+        addHref="/staff/pets/add"
+        addLabel="Add Pet"
+        filterControls={
+          <>
+            <div className="relative">
+              <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
+              <Input
+                placeholder="Search pets by name..."
+                value={
+                  (table.getColumn('name')?.getFilterValue() as string) ?? ''
+                }
+                onChange={(event) =>
+                  table.getColumn('name')?.setFilterValue(event.target.value)
+                }
+                className="max-w-sm pl-8"
+              />
+            </div>
+            {/* Breed Filter */}
+
+            <Select
               value={
-                (table.getColumn('name')?.getFilterValue() as string) ?? ''
+                (table.getColumn('breed')?.getFilterValue() as string) ?? ''
               }
-              onChange={(event) =>
-                table.getColumn('name')?.setFilterValue(event.target.value)
+              onValueChange={(value) =>
+                table
+                  .getColumn('breed')
+                  ?.setFilterValue(value === 'all' ? '' : value)
               }
-              className="max-w-sm pl-8"
-              disabled={isLoading}
-            />
-          </div>
-
-          <Select
-            value={(table.getColumn('breed')?.getFilterValue() as string) ?? ''}
-            onValueChange={(value) =>
-              table
-                .getColumn('breed')
-                ?.setFilterValue(value === 'all' ? '' : value)
-            }
-            disabled={isLoading}
-          >
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Breed" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Breeds</SelectItem>
-              {breedOptions.map((breed) => (
-                <SelectItem key={breed} value={breed}>
-                  {breed}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={(table.getColumn('size')?.getFilterValue() as string) ?? ''}
-            onValueChange={(value) =>
-              table
-                .getColumn('size')
-                ?.setFilterValue(value === 'all' ? '' : value)
-            }
-            disabled={isLoading}
-          >
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Size" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Sizes</SelectItem>
-              {sizeOptions.map((size) => (
-                <SelectItem key={size} value={size}>
-                  {size}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={
-              (table.getColumn('isAvailable')?.getFilterValue() as string) ?? ''
-            }
-            onValueChange={(value) =>
-              table
-                .getColumn('isAvailable')
-                ?.setFilterValue(value === 'all' ? '' : value === 'available')
-            }
-            disabled={isLoading}
-          >
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="available">Available</SelectItem>
-              <SelectItem value="sold">Sold</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="ml-auto"
-                disabled={isLoading}
-              >
-                Columns <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column.id.replace(/([A-Z])/g, ' $1').trim()}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <Button asChild>
-            <Link to="/staff/pets/add">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Pet
-            </Link>
-          </Button>
-        </div>
-      </div>
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select breed" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Breeds</SelectItem>
+                {breeds.map((breed) => (
+                  <SelectItem key={breed._id} value={breed.name}>
+                    {breed.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {/* Size Filter */}
+            <Select
+              value={
+                (table.getColumn('size')?.getFilterValue() as string) ?? ''
+              }
+              onValueChange={(value) =>
+                table
+                  .getColumn('size')
+                  ?.setFilterValue(value === 'all' ? '' : value)
+              }
+            >
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Select size" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Sizes</SelectItem>
+                <SelectItem value="Small">Small</SelectItem>
+                <SelectItem value="Medium">Medium</SelectItem>
+                <SelectItem value="Large">Large</SelectItem>
+              </SelectContent>
+            </Select>
+          </>
+        }
+      />
 
       {/* Selected items actions */}
-      {selectedRows.length > 0 && !isLoading && (
-        <div className="bg-muted/50 flex items-center justify-between rounded-md border px-4 py-2">
+      {table.getFilteredSelectedRowModel().rows.length > 0 && (
+        <div className="bg-muted/50 mb-4 flex items-center justify-between rounded-md border px-4 py-2">
           <div className="text-muted-foreground text-sm">
-            {selectedRows.length} of {table.getFilteredRowModel().rows.length}{' '}
-            row(s) selected.
+            {table.getFilteredSelectedRowModel().rows.length} of{' '}
+            {table.getFilteredRowModel().rows.length} row(s) selected.
           </div>
           <div className="flex items-center space-x-2">
             <Button
@@ -321,13 +231,11 @@ export function PetDataTable<TData, TValue>({
               onClick={() => handleBulkUpdateAvailability(true)}
               disabled={
                 bulkUpdateAvailability.isPending ||
-                selectedPets.every((pet) => pet.isAvailable)
+                selectedPets.every((p) => p.isAvailable)
               }
             >
-              {bulkUpdateAvailability.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : null}
-              Mark Available
+              <ToggleRight className="mr-2 h-4 w-4" />
+              Mark as Available
             </Button>
             <Button
               variant="outline"
@@ -335,23 +243,19 @@ export function PetDataTable<TData, TValue>({
               onClick={() => handleBulkUpdateAvailability(false)}
               disabled={
                 bulkUpdateAvailability.isPending ||
-                selectedPets.every((pet) => !pet.isAvailable)
+                selectedPets.every((p) => !p.isAvailable)
               }
             >
-              {bulkUpdateAvailability.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : null}
+              <ToggleLeft className="mr-2 h-4 w-4" />
               Mark as Sold
             </Button>
             <Button
               variant="destructive"
               size="sm"
-              onClick={handleBulkDelete}
+              onClick={() => setBulkDeleteDialogOpen(true)}
               disabled={bulkDeletePets.isPending}
             >
-              {bulkDeletePets.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : null}
+              <Trash2 className="mr-2 h-4 w-4" />
               Delete Selected
             </Button>
           </div>
@@ -364,18 +268,16 @@ export function PetDataTable<TData, TValue>({
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
-                    </TableHead>
-                  );
-                })}
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                  </TableHead>
+                ))}
               </TableRow>
             ))}
           </TableHeader>
@@ -403,7 +305,7 @@ export function PetDataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No pets found.
+                  No results.
                 </TableCell>
               </TableRow>
             )}
@@ -411,76 +313,66 @@ export function PetDataTable<TData, TValue>({
         </Table>
       </div>
 
-      {/* Pagination */}
-      <div className="flex items-center justify-between space-x-2 pb-4">
-        <div className="text-muted-foreground text-sm">
-          Showing {startItem} to {endItem} of {totalItems} results
-        </div>
-        <div className="flex items-center gap-5">
-          <div className="flex items-center gap-3">
-            <p className="shrink-0 text-sm font-medium">Rows per page</p>
-            <Select
-              value={`${table.getState().pagination.pageSize}`}
-              onValueChange={(value) => {
-                table.setPageSize(Number(value));
-              }}
-              disabled={isLoading}
+      <DataTablePagination table={table} />
+
+      {/* Dialogs */}
+      <AlertDialog
+        open={bulkDeleteDialogOpen}
+        onOpenChange={setBulkDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action will permanently delete {selectedPets.length} pet(s).
+              This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkDelete}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={bulkDeletePets.isPending}
             >
-              <SelectTrigger className="h-8 w-[70px]">
-                <SelectValue
-                  placeholder={table.getState().pagination.pageSize}
-                />
-              </SelectTrigger>
-              <SelectContent side="top">
-                {[5, 10, 20, 30, 50].map((pageSize) => (
-                  <SelectItem key={pageSize} value={`${pageSize}`}>
-                    {pageSize}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          {totalPages > 1 && !isLoading && (
-            <Pagination className="w-fit">
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() => table.previousPage()}
-                    className={
-                      !table.getCanPreviousPage()
-                        ? 'pointer-events-none opacity-50'
-                        : 'cursor-pointer'
-                    }
-                  />
-                </PaginationItem>
+              {bulkDeletePets.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                'Delete'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-                {getPageNumbers().map((pageNumber) => (
-                  <PaginationItem key={pageNumber}>
-                    <PaginationLink
-                      onClick={() => table.setPageIndex(pageNumber - 1)}
-                      isActive={currentPage === pageNumber}
-                      className="cursor-pointer"
-                    >
-                      {pageNumber}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
-
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={() => table.nextPage()}
-                    className={
-                      !table.getCanNextPage()
-                        ? 'pointer-events-none opacity-50'
-                        : 'cursor-pointer'
-                    }
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          )}
-        </div>
-      </div>
+      <AlertDialog
+        open={!!petToDelete}
+        onOpenChange={(open) => !open && setPetToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action will permanently delete the pet "
+              <strong>{petToDelete?.name}</strong>". This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleSingleDelete}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={deletePet.isPending}
+            >
+              {deletePet.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                'Delete'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

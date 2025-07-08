@@ -33,6 +33,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import type { Pet } from '@/types/pet';
+import { formatPrice } from '@/utils/formatter';
 import { useDeletePet, useUpdatePetAvailability } from '@/hooks/usePets';
 
 export const petColumns: ColumnDef<Pet>[] = [
@@ -105,16 +106,12 @@ export const petColumns: ColumnDef<Pet>[] = [
     },
   },
   {
-    accessorKey: 'breed',
+    id: 'breed',
+    accessorFn: (row) => row.breed.name, // Truy cập vào tên breed để lọc
     header: 'Breed',
     cell: ({ row }) => {
-      const breed = row.getValue('breed') as Pet['breed'];
+      const breed = row.original.breed;
       return <Badge variant="secondary">{breed?.name}</Badge>;
-    },
-    filterFn: (row, id, value) => {
-      if (value === 'all') return true;
-      const breed = row.getValue(id) as Pet['breed'];
-      return breed.name === value;
     },
   },
   {
@@ -167,9 +164,7 @@ export const petColumns: ColumnDef<Pet>[] = [
     cell: ({ row }) => {
       const price = parseFloat(row.getValue('price'));
       return (
-        <div className="text-right font-medium">
-          {price.toLocaleString('vi-VN')} ₫
-        </div>
+        <div className="text-right font-medium">{formatPrice(price)} VND</div>
       );
     },
   },
@@ -194,13 +189,6 @@ export const petColumns: ColumnDef<Pet>[] = [
           </div>
         </div>
       );
-    },
-  },
-  {
-    accessorKey: 'location',
-    header: 'Location',
-    cell: ({ row }) => {
-      return <div className="text-sm">{row.getValue('location')}</div>;
     },
   },
   {

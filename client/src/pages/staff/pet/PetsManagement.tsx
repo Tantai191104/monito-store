@@ -38,7 +38,7 @@ const PetsManagement = () => {
         columns={petColumns}
         data={pets}
         isLoading={isLoading}
-        className="rounded-lg bg-white p-6 shadow"
+        className="p-6"
       />
     </div>
   );
