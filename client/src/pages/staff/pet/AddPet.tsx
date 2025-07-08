@@ -106,7 +106,11 @@ const AddPet = () => {
               {/* Main Content - 2 columns */}
               <div className="space-y-6 lg:col-span-2">
                 <PetBasicInfo control={form.control} />
-                <PetImageUpload control={form.control} watch={form.watch} />
+                <PetImageUpload
+                  control={form.control}
+                  watch={form.watch}
+                  setValue={form.setValue}
+                />
               </div>
 
               {/* Sidebar - 1 column */}
