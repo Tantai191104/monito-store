@@ -69,6 +69,7 @@ import { Link } from 'react-router-dom';
 import {
   useBulkDeleteProducts,
   useBulkUpdateProductStatus,
+  useDeleteProduct, // Import the hook for single deletion
 } from '@/hooks/useProducts';
 import type { Product } from '@/types/product';
 
@@ -89,11 +90,13 @@ export function ProductDataTable<TData extends Product, TValue>({
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false); // Renamed for clarity
+  const [productToDelete, setProductToDelete] = useState<TData | null>(null); // State for single delete dialog
 
-  // Bulk operations hooks
+  // Bulk and single operations hooks
   const bulkDeleteProducts = useBulkDeleteProducts();
   const bulkUpdateStatus = useBulkUpdateProductStatus();
+  const deleteProduct = useDeleteProduct(); // Hook for single delete
 
   const table = useReactTable({
     data,
@@ -115,6 +118,11 @@ export function ProductDataTable<TData extends Product, TValue>({
     initialState: {
       pagination: {
         pageSize: 10,
+      },
+    },
+    meta: {
+      requestDelete: (product: TData) => {
+        setProductToDelete(product);
       },
     },
   });
@@ -156,7 +164,13 @@ export function ProductDataTable<TData extends Product, TValue>({
     const idsToDelete = selectedProducts.map((p) => p._id);
     await bulkDeleteProducts.mutateAsync(idsToDelete);
     table.resetRowSelection();
-    setDeleteDialogOpen(false);
+    setBulkDeleteDialogOpen(false);
+  };
+
+  const handleSingleDelete = async () => {
+    if (!productToDelete) return;
+    await deleteProduct.mutateAsync(productToDelete._id);
+    setProductToDelete(null); // Close dialog on success
   };
 
   const handleBulkUpdateStatus = async (isActive: boolean) => {
@@ -273,11 +287,6 @@ export function ProductDataTable<TData extends Product, TValue>({
                 selectedProducts.every((p) => p.isActive)
               }
             >
-              {bulkUpdateStatus.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <ToggleRight className="mr-2 h-4 w-4" />
-              )}
               Activate
             </Button>
             <Button
@@ -289,17 +298,12 @@ export function ProductDataTable<TData extends Product, TValue>({
                 selectedProducts.every((p) => !p.isActive)
               }
             >
-              {bulkUpdateStatus.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <ToggleLeft className="mr-2 h-4 w-4" />
-              )}
               Deactivate
             </Button>
             <Button
               variant="destructive"
               size="sm"
-              onClick={() => setDeleteDialogOpen(true)}
+              onClick={() => setBulkDeleteDialogOpen(true)}
               disabled={bulkDeleteProducts.isPending}
             >
               <Trash2 className="mr-2 h-4 w-4" />
@@ -470,8 +474,11 @@ export function ProductDataTable<TData extends Product, TValue>({
         </div>
       </div>
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      {/* Bulk Delete Confirmation Dialog */}
+      <AlertDialog
+        open={bulkDeleteDialogOpen}
+        onOpenChange={setBulkDeleteDialogOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
@@ -488,6 +495,39 @@ export function ProductDataTable<TData extends Product, TValue>({
               disabled={bulkDeleteProducts.isPending}
             >
               {bulkDeleteProducts.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Single Delete Confirmation Dialog */}
+      <AlertDialog
+        open={!!productToDelete}
+        onOpenChange={(open) => !open && setProductToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action will permanently delete the product "
+              <strong>{productToDelete?.name}</strong>". This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleSingleDelete}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={deleteProduct.isPending}
+            >
+              {deleteProduct.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Deleting...

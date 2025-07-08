@@ -36,7 +36,12 @@ const ProductsManagement = () => {
         </p>
       </div>
 
-      <ProductDataTable columns={productColumns} data={products} className="p-6" />
+      <ProductDataTable
+        columns={productColumns}
+        data={products}
+        isLoading={isLoading}
+        className="p-6"
+      />
     </div>
   );
 };
