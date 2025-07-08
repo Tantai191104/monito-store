@@ -98,15 +98,12 @@ export const useUpdatePetAvailability = () => {
     mutationFn: ({ id, isAvailable }: { id: string; isAvailable: boolean }) =>
       petService.updateAvailability(id, isAvailable),
     onSuccess: (response, { id }) => {
-      // ✅ FIX: Invalidate list queries to trigger a refetch for the table
       queryClient.invalidateQueries({ queryKey: petKeys.lists() });
 
       const updatedPet = response.data?.pet;
       if (updatedPet) {
-        // This part is good, it updates the detail view cache
         queryClient.setQueryData(petKeys.detail(id), updatedPet);
       }
-      toast.success('Pet availability updated successfully!');
       return updatedPet;
     },
     onError: (error: any) => {
@@ -123,10 +120,8 @@ export const useDeletePet = () => {
   return useMutation({
     mutationFn: (id: string) => petService.deletePet(id),
     onSuccess: (_, deletedId) => {
-      // ✅ FIX: Invalidate list queries to trigger a refetch for the table
       queryClient.invalidateQueries({ queryKey: petKeys.lists() });
       queryClient.removeQueries({ queryKey: petKeys.detail(deletedId) });
-      toast.success('Pet deleted successfully!');
     },
     onError: (error: any) => {
       const apiError = error.response?.data as ApiError;
