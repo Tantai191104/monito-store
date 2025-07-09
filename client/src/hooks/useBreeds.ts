@@ -75,8 +75,15 @@ export const useCreateBreed = () => {
       queryClient.invalidateQueries({ queryKey: breedKeys.all });
       const newBreed = response.data?.breed;
       if (newBreed) {
+        // ✅ Fix: Add to BEGINNING of list with petCount = 0
         queryClient.setQueryData(breedKeys.lists(), (old: Breed[] = []) => [
-          newBreed,
+          { ...newBreed, petCount: 0 }, // ✅ Add at beginning
+          ...old,
+        ]);
+
+        // ✅ Also update the main query key
+        queryClient.setQueryData(['breeds', ''], (old: Breed[] = []) => [
+          { ...newBreed, petCount: 0 },
           ...old,
         ]);
       }

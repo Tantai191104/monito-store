@@ -42,6 +42,7 @@ import {
   useBulkDeactivateBreeds,
 } from '@/hooks/useBreeds';
 import { toast } from 'sonner';
+import { AddBreedDialog } from './AddBreedDialog';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -174,6 +175,33 @@ export function BreedDataTable<TData, TValue>({
           <SelectItem value="inactive">Inactive</SelectItem>
         </SelectContent>
       </Select>
+
+      {/* ✅ Sort Options */}
+      <Select
+        value={
+          table.getState().sorting[0]
+            ? `${table.getState().sorting[0].id}-${table.getState().sorting[0].desc ? 'desc' : 'asc'}`
+            : 'createdAt-desc'
+        }
+        onValueChange={(value) => {
+          const [field, order] = value.split('-');
+          table.resetSorting();
+          table.getColumn(field)?.toggleSorting(order === 'desc');
+        }}
+        disabled={isLoading}
+      >
+        <SelectTrigger className="w-[160px]">
+          <SelectValue placeholder="Sort by" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="createdAt-desc">Newest First</SelectItem>
+          <SelectItem value="createdAt-asc">Oldest First</SelectItem>
+          <SelectItem value="name-asc">Name A-Z</SelectItem>
+          <SelectItem value="name-desc">Name Z-A</SelectItem>
+          <SelectItem value="petCount-desc">Most Pets</SelectItem>
+          <SelectItem value="petCount-asc">Least Pets</SelectItem>
+        </SelectContent>
+      </Select>
     </>
   );
 
@@ -183,8 +211,7 @@ export function BreedDataTable<TData, TValue>({
       <DataTableToolbar
         table={table}
         filterControls={filterControls}
-        addHref="/staff/breeds/add"
-        addLabel="Add Breed"
+        addButton={<AddBreedDialog />}
       />
 
       {/* Selected items actions */}

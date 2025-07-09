@@ -24,7 +24,7 @@ export const breedService = {
   },
 
   async getBreeds() {
-    const breeds = await BreedModel.find().sort({ name: 1 });
+    const breeds = await BreedModel.find().sort({ createdAt: -1 });
 
     // Calculate pet count for each breed
     const breedsWithPetCount = await Promise.all(
