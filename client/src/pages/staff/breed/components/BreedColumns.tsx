@@ -6,8 +6,10 @@ import {
   Trash2,
   Eye,
   EyeOff,
+  Copy,
 } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -20,7 +22,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-// ✅ Import Tooltip components
 import {
   Tooltip,
   TooltipContent,
@@ -28,6 +29,11 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import type { Breed } from '@/types/breed';
+
+// ✅ Import all dialogs
+import { EditBreedDialog } from './EditBreedDialog';
+import { DeleteBreedDialog } from './DeleteBreedDialog';
+import { DeactivateBreedDialog } from './DeactivateBreedDialog';
 
 export const breedColumns: ColumnDef<Breed>[] = [
   {
@@ -234,17 +240,27 @@ export const breedColumns: ColumnDef<Breed>[] = [
     header: 'Actions',
     cell: ({ row }) => {
       const breed = row.original;
-
       return <BreedActionsCell breed={breed} />;
     },
   },
 ];
 
-// ✅ Separate component for actions to handle hooks properly
+// ✅ Complete Actions Cell component
 function BreedActionsCell({ breed }: { breed: Breed }) {
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
+
+  const handleCopyId = () => {
+    navigator.clipboard.writeText(breed._id);
+    toast.success('Breed ID copied to clipboard!');
+  };
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setEditDialogOpen(true);
+  };
 
   return (
     <>
@@ -257,19 +273,20 @@ function BreedActionsCell({ breed }: { breed: Breed }) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem
-            onClick={() => navigator.clipboard.writeText(breed._id)}
-          >
+
+          <DropdownMenuItem onClick={handleCopyId}>
+            <Copy className="h-4 w-4" />
             Copy ID
           </DropdownMenuItem>
+
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
+          <DropdownMenuItem onClick={handleEditClick}>
             <Edit className="h-4 w-4" />
             Edit breed
           </DropdownMenuItem>
 
-          {/* Deactivate/Activate action */}
+          {/* ✅ Toggle Status action */}
           <DropdownMenuItem
             onClick={() => setDeactivateDialogOpen(true)}
             className={breed.isActive ? 'text-orange-600' : 'text-green-600'}
@@ -289,7 +306,7 @@ function BreedActionsCell({ breed }: { breed: Breed }) {
 
           <DropdownMenuSeparator />
 
-          {/* Delete action */}
+          {/* ✅ Delete action */}
           <DropdownMenuItem
             onClick={() => setDeleteDialogOpen(true)}
             className="text-red-600"
@@ -300,13 +317,13 @@ function BreedActionsCell({ breed }: { breed: Breed }) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* TODO: Implement dialogs */}
-      {/* <EditBreedDialog
+      {/* ✅ All Dialogs */}
+      <EditBreedDialog
         breed={breed}
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
       />
-      
+
       <DeactivateBreedDialog
         breed={breed}
         open={deactivateDialogOpen}
@@ -317,7 +334,7 @@ function BreedActionsCell({ breed }: { breed: Breed }) {
         breed={breed}
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-      /> */}
+      />
     </>
   );
 }

@@ -101,20 +101,40 @@ export const useCreateBreed = () => {
 // Update breed mutation
 export const useUpdateBreed = () => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateBreedPayload }) =>
       breedService.updateBreed(id, data),
     onSuccess: (response, { id }) => {
       queryClient.invalidateQueries({ queryKey: breedKeys.all });
+
       const updatedBreed = response.data?.breed;
       if (updatedBreed) {
-        queryClient.setQueryData(breedKeys.detail(id), updatedBreed);
+        // ✅ Update the breed in all relevant queries
         queryClient.setQueryData(breedKeys.lists(), (old: Breed[] = []) =>
-          old.map((breed) => (breed._id === id ? updatedBreed : breed)),
+          old.map((breed) =>
+            breed._id === id
+              ? { ...updatedBreed, petCount: breed.petCount }
+              : breed,
+          ),
         );
+
+        // ✅ Update main query key
+        queryClient.setQueryData(['breeds', ''], (old: Breed[] = []) =>
+          old.map((breed) =>
+            breed._id === id
+              ? { ...updatedBreed, petCount: breed.petCount }
+              : breed,
+          ),
+        );
+
+        // ✅ Update individual breed query
+        queryClient.setQueryData(breedKeys.detail(id), {
+          data: { breed: updatedBreed },
+        });
       }
+
       toast.success('Breed updated successfully!');
-      return updatedBreed;
     },
     onError: (error: any) => {
       const apiError = error.response?.data as ApiError;
