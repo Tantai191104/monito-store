@@ -39,5 +39,17 @@ categoryRoute.delete(
   requireAdminOrStaff,
   categoryController.deleteCategory,
 );
+categoryRoute.post(
+  '/bulk-delete',
+  authenticate,
+  requireAdminOrStaff,
+  categoryController.bulkDeleteCategories,
+);
+categoryRoute.get(
+  '/:id/usage-stats',
+  authenticate,
+  requireAdminOrStaff,
+  categoryController.getCategoryUsageStats,
+);
 
 export default categoryRoute;

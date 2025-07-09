@@ -7,7 +7,29 @@ import API from '@/lib/axios';
  * Types
  */
 import type { ApiResponse } from '@/types/api';
-import type { Category, CreateCategoryPayload, UpdateCategoryPayload } from '@/types/category';
+import type {
+  Category,
+  CreateCategoryPayload,
+  UpdateCategoryPayload,
+} from '@/types/category';
+
+// ✅ Add new types for enhanced functionality
+export interface CategoryUsageStats {
+  category: Category;
+  productCount: number;
+  sampleProducts: Array<{ _id: string; name: string }>;
+  canDelete: boolean;
+}
+
+export interface BulkDeleteResult {
+  deleted: Category[];
+  failed: Array<{
+    categoryId: string;
+    categoryName: string;
+    reason: string;
+    productCount: number;
+  }>;
+}
 
 export const categoryService = {
   // Get all categories
@@ -54,6 +76,27 @@ export const categoryService = {
   // Delete category
   async deleteCategory(id: string): Promise<ApiResponse> {
     const response = await API.delete<ApiResponse>(`/categories/${id}`);
+    return response.data;
+  },
+
+  // ✅ New method for bulk delete
+  async bulkDeleteCategories(
+    ids: string[],
+  ): Promise<ApiResponse<BulkDeleteResult>> {
+    const response = await API.post<ApiResponse<BulkDeleteResult>>(
+      '/categories/bulk-delete',
+      { ids },
+    );
+    return response.data;
+  },
+
+  // ✅ New method to get category usage stats
+  async getCategoryUsageStats(
+    id: string,
+  ): Promise<ApiResponse<CategoryUsageStats>> {
+    const response = await API.get<ApiResponse<CategoryUsageStats>>(
+      `/categories/${id}/usage-stats`,
+    );
     return response.data;
   },
 };

@@ -14,8 +14,9 @@ import {
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
   filterControls: React.ReactNode;
-  addHref: string;
-  addLabel: string;
+  addHref?: string; // ✅ Make optional
+  addLabel?: string; // ✅ Make optional
+  addButton?: React.ReactNode; // ✅ Add custom button support
 }
 
 export function DataTableToolbar<TData>({
@@ -23,13 +24,12 @@ export function DataTableToolbar<TData>({
   filterControls,
   addHref,
   addLabel,
+  addButton, // ✅ New prop for custom add button
 }: DataTableToolbarProps<TData>) {
   return (
     <div className="flex items-center justify-between">
       {/* Left side: Filters */}
-      <div className="flex flex-1 items-center space-x-2">
-        {filterControls}
-      </div>
+      <div className="flex flex-1 items-center space-x-2">{filterControls}</div>
 
       {/* Right side: Actions */}
       <div className="flex items-center space-x-2">
@@ -60,12 +60,17 @@ export function DataTableToolbar<TData>({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Button asChild>
-          <Link to={addHref}>
-            <Plus className="mr-2 h-4 w-4" />
-            {addLabel}
-          </Link>
-        </Button>
+        {/* ✅ Support both custom button and link */}
+        {addButton ? (
+          addButton
+        ) : addHref && addLabel ? (
+          <Button asChild>
+            <Link to={addHref}>
+              <Plus className="mr-2 h-4 w-4" />
+              {addLabel}
+            </Link>
+          </Button>
+        ) : null}
       </div>
     </div>
   );
