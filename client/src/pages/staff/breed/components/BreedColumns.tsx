@@ -1,5 +1,13 @@
 import type { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, MoreHorizontal, Edit, Trash2, Eye } from 'lucide-react';
+import {
+  ArrowUpDown,
+  MoreHorizontal,
+  Edit,
+  Trash2,
+  Eye,
+  EyeOff,
+} from 'lucide-react';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -12,6 +20,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
+// ✅ Import Tooltip components
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import type { Breed } from '@/types/breed';
 
 export const breedColumns: ColumnDef<Breed>[] = [
@@ -60,9 +75,38 @@ export const breedColumns: ColumnDef<Breed>[] = [
     header: 'Description',
     cell: ({ row }) => {
       const description = row.getValue('description') as string;
+
+      if (!description) {
+        return (
+          <span className="text-sm text-gray-400 italic">No description</span>
+        );
+      }
+
+      // ✅ Truncate long descriptions
+      const isLong = description.length > 60;
+      const truncated = isLong
+        ? `${description.substring(0, 60)}...`
+        : description;
+
       return (
-        <div className="max-w-[300px] text-sm text-gray-600">
-          {description || 'No description'}
+        <div className="max-w-[200px]">
+          {/* ✅ Giới hạn width */}
+          {isLong ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="cursor-help truncate text-sm text-gray-600">
+                    {truncated}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs">
+                  <p className="text-sm">{description}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <div className="text-sm text-gray-600">{description}</div>
+          )}
         </div>
       );
     },
@@ -81,11 +125,13 @@ export const breedColumns: ColumnDef<Breed>[] = [
       );
     },
     cell: ({ row }) => {
-      const count = row.getValue('petCount') as number;
+      const count = (row.getValue('petCount') as number) || 0;
       return (
         <div className="text-center">
           <div className="font-medium">{count}</div>
-          <div className="text-xs text-gray-500">pets</div>
+          <div className="text-xs text-gray-500">
+            {count === 1 ? 'pet' : 'pets'}
+          </div>
         </div>
       );
     },
@@ -96,10 +142,23 @@ export const breedColumns: ColumnDef<Breed>[] = [
     cell: ({ row }) => {
       const isActive = row.getValue('isActive') as boolean;
       return (
-        <Badge variant={isActive ? 'default' : 'secondary'}>
-          {isActive ? 'Active' : 'Inactive'}
-        </Badge>
+        <div className="pl-2.5">
+          <Badge
+            variant={isActive ? 'default' : 'secondary'}
+            className={
+              isActive
+                ? 'bg-green-100 text-green-800'
+                : 'bg-gray-100 text-gray-600'
+            }
+          >
+            {isActive ? 'Active' : 'Inactive'}
+          </Badge>
+        </div>
       );
+    },
+    filterFn: (row, id, value) => {
+      if (value === 'all') return true;
+      return value === 'active' ? row.getValue(id) : !row.getValue(id);
     },
   },
   {
@@ -117,7 +176,57 @@ export const breedColumns: ColumnDef<Breed>[] = [
     },
     cell: ({ row }) => {
       const date = new Date(row.getValue('createdAt'));
-      return <div className="text-sm">{date.toLocaleDateString('vi-VN')}</div>;
+      return (
+        <div className="pl-2.5 text-sm">
+          <div>{date.toLocaleDateString('vi-VN')}</div>
+          <div className="text-xs text-gray-500">
+            {date.toLocaleTimeString('vi-VN', {
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </div>
+        </div>
+      );
+    },
+  },
+  // ✅ Updated At column
+  {
+    accessorKey: 'updatedAt',
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Updated At
+          <ArrowUpDown className="h-4 w-4" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const createdAt = row.original.createdAt;
+      const updatedAt = row.getValue('updatedAt') as string;
+
+      if (updatedAt === createdAt) {
+        return (
+          <span className="pl-2.5 text-sm text-gray-400 italic">
+            Never updated
+          </span>
+        );
+      }
+
+      const date = new Date(updatedAt);
+      return (
+        <div className="pl-2.5 text-sm">
+          <div>{date.toLocaleDateString('vi-VN')}</div>
+          <div className="text-xs text-gray-500">
+            {date.toLocaleTimeString('vi-VN', {
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </div>
+        </div>
+      );
     },
   },
   {
@@ -126,33 +235,89 @@ export const breedColumns: ColumnDef<Breed>[] = [
     cell: ({ row }) => {
       const breed = row.original;
 
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(breed._id)}
-            >
-              Copy breed ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="flex items-center">
-              <Edit className="h-4 w-4" />
-              Edit breed
-            </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center text-red-600">
-              <Trash2 className="h-4 w-4" />
-              Delete breed
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
+      return <BreedActionsCell breed={breed} />;
     },
   },
 ];
+
+// ✅ Separate component for actions to handle hooks properly
+function BreedActionsCell({ breed }: { breed: Breed }) {
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuItem
+            onClick={() => navigator.clipboard.writeText(breed._id)}
+          >
+            Copy ID
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+
+          <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
+            <Edit className="h-4 w-4" />
+            Edit breed
+          </DropdownMenuItem>
+
+          {/* Deactivate/Activate action */}
+          <DropdownMenuItem
+            onClick={() => setDeactivateDialogOpen(true)}
+            className={breed.isActive ? 'text-orange-600' : 'text-green-600'}
+          >
+            {breed.isActive ? (
+              <>
+                <EyeOff className="h-4 w-4" />
+                Deactivate
+              </>
+            ) : (
+              <>
+                <Eye className="h-4 w-4" />
+                Activate
+              </>
+            )}
+          </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+
+          {/* Delete action */}
+          <DropdownMenuItem
+            onClick={() => setDeleteDialogOpen(true)}
+            className="text-red-600"
+          >
+            <Trash2 className="h-4 w-4" />
+            Delete breed
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* TODO: Implement dialogs */}
+      {/* <EditBreedDialog
+        breed={breed}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+      />
+      
+      <DeactivateBreedDialog
+        breed={breed}
+        open={deactivateDialogOpen}
+        onOpenChange={setDeactivateDialogOpen}
+      />
+
+      <DeleteBreedDialog
+        breed={breed}
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+      /> */}
+    </>
+  );
+}

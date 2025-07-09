@@ -99,6 +99,7 @@ export const breedController = {
     }
   },
 
+  // ✅ Enhanced delete method
   async deleteBreed(
     req: Request,
     res: Response,
@@ -107,10 +108,73 @@ export const breedController = {
     try {
       const { id } = req.params;
 
-      await breedService.deleteBreed(id);
+      const result = await breedService.deleteBreed(id);
 
       res.status(STATUS_CODE.OK).json({
         message: 'Breed deleted successfully',
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  // ✅ New endpoint for bulk delete
+  async bulkDeleteBreeds(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const { ids } = req.body;
+
+      if (!Array.isArray(ids) || ids.length === 0) {
+        res.status(STATUS_CODE.BAD_REQUEST).json({
+          message: 'Breed IDs array is required',
+        });
+        return;
+      }
+
+      const result = await breedService.bulkDeleteBreeds(ids);
+
+      // Determine response based on results
+      if (result.failed.length === 0) {
+        res.status(STATUS_CODE.OK).json({
+          message: `Successfully deleted ${result.deleted.length} breeds`,
+          data: result,
+        });
+      } else if (result.deleted.length === 0) {
+        res.status(STATUS_CODE.BAD_REQUEST).json({
+          message: 'Failed to delete any breeds',
+          data: result,
+          errorCode: 'BULK_DELETE_FAILED',
+        });
+      } else {
+        res.status(STATUS_CODE.MULTI_STATUS).json({
+          message: `Deleted ${result.deleted.length} breeds, ${result.failed.length} failed`,
+          data: result,
+          errorCode: 'PARTIAL_DELETE_SUCCESS',
+        });
+      }
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  // ✅ New endpoint to get breed usage stats
+  async getBreedUsageStats(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const { id } = req.params;
+
+      const stats = await breedService.getBreedUsageStats(id);
+
+      res.status(STATUS_CODE.OK).json({
+        message: 'Breed usage stats retrieved successfully',
+        data: stats,
       });
     } catch (error) {
       next(error);

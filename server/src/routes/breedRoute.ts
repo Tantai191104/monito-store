@@ -39,5 +39,17 @@ breedRoute.delete(
   requireAdminOrStaff,
   breedController.deleteBreed,
 );
+breedRoute.post(
+  '/bulk-delete',
+  authenticate,
+  requireAdminOrStaff,
+  breedController.bulkDeleteBreeds,
+);
+breedRoute.get(
+  '/:id/usage-stats',
+  authenticate,
+  requireAdminOrStaff,
+  breedController.getBreedUsageStats,
+);
 
 export default breedRoute;
