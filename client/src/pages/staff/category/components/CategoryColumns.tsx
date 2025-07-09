@@ -24,8 +24,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { Category } from '@/types/category';
 import { EditCategoryDialog } from './EditCategoryDialog';
+import { DeactivateCategoryDialog } from './DeactivateCategoryDialog';
 import { DeleteCategoryDialog } from './DeleteCategoryDialog'; // ✅ Import new component
-import { useUpdateCategory, useDeleteCategory } from '@/hooks/useCategories';
 
 export const categoryColumns: ColumnDef<Category>[] = [
   {
@@ -202,19 +202,8 @@ export const categoryColumns: ColumnDef<Category>[] = [
 // Separate component for actions to handle hooks properly
 function CategoryActionsCell({ category }: { category: Category }) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const updateCategory = useUpdateCategory();
-
-  const handleToggleActive = async () => {
-    try {
-      await updateCategory.mutateAsync({
-        id: category._id,
-        data: { isActive: !category.isActive },
-      });
-    } catch (error) {
-      // Error handled in mutation
-    }
-  };
 
   const handleEditClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -248,8 +237,8 @@ function CategoryActionsCell({ category }: { category: Category }) {
             Edit category
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={handleToggleActive}
-            disabled={updateCategory.isPending}
+            onClick={() => setDeactivateDialogOpen(true)}
+            className={category.isActive ? 'text-orange-600' : 'text-green-600'}
           >
             {category.isActive ? (
               <>
@@ -274,14 +263,21 @@ function CategoryActionsCell({ category }: { category: Category }) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* ✅ EditDialog outside DropdownMenu with controlled state */}
+      {/* Dialogs */}
       <EditCategoryDialog
         category={category}
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
       />
 
-      {/* ✅ Use enhanced Delete Dialog */}
+      {/* ✅ Use new Deactivate Dialog */}
+      <DeactivateCategoryDialog
+        category={category}
+        open={deactivateDialogOpen}
+        onOpenChange={setDeactivateDialogOpen}
+      />
+
+      {/* ✅ Keep Delete Dialog for permanent deletion */}
       <DeleteCategoryDialog
         category={category}
         open={deleteDialogOpen}

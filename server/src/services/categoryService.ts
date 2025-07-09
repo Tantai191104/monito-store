@@ -62,6 +62,7 @@ export const categoryService = {
         throw new NotFoundException('Category not found');
       }
 
+      // ✅ NO constraint check here - allow deactivate even if products exist
       return updatedCategory;
     } catch (error: any) {
       if (error.code === 11000) {
@@ -78,7 +79,7 @@ export const categoryService = {
       throw new NotFoundException('Category not found');
     }
 
-    // ✅ Check if category is being used by any products
+    // ✅ ONLY check constraint for DELETE
     const productsUsingCategory = await ProductModel.countDocuments({
       category: categoryId,
     });
@@ -168,6 +169,33 @@ export const categoryService = {
       productCount,
       sampleProducts,
       canDelete: productCount === 0,
+    };
+  },
+
+  // ✅ New method to get products that would be affected by category deactivation
+  async getCategoryDeactivationImpact(categoryId: string) {
+    const category = await CategoryModel.findById(categoryId);
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
+
+    const affectedProducts = await ProductModel.find({
+      category: categoryId,
+      isActive: true,
+    })
+      .select('name _id isActive')
+      .limit(10); // Show sample of affected products
+
+    const totalAffectedProducts = await ProductModel.countDocuments({
+      category: categoryId,
+      isActive: true,
+    });
+
+    return {
+      category,
+      affectedProducts,
+      totalAffectedProducts,
+      impact: totalAffectedProducts > 0 ? 'warning' : 'safe',
     };
   },
 };
