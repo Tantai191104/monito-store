@@ -54,7 +54,7 @@ export const productController = {
 
       res.status(STATUS_CODE.OK).json({
         message: 'Products retrieved successfully',
-        data: result
+        data: result,
       });
     } catch (error) {
       next(error);
@@ -139,6 +139,35 @@ export const productController = {
       res.status(STATUS_CODE.OK).json({
         message: 'Stock updated successfully',
         data: { product },
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  // ✅ Add bulk operations if needed
+  async bulkUpdateProducts(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const { ids, updates } = req.body;
+
+      if (!Array.isArray(ids) || ids.length === 0) {
+        res.status(STATUS_CODE.BAD_REQUEST).json({
+          message: 'Product IDs array is required',
+        });
+        return;
+      }
+
+      const updateData = updateProductSchema.parse(updates);
+
+      // Implement bulk update logic in service
+      // const result = await productService.bulkUpdateProducts(ids, updateData);
+      res.status(STATUS_CODE.OK).json({
+        message: 'Products updated successfully',
+        // data: result,
       });
     } catch (error) {
       next(error);

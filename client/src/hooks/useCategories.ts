@@ -4,7 +4,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 /**
  * Services
  */
-import { categoryService } from '@/services/categoryService';
+import {
+  categoryService,
+  type BulkDeleteResult,
+} from '@/services/categoryService';
 
 /**
  * Types
@@ -28,20 +31,10 @@ export const categoryKeys = {
   list: (filters: string) => [...categoryKeys.lists(), { filters }] as const,
   details: () => [...categoryKeys.all, 'detail'] as const,
   detail: (id: string) => [...categoryKeys.details(), id] as const,
+  usageStats: (id: string) => [...categoryKeys.all, 'usage-stats', id] as const,
 };
 
 // Get all categories
-// export const useCategories = () => {
-//   return useQuery({
-//     queryKey: categoryKeys.lists(),
-//     queryFn: async () => {
-//       const response = await categoryService.getCategories();
-//       return response.data || [];
-//     },
-//     staleTime: 5 * 60 * 1000, // 5 minutes
-//   });
-// };
-
 export const useCategories = (
   params: URLSearchParams = new URLSearchParams(),
 ) => {
@@ -67,6 +60,19 @@ export const useCategory = (id: string) => {
   });
 };
 
+// ✅ New hook for category usage stats
+export const useCategoryUsageStats = (id: string) => {
+  return useQuery({
+    queryKey: categoryKeys.usageStats(id),
+    queryFn: async () => {
+      const response = await categoryService.getCategoryUsageStats(id);
+      return response.data;
+    },
+    enabled: !!id,
+    staleTime: 30 * 1000, // 30 seconds - more frequent updates for usage stats
+  });
+};
+
 // Create category mutation
 export const useCreateCategory = () => {
   const queryClient = useQueryClient();
@@ -75,20 +81,17 @@ export const useCreateCategory = () => {
     mutationFn: (data: CreateCategoryPayload) =>
       categoryService.createCategory(data),
     onSuccess: (response) => {
-      // Invalidate and refetch categories
       queryClient.invalidateQueries({ queryKey: categoryKeys.all });
 
-      // Optional: Update cache optimistically
       const newCategory = response.data?.category;
       if (newCategory) {
         queryClient.setQueryData(
-          categoryKeys.lists(),
-          (old: Category[] = []) => [newCategory, ...old],
+          categoryKeys.detail(newCategory._id),
+          newCategory,
         );
       }
 
       toast.success('Category created successfully!');
-      return newCategory;
     },
     onError: (error: any) => {
       const apiError = error.response?.data as ApiError;
@@ -106,15 +109,11 @@ export const useUpdateCategory = () => {
     mutationFn: ({ id, data }: { id: string; data: UpdateCategoryPayload }) =>
       categoryService.updateCategory(id, data),
     onSuccess: (response, { id }) => {
-      // Invalidate categories list
       queryClient.invalidateQueries({ queryKey: categoryKeys.all });
 
-      // Update specific category cache
       const updatedCategory = response.data?.category;
       if (updatedCategory) {
         queryClient.setQueryData(categoryKeys.detail(id), updatedCategory);
-
-        // Update in list cache
         queryClient.setQueryData(categoryKeys.lists(), (old: Category[] = []) =>
           old.map((cat) => (cat._id === id ? updatedCategory : cat)),
         );
@@ -131,58 +130,87 @@ export const useUpdateCategory = () => {
   });
 };
 
-// Delete category mutation
+// ✅ Enhanced delete category mutation with constraint handling
 export const useDeleteCategory = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (id: string) => categoryService.deleteCategory(id),
     onSuccess: (_, deletedId) => {
-      // Remove from cache immediately
       queryClient.setQueryData(categoryKeys.lists(), (old: Category[] = []) =>
         old.filter((cat) => cat._id !== deletedId),
       );
 
-      // Remove specific category cache
       queryClient.removeQueries({ queryKey: categoryKeys.detail(deletedId) });
-
-      // Invalidate to ensure consistency
+      queryClient.removeQueries({
+        queryKey: categoryKeys.usageStats(deletedId),
+      });
       queryClient.invalidateQueries({ queryKey: categoryKeys.all });
 
       toast.success('Category deleted successfully!');
     },
     onError: (error: any) => {
       const apiError = error.response?.data as ApiError;
-      const message = getErrorMessage(apiError?.errorCode, apiError?.message);
-      toast.error(message);
+
+      // ✅ Handle specific constraint violation error
+      if (apiError?.errorCode === 'CATEGORY_IN_USE') {
+        toast.error(apiError.message, {
+          description:
+            'Please reassign or delete products using this category first.',
+          duration: 6000,
+        });
+      } else {
+        const message = getErrorMessage(apiError?.errorCode, apiError?.message);
+        toast.error(message);
+      }
     },
   });
 };
 
-// Bulk operations
+// ✅ Enhanced bulk delete with constraint handling
 export const useBulkDeleteCategories = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (ids: string[]) => {
-      // Delete categories in parallel
-      await Promise.all(ids.map((id) => categoryService.deleteCategory(id)));
-      return ids;
-    },
-    onSuccess: (deletedIds) => {
-      // Remove from cache
-      queryClient.setQueryData(categoryKeys.lists(), (old: Category[] = []) =>
-        old.filter((cat) => !deletedIds.includes(cat._id)),
-      );
+    mutationFn: (ids: string[]) => categoryService.bulkDeleteCategories(ids),
+    onSuccess: (response) => {
+      const result = response.data as BulkDeleteResult;
 
-      // Remove specific category caches
-      deletedIds.forEach((id) => {
-        queryClient.removeQueries({ queryKey: categoryKeys.detail(id) });
-      });
+      // Remove successfully deleted categories from cache
+      if (result.deleted.length > 0) {
+        const deletedIds = result.deleted.map((cat) => cat._id);
 
-      queryClient.invalidateQueries({ queryKey: categoryKeys.all });
+        queryClient.setQueryData(categoryKeys.lists(), (old: Category[] = []) =>
+          old.filter((cat) => !deletedIds.includes(cat._id)),
+        );
 
-      toast.success(`${deletedIds.length} categories deleted successfully!`);
+        deletedIds.forEach((id) => {
+          queryClient.removeQueries({ queryKey: categoryKeys.detail(id) });
+          queryClient.removeQueries({ queryKey: categoryKeys.usageStats(id) });
+        });
+
+        queryClient.invalidateQueries({ queryKey: categoryKeys.all });
+      }
+
+      // Show detailed results
+      if (result.failed.length === 0) {
+        toast.success(
+          `Successfully deleted ${result.deleted.length} categories!`,
+        );
+      } else if (result.deleted.length === 0) {
+        toast.error('No categories could be deleted', {
+          description: 'All selected categories are being used by products.',
+          duration: 6000,
+        });
+      } else {
+        toast.warning(
+          `Partial success: ${result.deleted.length} deleted, ${result.failed.length} failed`,
+          {
+            description: 'Some categories are being used by products.',
+            duration: 6000,
+          },
+        );
+      }
     },
     onError: (error: any) => {
       const apiError = error.response?.data as ApiError;
@@ -192,13 +220,12 @@ export const useBulkDeleteCategories = () => {
   });
 };
 
-// ✅ Bulk activate categories
+// Keep existing bulk activate/deactivate hooks unchanged...
 export const useBulkActivateCategories = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (ids: string[]) => {
-      // Activate categories in parallel
       const results = await Promise.all(
         ids.map((id) => categoryService.updateCategory(id, { isActive: true })),
       );
@@ -208,7 +235,6 @@ export const useBulkActivateCategories = () => {
       };
     },
     onSuccess: ({ ids, categories }) => {
-      // Update cache optimistically
       queryClient.setQueryData(categoryKeys.lists(), (old: Category[] = []) =>
         old.map((cat) => {
           if (ids.includes(cat._id)) {
@@ -218,14 +244,12 @@ export const useBulkActivateCategories = () => {
         }),
       );
 
-      // Update individual category caches
       categories.forEach((category) => {
         if (category) {
           queryClient.setQueryData(categoryKeys.detail(category._id), category);
         }
       });
 
-      // Invalidate to ensure consistency
       queryClient.invalidateQueries({ queryKey: categoryKeys.all });
 
       toast.success(`${ids.length} categories activated successfully!`);
@@ -238,13 +262,11 @@ export const useBulkActivateCategories = () => {
   });
 };
 
-// ✅ Bulk deactivate categories
 export const useBulkDeactivateCategories = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (ids: string[]) => {
-      // Deactivate categories in parallel
       const results = await Promise.all(
         ids.map((id) =>
           categoryService.updateCategory(id, { isActive: false }),
@@ -256,7 +278,6 @@ export const useBulkDeactivateCategories = () => {
       };
     },
     onSuccess: ({ ids, categories }) => {
-      // Update cache optimistically
       queryClient.setQueryData(categoryKeys.lists(), (old: Category[] = []) =>
         old.map((cat) => {
           if (ids.includes(cat._id)) {
@@ -266,14 +287,12 @@ export const useBulkDeactivateCategories = () => {
         }),
       );
 
-      // Update individual category caches
       categories.forEach((category) => {
         if (category) {
           queryClient.setQueryData(categoryKeys.detail(category._id), category);
         }
       });
 
-      // Invalidate to ensure consistency
       queryClient.invalidateQueries({ queryKey: categoryKeys.all });
 
       toast.success(`${ids.length} categories deactivated successfully!`);
@@ -286,7 +305,6 @@ export const useBulkDeactivateCategories = () => {
   });
 };
 
-// ✅ Smart bulk status update (activate only inactive, deactivate only active)
 export const useBulkUpdateCategoryStatus = () => {
   const queryClient = useQueryClient();
 
@@ -298,7 +316,6 @@ export const useBulkUpdateCategoryStatus = () => {
       ids: string[];
       targetStatus: boolean;
     }) => {
-      // Update categories status in parallel
       const results = await Promise.all(
         ids.map((id) =>
           categoryService.updateCategory(id, { isActive: targetStatus }),
@@ -311,7 +328,6 @@ export const useBulkUpdateCategoryStatus = () => {
       };
     },
     onSuccess: ({ ids, targetStatus, categories }) => {
-      // Update cache optimistically
       queryClient.setQueryData(categoryKeys.lists(), (old: Category[] = []) =>
         old.map((cat) => {
           if (ids.includes(cat._id)) {
@@ -321,14 +337,12 @@ export const useBulkUpdateCategoryStatus = () => {
         }),
       );
 
-      // Update individual category caches
       categories.forEach((category) => {
         if (category) {
           queryClient.setQueryData(categoryKeys.detail(category._id), category);
         }
       });
 
-      // Invalidate to ensure consistency
       queryClient.invalidateQueries({ queryKey: categoryKeys.all });
 
       const action = targetStatus ? 'activated' : 'deactivated';
@@ -348,9 +362,13 @@ export const useActiveCategories = () => {
     queryKey: [...categoryKeys.lists(), 'active'],
     queryFn: async () => {
       const response = await categoryService.getCategories();
-      return (response.data || []).filter((cat) => cat.isActive);
+
+      const allCategories = response.data?.categories || [];
+      const activeCategories = allCategories.filter((cat: any) => cat.isActive);
+
+      return activeCategories;
     },
-    staleTime: 10 * 60 * 1000, // 10 minutes (active categories change less frequently)
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    enabled: true,
   });
 };
-

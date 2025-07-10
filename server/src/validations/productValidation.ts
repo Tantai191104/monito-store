@@ -54,4 +54,6 @@ export const productFiltersSchema = z.object({
   limit: z.coerce.number().min(1).max(100).default(15),
   sortBy: z.enum(['name', 'price', 'rating', 'createdAt']).default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
+  search: z.string().trim().optional(), // ✅ Add search validation
+  includeInactiveCategories: z.coerce.boolean().optional(), // ✅ Add includeInactiveCategories validation
 });

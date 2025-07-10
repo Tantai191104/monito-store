@@ -39,5 +39,17 @@ colorRoute.delete(
   requireAdminOrStaff,
   colorController.deleteColor,
 );
+colorRoute.post(
+  '/bulk-delete',
+  authenticate,
+  requireAdminOrStaff,
+  colorController.bulkDeleteColors,
+);
+colorRoute.get(
+  '/:id/usage-stats',
+  authenticate,
+  requireAdminOrStaff,
+  colorController.getColorUsageStats,
+);
 
 export default colorRoute;

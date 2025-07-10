@@ -51,6 +51,21 @@ export interface CreateProductPayload {
 
 export interface UpdateProductPayload extends Partial<CreateProductPayload> {}
 
+export interface ProductFilters {
+  category?: string;
+  brand?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  inStock?: boolean;
+  isActive?: boolean;
+  page?: number;
+  limit?: number;
+  sortBy?: 'name' | 'price' | 'rating' | 'createdAt';
+  sortOrder?: 'asc' | 'desc';
+  search?: string; // ✅ Add search property
+  includeInactiveCategories?: boolean; // ✅ Add includeInactiveCategories property
+}
+
 export interface ProductsResponse {
   products: Product[];
   pagination: {

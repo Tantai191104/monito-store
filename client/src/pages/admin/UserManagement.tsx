@@ -417,15 +417,6 @@ const UserManagement = () => {
                             <Eye className="mr-2 h-4 w-4" />
                             View Details
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit User
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem>
-                            <Mail className="mr-2 h-4 w-4" />
-                            Send Email
-                          </DropdownMenuItem>
                           {user.status === 'Active' ? (
                             <DropdownMenuItem className="text-red-600">
                               <Ban className="mr-2 h-4 w-4" />

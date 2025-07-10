@@ -1,404 +1,411 @@
-'use client';
-
-import * as React from 'react';
-import { Copy, Check } from 'lucide-react';
-import * as ColorUtils from '@/utils/colorPicker';
 import { Button } from '@/components/ui/button';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { cn } from '@/lib/utils';
+import { Root, Thumb, Track } from '@radix-ui/react-slider';
+// ✅ Import Color constructor và Color type từ thư viện
+import Color from 'color';
+import { PipetteIcon } from 'lucide-react';
+import {
+  type ChangeEventHandler,
+  type ComponentProps,
+  type HTMLAttributes,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  createContext,
+  useContext,
+} from 'react';
 
-interface ColorPickerProps {
-  color?: string;
-  onChange?: (value: string) => void;
+type ColorType = ReturnType<typeof Color>;
+
+// ✅ Use ColorType instead of Color for the interface
+interface ColorPickerContextValue {
+  color: ColorType;
+  setColor: (color: ColorType) => void;
+  mode: string;
+  setMode: (mode: string) => void;
 }
 
-type ColorMode = 'hex' | 'rgba' | 'hsla';
-type CopyState = { [key in ColorMode]: boolean };
+const ColorPickerContext = createContext<ColorPickerContextValue | undefined>(
+  undefined,
+);
 
-export function ColorPicker({ color = '#000000', onChange }: ColorPickerProps) {
-  const [currentColor, setCurrentColor] = React.useState(color);
-  const [alpha, setAlpha] = React.useState(1);
-  const [colorMode, setColorMode] = React.useState<ColorMode>('hex');
-  const [copied, setCopied] = React.useState<CopyState>({
-    hex: false,
-    rgba: false,
-    hsla: false,
-  });
-  const colorPlaneRef = React.useRef<HTMLDivElement>(null);
-  const isDragging = React.useRef(false);
+export const useColorPicker = () => {
+  const context = useContext(ColorPickerContext);
+  if (!context) {
+    throw new Error('useColorPicker must be used within a ColorPickerProvider');
+  }
+  return context;
+};
 
-  const rgb = {
-    ...(ColorUtils.hexToRgb(currentColor) || { r: 0, g: 0, b: 0 }),
-    a: alpha,
-  };
-  const hsl = ColorUtils.rgbToHsl(rgb);
-  const rgbaString = ColorUtils.formatRgba(rgb);
-  const hslaString = ColorUtils.formatHsla(hsl);
+export type ColorPickerProps = Omit<
+  HTMLAttributes<HTMLDivElement>,
+  'onChange'
+> & {
+  value?: string;
+  defaultValue?: string;
+  onChange?: (value: string) => void;
+};
 
-  const handleColorChange = (newColor: string) => {
-    setCurrentColor(newColor);
-    onChange?.(newColor);
-  };
+export const ColorPicker = ({
+  value,
+  defaultValue = '#000000',
+  onChange,
+  className,
+  children,
+  ...props
+}: ColorPickerProps) => {
+  // ✅ Force alpha to 1 for solid colors only
+  const [color, setColor] = useState<ColorType>(() =>
+    Color(value || defaultValue).alpha(1),
+  );
+  const [mode, setMode] = useState('hex');
 
-  const handleAlphaChange = (newAlpha: number) => {
-    setAlpha(newAlpha);
-  };
-
-  const updateHSL = (h: number, s: number, l: number) => {
-    const rgb = ColorUtils.hslToRgb({ h, s, l, a: alpha });
-    handleColorChange(ColorUtils.rgbToHex(rgb));
-  };
-
-  const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
-    isDragging.current = true;
-    handleColorPlaneChange(e);
-  };
-
-  const handleMouseUp = () => {
-    isDragging.current = false;
-  };
-
-  const handleMouseMove = (e: React.MouseEvent | React.TouchEvent) => {
-    if (isDragging.current) {
-      handleColorPlaneChange(e);
+  // ✅ Update internal state when controlled value changes
+  useEffect(() => {
+    if (value && value !== color.hex()) {
+      try {
+        // ✅ Always set alpha to 1 for solid colors
+        setColor(Color(value).alpha(1));
+      } catch (error) {
+        console.warn('Invalid color value:', value);
+      }
     }
-  };
+  }, [value, color]);
 
-  const handleColorPlaneChange = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!colorPlaneRef.current) return;
+  // ✅ Handle color changes and notify parent with solid color
+  const handleColorChange = useCallback(
+    (newColor: ColorType) => {
+      // ✅ Force alpha to 1 before setting
+      const solidColor = newColor.alpha(1);
+      setColor(solidColor);
+      if (onChange) {
+        onChange(solidColor.hex());
+      }
+    },
+    [onChange],
+  );
 
-    const rect = colorPlaneRef.current.getBoundingClientRect();
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+  return (
+    <ColorPickerContext.Provider
+      value={{
+        color,
+        setColor: handleColorChange,
+        mode,
+        setMode,
+      }}
+    >
+      <div className={cn('grid w-full gap-4', className)} {...props}>
+        {children}
+      </div>
+    </ColorPickerContext.Provider>
+  );
+};
 
-    const x = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-    const y = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
+export type ColorPickerSelectionProps = HTMLAttributes<HTMLDivElement>;
 
-    updateHSL(hsl.h, Math.round(x * 100), Math.round((1 - y) * 100));
-  };
+export const ColorPickerSelection = ({
+  className,
+  ...props
+}: ColorPickerSelectionProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const { color, setColor } = useColorPicker();
 
-  React.useEffect(() => {
-    const handleGlobalMouseUp = () => {
-      isDragging.current = false;
-    };
+  // ✅ Get current HSV values for positioning
+  const hsv = color.hsv().object();
+  const { h: hue, s: saturation, v: value } = hsv;
 
-    window.addEventListener('mouseup', handleGlobalMouseUp);
-    window.addEventListener('touchend', handleGlobalMouseUp);
+  const handlePointerMove = useCallback(
+    (event: PointerEvent) => {
+      if (!isDragging || !containerRef.current) return;
 
+      const rect = containerRef.current.getBoundingClientRect();
+      const x = Math.max(
+        0,
+        Math.min(1, (event.clientX - rect.left) / rect.width),
+      );
+      const y = Math.max(
+        0,
+        Math.min(1, (event.clientY - rect.top) / rect.height),
+      );
+
+      // ✅ Update color using HSV for better color picker behavior
+      const newColor = Color.hsv(hue, x * 100, (1 - y) * 100);
+      setColor(newColor);
+    },
+    [isDragging, hue, setColor],
+  );
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('pointermove', handlePointerMove);
+      window.addEventListener('pointerup', () => setIsDragging(false));
+    }
     return () => {
-      window.removeEventListener('mouseup', handleGlobalMouseUp);
-      window.removeEventListener('touchend', handleGlobalMouseUp);
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', () => setIsDragging(false));
     };
-  }, []);
+  }, [isDragging, handlePointerMove]);
 
-  const copyToClipboard = (text: string, format: ColorMode) => {
-    navigator.clipboard.writeText(text);
-    setCopied((prev) => ({
-      ...prev,
-      [format]: true,
-    }));
-    setTimeout(() => {
-      setCopied((prev) => ({
-        ...prev,
-        [format]: false,
-      }));
-    }, 1500);
-  };
+  return (
+    <div
+      ref={containerRef}
+      className={cn(
+        'relative aspect-video w-full cursor-crosshair rounded',
+        className,
+      )}
+      style={{ backgroundColor: `hsl(${hue}, 100%, 50%)` }}
+      onPointerDown={(e) => {
+        e.preventDefault();
+        setIsDragging(true);
+        handlePointerMove(e.nativeEvent);
+      }}
+      {...props}
+    >
+      {/* Gradients for saturation and brightness */}
+      <div className="absolute inset-0 bg-gradient-to-r from-white to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
 
-  const handleHexChange = (hex: string) => {
-    if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
-      handleColorChange(hex);
-    }
-  };
+      {/* Selector dot */}
+      <div
+        className="pointer-events-none absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white"
+        style={{
+          left: `${saturation}%`,
+          top: `${100 - value}%`,
+          boxShadow: '0 0 0 1px rgba(0,0,0,0.5)',
+        }}
+      />
+    </div>
+  );
+};
 
-  const handleRgbChange = (key: keyof typeof rgb, value: string) => {
-    const numValue = Number.parseInt(value);
-    if (key === 'a') {
-      const alphaValue = Number.parseFloat(value);
-      if (!isNaN(alphaValue) && alphaValue >= 0 && alphaValue <= 1) {
-        handleAlphaChange(alphaValue);
-      }
-      return;
-    }
-    if (!isNaN(numValue) && numValue >= 0 && numValue <= 255) {
-      const newRgb = { ...rgb, [key]: numValue };
-      handleColorChange(ColorUtils.rgbToHex(newRgb));
-    }
-  };
+export type ColorPickerHueProps = HTMLAttributes<HTMLDivElement>;
 
-  const handleHslChange = (key: keyof typeof hsl, value: string) => {
-    const numValue = Number.parseInt(value);
-    if (key === 'a') {
-      const alphaValue = Number.parseFloat(value);
-      if (!isNaN(alphaValue) && alphaValue >= 0 && alphaValue <= 1) {
-        handleAlphaChange(alphaValue);
-      }
-      return;
-    }
-    if (isNaN(numValue)) return;
+export const ColorPickerHue = ({
+  className,
+  ...props
+}: ColorPickerHueProps) => {
+  const { color, setColor } = useColorPicker();
+  const hue = color.hue();
 
-    const max = key === 'h' ? 360 : 100;
-    if (numValue >= 0 && numValue <= max) {
-      const newHsl = { ...hsl, [key]: numValue };
-      const newRgb = ColorUtils.hslToRgb(newHsl);
-      handleColorChange(ColorUtils.rgbToHex(newRgb));
+  return (
+    <Root
+      value={[hue]}
+      max={360}
+      step={1}
+      className={cn('relative flex h-4 w-full touch-none', className)}
+      onValueChange={([h]) => setColor(color.hue(h))}
+      {...props}
+    >
+      <Track className="relative my-0.5 h-3 w-full grow rounded-full bg-[linear-gradient(90deg,#FF0000,#FFFF00,#00FF00,#00FFFF,#0000FF,#FF00FF,#FF0000)]" />
+      <Thumb className="border-primary/50 bg-background focus-visible:ring-ring block h-4 w-4 rounded-full border shadow-transition-colors focus-visible:ring-1 focus-visible:outline-none" />
+    </Root>
+  );
+};
+
+export type ColorPickerAlphaProps = HTMLAttributes<HTMLDivElement>;
+
+export const ColorPickerAlpha = ({
+  className,
+  ...props
+}: ColorPickerAlphaProps) => {
+  const { color, setColor } = useColorPicker();
+  const alpha = color.alpha() * 100;
+
+  return (
+    <Root
+      value={[alpha]}
+      max={100}
+      step={1}
+      className={cn('relative flex h-4 w-full touch-none', className)}
+      onValueChange={([a]) => setColor(color.alpha(a / 100))}
+      {...props}
+    >
+      <Track className='relative my-0.5 h-3 w-full grow rounded-full bg-[url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVQ4T2NkYGAQYcAP3uCTZhw1gGGYhAGBZIA/nYDCgBDAm9BGDWAAJyRCgLaBCAAgXwixzAS0pgAAAABJRU5ErkJggg==")]'>
+        <div
+          className="absolute inset-0 rounded-full"
+          style={{
+            background: `linear-gradient(to right, transparent, ${color.hex()})`,
+          }}
+        />
+      </Track>
+      <Thumb className="border-primary/50 bg-background focus-visible:ring-ring block h-4 w-4 rounded-full border shadow-transition-colors focus-visible:ring-1 focus-visible:outline-none" />
+    </Root>
+  );
+};
+
+export type ColorPickerEyeDropperProps = ComponentProps<typeof Button>;
+
+export const ColorPickerEyeDropper = ({
+  className,
+  ...props
+}: ColorPickerEyeDropperProps) => {
+  const { setColor } = useColorPicker();
+
+  const handleEyeDropper = async () => {
+    try {
+      // @ts-ignore - EyeDropper API is experimental
+      const eyeDropper = new EyeDropper();
+      const result = await eyeDropper.open();
+      setColor(Color(result.sRGBHex));
+    } catch (error) {
+      console.error('EyeDropper failed:', error);
     }
   };
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          className="w-[240px] justify-start text-left font-normal"
-        >
-          <div className="flex w-full items-center gap-2">
-            <div
-              className="h-4 w-4 rounded border !bg-cover !bg-center transition-all"
-              style={{ backgroundColor: ColorUtils.formatRgba(rgb) }}
-            />
-            <div className="flex-1 truncate">{currentColor}</div>
-          </div>
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-80">
-        <div className="grid gap-4">
-          <div
-            ref={colorPlaneRef}
-            className="relative h-48 w-full cursor-crosshair touch-none rounded-lg"
-            style={{
-              background: `
-                linear-gradient(to right, #fff 0%, rgba(255, 255, 255, 0) 100%),
-                linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, #000 100%),
-                hsl(${hsl.h}, 100%, 50%)
-              `,
-            }}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onTouchStart={handleMouseDown}
-            onTouchMove={handleMouseMove}
-            onTouchEnd={handleMouseUp}
-          >
-            <div
-              className="pointer-events-none absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-md"
-              style={{
-                left: `${hsl.s}%`,
-                top: `${100 - hsl.l}%`,
-                backgroundColor: ColorUtils.formatRgba(rgb),
-              }}
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label>Hue</Label>
-            <div className="relative">
-              <Slider
-                value={[hsl.h]}
-                max={360}
-                step={1}
-                className="[&_.bg-primary]:bg-transparent [&_.bg-secondary]:bg-transparent [&_[role=slider]]:h-4 [&_[role=slider]]:w-4"
-                onValueChange={([h]) => updateHSL(h, hsl.s, hsl.l)}
-                style={{
-                  backgroundImage: `linear-gradient(to right, 
-                    hsl(0, 100%, 50%),
-                    hsl(60, 100%, 50%),
-                    hsl(120, 100%, 50%),
-                    hsl(180, 100%, 50%),
-                    hsl(240, 100%, 50%),
-                    hsl(300, 100%, 50%),
-                    hsl(360, 100%, 50%)
-                  )`,
-                }}
-              />
-            </div>
-          </div>
-
-          <div className="grid gap-2">
-            <Label>Alpha</Label>
-            <div className="relative">
-              <Slider
-                value={[alpha]}
-                max={1}
-                step={0.1}
-                className="[&_.bg-primary]:bg-transparent [&_.bg-secondary]:bg-transparent [&_[role=slider]]:h-4 [&_[role=slider]]:w-4"
-                onValueChange={([a]) => handleAlphaChange(a)}
-                style={{
-                  backgroundImage: `linear-gradient(to right, 
-                    transparent 0%,
-                    ${currentColor} 100%
-                  )`,
-                }}
-              />
-            </div>
-          </div>
-
-          <Tabs
-            value={colorMode}
-            onValueChange={(v) => setColorMode(v as ColorMode)}
-          >
-            <TabsList className="w-full">
-              <TabsTrigger value="hex" className="flex-1">
-                Hex
-              </TabsTrigger>
-              <TabsTrigger value="rgba" className="flex-1">
-                RGBA
-              </TabsTrigger>
-              <TabsTrigger value="hsla" className="flex-1">
-                HSLA
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="hex" className="mt-2">
-              <div className="flex gap-2">
-                <Input
-                  value={currentColor}
-                  onChange={(e) => handleHexChange(e.target.value)}
-                  className="font-mono"
-                />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="shrink-0"
-                  onClick={() => copyToClipboard(currentColor, 'hex')}
-                >
-                  {copied.hex ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="rgba" className="mt-2">
-              <div className="grid gap-4">
-                <div className="flex gap-2">
-                  <Input value={rgbaString} readOnly className="font-mono" />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="shrink-0"
-                    onClick={() => copyToClipboard(rgbaString, 'rgba')}
-                  >
-                    {copied.rgba ? (
-                      <Check className="h-4 w-4" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-                <div className="grid grid-cols-4 gap-2">
-                  <div>
-                    <Label>R</Label>
-                    <Input
-                      value={rgb.r}
-                      onChange={(e) => handleRgbChange('r', e.target.value)}
-                      className="font-mono"
-                    />
-                  </div>
-                  <div>
-                    <Label>G</Label>
-                    <Input
-                      value={rgb.g}
-                      onChange={(e) => handleRgbChange('g', e.target.value)}
-                      className="font-mono"
-                    />
-                  </div>
-                  <div>
-                    <Label>B</Label>
-                    <Input
-                      value={rgb.b}
-                      onChange={(e) => handleRgbChange('b', e.target.value)}
-                      className="font-mono"
-                    />
-                  </div>
-                  <div>
-                    <Label>A</Label>
-                    <Input
-                      value={rgb.a.toFixed(1)}
-                      onChange={(e) => handleRgbChange('a', e.target.value)}
-                      className="font-mono"
-                      step="0.1"
-                      min="0"
-                      max="1"
-                    />
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="hsla" className="mt-2">
-              <div className="grid gap-4">
-                <div className="flex gap-2">
-                  <Input value={hslaString} readOnly className="font-mono" />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="shrink-0"
-                    onClick={() => copyToClipboard(hslaString, 'hsla')}
-                  >
-                    {copied.hsla ? (
-                      <Check className="h-4 w-4" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-                <div className="grid grid-cols-4 gap-2">
-                  <div>
-                    <Label>H</Label>
-                    <Input
-                      value={hsl.h}
-                      onChange={(e) => handleHslChange('h', e.target.value)}
-                      className="font-mono"
-                    />
-                  </div>
-                  <div>
-                    <Label>S</Label>
-                    <Input
-                      value={hsl.s}
-                      onChange={(e) => handleHslChange('s', e.target.value)}
-                      className="font-mono"
-                    />
-                  </div>
-                  <div>
-                    <Label>L</Label>
-                    <Input
-                      value={hsl.l}
-                      onChange={(e) => handleHslChange('l', e.target.value)}
-                      className="font-mono"
-                    />
-                  </div>
-                  <div>
-                    <Label>A</Label>
-                    <Input
-                      value={hsl.a.toFixed(1)}
-                      onChange={(e) => handleHslChange('a', e.target.value)}
-                      className="font-mono"
-                      step="0.1"
-                      min="0"
-                      max="1"
-                    />
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
-
-          <div
-            className="h-6 rounded border bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVQ4T2NkYGAQYcAP3uCTZhw1gGGYhAGBZIA/nYDCgBDAm9BGDWAAJyRCgLaBCAAgXwixzAS0pgAAAABJRU5ErkJggg==')]"
-            style={{ backgroundColor: ColorUtils.formatRgba(rgb) }}
-          />
-        </div>
-      </PopoverContent>
-    </Popover>
+    <Button
+      variant="outline"
+      size="icon"
+      onClick={handleEyeDropper}
+      className={cn('text-muted-foreground shrink-0', className)}
+      {...props}
+    >
+      <PipetteIcon size={16} />
+    </Button>
   );
-}
+};
+
+export type ColorPickerOutputProps = ComponentProps<typeof SelectTrigger>;
+
+const formats = ['hex', 'rgb', 'hsl'];
+
+export const ColorPickerOutput = ({
+  className,
+  ...props
+}: ColorPickerOutputProps) => {
+  const { mode, setMode } = useColorPicker();
+  return (
+    <Select value={mode} onValueChange={setMode}>
+      <SelectTrigger className="h-8 w-[4.5rem] shrink-0 text-xs" {...props}>
+        <SelectValue placeholder="Mode" />
+      </SelectTrigger>
+      <SelectContent>
+        {formats.map((format) => (
+          <SelectItem key={format} value={format} className="text-xs">
+            {format.toUpperCase()}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+};
+
+type PercentageInputProps = ComponentProps<typeof Input>;
+
+const PercentageInput = ({ className, ...props }: PercentageInputProps) => (
+  <div className="relative">
+    <Input
+      type="text"
+      {...props}
+      className={cn(
+        'bg-secondary h-8 w-[3.25rem] rounded-l-none px-2 text-xs shadow-none',
+        className,
+      )}
+    />
+    <span className="text-muted-foreground absolute top-1/2 right-2 -translate-y-1/2 text-xs">
+      %
+    </span>
+  </div>
+);
+
+export type ColorPickerFormatProps = HTMLAttributes<HTMLDivElement>;
+
+export const ColorPickerFormat = ({
+  className,
+  ...props
+}: ColorPickerFormatProps) => {
+  const { color, setColor, mode } = useColorPicker();
+
+  if (mode === 'hex') {
+    const hex = color.hex();
+    const handleChange: ChangeEventHandler<HTMLInputElement> = (event) => {
+      try {
+        const newValue = `#${event.target.value}`;
+        // ✅ Force alpha to 1
+        setColor(Color(newValue).alpha(1));
+      } catch (error) {
+        // Invalid color, ignore
+      }
+    };
+    return (
+      <div
+        className={cn(
+          'relative flex items-center -space-x-px shadow-sm',
+          className,
+        )}
+        {...props}
+      >
+        <span className="absolute top-1/2 left-2 -translate-y-1/2 text-xs">
+          #
+        </span>
+        <Input
+          value={hex.substring(1)}
+          onChange={handleChange}
+          className="bg-secondary h-8 pl-4 text-xs shadow-none"
+        />
+      </div>
+    );
+  }
+
+  if (mode === 'rgb') {
+    const rgb = color.rgb().round().array();
+    return (
+      <div
+        className={cn('flex items-center -space-x-px shadow-sm', className)}
+        {...props}
+      >
+        {/* ✅ Only show R, G, B values (no alpha) */}
+        {rgb.slice(0, 3).map((value, index) => (
+          <Input
+            key={index}
+            type="text"
+            value={value}
+            readOnly
+            className={cn(
+              'bg-secondary h-8 rounded-none px-2 text-xs shadow-none',
+              !index && 'rounded-l-md',
+              index === 2 && 'rounded-r-md' // Last item
+            )}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  if (mode === 'hsl') {
+    const hsl = color.hsl().round().array();
+    return (
+      <div
+        className={cn('flex items-center -space-x-px shadow-sm', className)}
+        {...props}
+      >
+        {/* ✅ Only show H, S, L values (no alpha) */}
+        {hsl.slice(0, 3).map((value, index) => (
+          <Input
+            key={index}
+            type="text"
+            value={value}
+            readOnly
+            className={cn(
+              'bg-secondary h-8 rounded-none px-2 text-xs shadow-none',
+              !index && 'rounded-l-md',
+              index === 2 && 'rounded-r-md' // Last item
+            )}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  return null;
+};

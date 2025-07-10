@@ -1,21 +1,13 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth'; // ← import hook
 import {
   BarChart3,
   Users,
   UserPlus,
-  Settings,
   Shield,
   LogOut,
   ChevronUp,
   User2,
-  Database,
-  Activity,
-  Package,
-  Heart,
-  ShoppingCart,
-  FileText,
-  Bell,
-  CreditCard,
 } from 'lucide-react';
 
 import {
@@ -43,15 +35,33 @@ import { Badge } from '@/components/ui/badge';
 
 const AdminSidebar = () => {
   const location = useLocation();
+  const { user, logout } = useAuth();
+
+  const initials = user?.name
+    .split(' ')
+    .map((n) => n[0])
+    .join('');
+
+  const isMenuActive = (basePath: string): boolean => {
+    const currentPath = location.pathname;
+
+    // Exact match cho dashboard
+    if (basePath === '/admin' && currentPath === '/admin') {
+      return true;
+    }
+
+    // Cho các menu khác, check nếu path bắt đầu với basePath
+    if (basePath !== '/admin' && currentPath.startsWith(basePath)) {
+      return true;
+    }
+
+    return false;
+  };
 
   const navigationGroups = [
     {
       label: 'Dashboard',
-      items: [
-        { name: 'Overview', href: '/admin', icon: BarChart3 },
-        { name: 'Analytics', href: '/admin/analytics', icon: Activity },
-        { name: 'Reports', href: '/admin/reports', icon: FileText },
-      ],
+      items: [{ name: 'Overview', href: '/admin', icon: BarChart3 }],
     },
     {
       label: 'User Management',
@@ -68,26 +78,8 @@ const AdminSidebar = () => {
           icon: UserPlus,
           badge: '23',
         },
-        { name: 'Roles & Permissions', href: '/admin/roles', icon: Shield },
       ],
-    },
-    {
-      label: 'Business Overview',
-      items: [
-        { name: 'Products', href: '/admin/products', icon: Package },
-        { name: 'Pets', href: '/admin/pets', icon: Heart },
-        { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
-        { name: 'Payments', href: '/admin/payments', icon: CreditCard },
-      ],
-    },
-    {
-      label: 'System',
-      items: [
-        { name: 'Settings', href: '/admin/settings', icon: Settings },
-        { name: 'Database', href: '/admin/database', icon: Database },
-        { name: 'Notifications', href: '/admin/notifications', icon: Bell },
-      ],
-    },
+    }
   ];
 
   return (
@@ -122,7 +114,8 @@ const AdminSidebar = () => {
               <SidebarMenu>
                 {group.items.map((item) => {
                   const Icon = item.icon;
-                  const isActive = location.pathname === item.href;
+                  // 🔧 Sử dụng helper function
+                  const isActive = isMenuActive(item.href);
 
                   return (
                     <SidebarMenuItem key={item.name}>
@@ -144,14 +137,6 @@ const AdminSidebar = () => {
                             <Icon className="size-4 shrink-0" />
                             <span>{item.name}</span>
                           </div>
-                          {item.badge && (
-                            <Badge
-                              variant="secondary"
-                              className="bg-red-100 text-xs text-red-700"
-                            >
-                              {item.badge}
-                            </Badge>
-                          )}
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -173,17 +158,18 @@ const AdminSidebar = () => {
                   className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 >
                   <Avatar className="h-8 w-8 rounded-lg">
-                    <AvatarImage src="/avatars/admin-avatar.png" alt="Admin" />
-                    <AvatarFallback className="rounded-lg bg-red-100 text-red-600">
-                      AD
-                    </AvatarFallback>
+                    <AvatarImage
+                      src={user?.avatarUrl || '/avatars/admin-avatar.png'}
+                      alt={user?.name || 'Admin'}
+                    />
+                    <AvatarFallback>{initials || 'AD'}</AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold">
-                      Administrator
+                      {user?.name || 'Administrator'}
                     </span>
                     <span className="text-muted-foreground truncate text-xs">
-                      admin@monito.com
+                      {user?.email || '—'}
                     </span>
                   </div>
                   <ChevronUp className="ml-auto size-4" />
@@ -195,23 +181,18 @@ const AdminSidebar = () => {
                 align="end"
                 sideOffset={4}
               >
+                <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link to="/staff">
-                    <Users className="mr-2 size-4" />
-                    Switch to Staff Portal
+                  <Link to="/admin/profile">
+                    <User2 className="mr-2 size-4" />
+                    Profile
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <User2 className="mr-2 size-4" />
-                  Profile Settings
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="mr-2 size-4" />
-                  Admin Settings
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-red-600">
+                <DropdownMenuItem
+                  className="text-red-600"
+                  onClick={() => logout.mutate()}
+                >
                   <LogOut className="mr-2 size-4" />
                   Sign Out
                 </DropdownMenuItem>

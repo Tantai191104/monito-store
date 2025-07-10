@@ -24,17 +24,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { Color } from '@/types/color';
 import { EditColorDialog } from './EditColorDialog';
-import { useUpdateColor, useDeleteColor } from '@/hooks/useColors';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { DeactivateColorDialog } from './DeactivateColorDialog';
+import { DeleteColorDialog } from './DeleteColorDialog';
 
 export const colorColumns: ColumnDef<Color>[] = [
   {
@@ -75,15 +66,8 @@ export const colorColumns: ColumnDef<Color>[] = [
     cell: ({ row }) => {
       const color = row.original;
       return (
-        <div className="flex items-center space-x-3">
-          <div
-            className="h-6 w-6 rounded-full border-2 border-gray-300"
-            style={{ backgroundColor: color.hexCode }}
-          />
-          <div className="max-w-[150px]">
-            <div className="font-medium">{color.name}</div>
-            <div className="text-sm text-gray-500">{color.hexCode}</div>
-          </div>
+        <div className="max-w-[150px]">
+          <div className="font-medium">{color.name}</div>
         </div>
       );
     },
@@ -120,35 +104,30 @@ export const colorColumns: ColumnDef<Color>[] = [
   },
   {
     accessorKey: 'isActive',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Status
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
+    header: 'Status',
     cell: ({ row }) => {
       const isActive = row.getValue('isActive') as boolean;
       return (
-        <Badge
-          variant={isActive ? 'default' : 'secondary'}
-          className={
-            isActive
-              ? 'bg-green-100 text-green-800'
-              : 'bg-gray-100 text-gray-600'
-          }
-        >
-          {isActive ? 'Active' : 'Inactive'}
-        </Badge>
+        <div className="pl-2.5">
+          <Badge
+            variant={isActive ? 'default' : 'secondary'}
+            className={
+              isActive
+                ? 'bg-green-100 text-green-800'
+                : 'bg-gray-100 text-gray-600'
+            }
+          >
+            {isActive ? 'Active' : 'Inactive'}
+          </Badge>
+        </div>
       );
     },
+    // ✅ Fix filterFn to handle string-based filtering
     filterFn: (row, id, value) => {
-      if (value === 'all') return true;
-      return value === 'active' ? row.getValue(id) : !row.getValue(id);
+      if (!value || value === 'all') return true;
+
+      const isActive = row.getValue(id) as boolean;
+      return value === 'active' ? isActive : !isActive;
     },
   },
   {
@@ -229,32 +208,15 @@ export const colorColumns: ColumnDef<Color>[] = [
 
 // Separate component for actions to handle hooks properly
 function ColorActionsCell({ color }: { color: Color }) {
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const updateColor = useUpdateColor();
-  const deleteColor = useDeleteColor();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
 
-  const handleToggleActive = async () => {
-    try {
-      await updateColor.mutateAsync({
-        id: color._id,
-        data: { isActive: !color.isActive },
-      });
-    } catch (error) {
-      // Error handled in mutation
-    }
+  const handleCopyId = () => {
+    navigator.clipboard.writeText(color._id);
+    toast.success('Color ID copied to clipboard!');
   };
 
-  const handleDelete = async () => {
-    try {
-      await deleteColor.mutateAsync(color._id);
-      setDeleteDialogOpen(false);
-    } catch (error) {
-      // Error handled in mutation
-    }
-  };
-
-  // Handle edit click with proper state management
   const handleEditClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -272,33 +234,18 @@ function ColorActionsCell({ color }: { color: Color }) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem
-            onClick={() => {
-              navigator.clipboard.writeText(color._id);
-              toast.info('Color ID copied!');
-            }}
-          >
+          <DropdownMenuItem onClick={handleCopyId}>
             <CopyIcon className="mr-2 h-4 w-4" />
             Copy ID
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => {
-              navigator.clipboard.writeText(color.hexCode);
-              toast.info('Hex code copied!');
-            }}
-          >
-            <CopyIcon className="mr-2 h-4 w-4" />
-            Copy Hex Code
-          </DropdownMenuItem>
           <DropdownMenuSeparator />
-          {/* Use onClick instead of nested component */}
           <DropdownMenuItem onClick={handleEditClick}>
             <Edit className="mr-2 h-4 w-4" />
             Edit color
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={handleToggleActive}
-            disabled={updateColor.isPending}
+            onClick={() => setDeactivateDialogOpen(true)}
+            className={color.isActive ? 'text-orange-600' : 'text-green-600'}
           >
             {color.isActive ? (
               <>
@@ -330,28 +277,17 @@ function ColorActionsCell({ color }: { color: Color }) {
         onOpenChange={setEditDialogOpen}
       />
 
-      {/* Delete Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Color</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete the color "{color.name}"? This
-              action cannot be undone and may affect pets using this color.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700"
-              disabled={deleteColor.isPending}
-            >
-              {deleteColor.isPending ? 'Deleting...' : 'Delete'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeactivateColorDialog
+        color={color}
+        open={deactivateDialogOpen}
+        onOpenChange={setDeactivateDialogOpen}
+      />
+
+      <DeleteColorDialog
+        color={color}
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+      />
     </>
   );
 }

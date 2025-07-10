@@ -19,12 +19,18 @@ export const breedKeys = {
 };
 
 // Get all breeds
-export const useBreeds = () => {
+export const useBreeds = (params: URLSearchParams = new URLSearchParams()) => {
   return useQuery({
-    queryKey: breedKeys.lists(),
+    queryKey: ['breeds', params.toString()],
     queryFn: async () => {
-      const response = await breedService.getBreeds();
-      return response.data || [];
+      const response = await breedService.getBreeds(params);
+      const breeds = response.data || [];
+
+      // ✅ Ensure petCount is always a number
+      return breeds.map((breed) => ({
+        ...breed,
+        petCount: breed.petCount || 0,
+      }));
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -37,7 +43,12 @@ export const useActiveBreeds = () => {
     queryFn: async () => {
       const response = await breedService.getBreeds();
       const breeds = response.data || [];
-      return breeds.filter((breed) => breed.isActive);
+      return breeds
+        .filter((breed) => breed.isActive)
+        .map((breed) => ({
+          ...breed,
+          petCount: breed.petCount || 0,
+        }));
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -64,8 +75,15 @@ export const useCreateBreed = () => {
       queryClient.invalidateQueries({ queryKey: breedKeys.all });
       const newBreed = response.data?.breed;
       if (newBreed) {
+        // ✅ Fix: Add to BEGINNING of list with petCount = 0
         queryClient.setQueryData(breedKeys.lists(), (old: Breed[] = []) => [
-          newBreed,
+          { ...newBreed, petCount: 0 }, // ✅ Add at beginning
+          ...old,
+        ]);
+
+        // ✅ Also update the main query key
+        queryClient.setQueryData(['breeds', ''], (old: Breed[] = []) => [
+          { ...newBreed, petCount: 0 },
           ...old,
         ]);
       }
@@ -83,20 +101,40 @@ export const useCreateBreed = () => {
 // Update breed mutation
 export const useUpdateBreed = () => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateBreedPayload }) =>
       breedService.updateBreed(id, data),
     onSuccess: (response, { id }) => {
       queryClient.invalidateQueries({ queryKey: breedKeys.all });
+
       const updatedBreed = response.data?.breed;
       if (updatedBreed) {
-        queryClient.setQueryData(breedKeys.detail(id), updatedBreed);
+        // ✅ Update the breed in all relevant queries
         queryClient.setQueryData(breedKeys.lists(), (old: Breed[] = []) =>
-          old.map((breed) => (breed._id === id ? updatedBreed : breed)),
+          old.map((breed) =>
+            breed._id === id
+              ? { ...updatedBreed, petCount: breed.petCount }
+              : breed,
+          ),
         );
+
+        // ✅ Update main query key
+        queryClient.setQueryData(['breeds', ''], (old: Breed[] = []) =>
+          old.map((breed) =>
+            breed._id === id
+              ? { ...updatedBreed, petCount: breed.petCount }
+              : breed,
+          ),
+        );
+
+        // ✅ Update individual breed query
+        queryClient.setQueryData(breedKeys.detail(id), {
+          data: { breed: updatedBreed },
+        });
       }
+
       toast.success('Breed updated successfully!');
-      return updatedBreed;
     },
     onError: (error: any) => {
       const apiError = error.response?.data as ApiError;
@@ -109,20 +147,32 @@ export const useUpdateBreed = () => {
 // Delete breed mutation
 export const useDeleteBreed = () => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (id: string) => breedService.deleteBreed(id),
     onSuccess: (_, deletedId) => {
       queryClient.setQueryData(breedKeys.lists(), (old: Breed[] = []) =>
         old.filter((breed) => breed._id !== deletedId),
       );
+
       queryClient.removeQueries({ queryKey: breedKeys.detail(deletedId) });
       queryClient.invalidateQueries({ queryKey: breedKeys.all });
+
       toast.success('Breed deleted successfully!');
     },
     onError: (error: any) => {
       const apiError = error.response?.data as ApiError;
-      const message = getErrorMessage(apiError?.errorCode, apiError?.message);
-      toast.error(message);
+
+      // ✅ Handle specific constraint violation error
+      if (apiError?.errorCode === 'BREED_IN_USE') {
+        toast.error(apiError.message, {
+          description: 'Please reassign or delete pets using this breed first.',
+          duration: 6000,
+        });
+      } else {
+        const message = getErrorMessage(apiError?.errorCode, apiError?.message);
+        toast.error(message);
+      }
     },
   });
 };
@@ -186,8 +236,10 @@ export const useBulkDeactivateBreeds = () => {
   });
 };
 
+// ✅ Enhanced bulk delete with constraint handling
 export const useBulkDeleteBreeds = () => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (ids: string[]) => {
       await Promise.all(ids.map((id) => breedService.deleteBreed(id)));
@@ -197,16 +249,27 @@ export const useBulkDeleteBreeds = () => {
       queryClient.setQueryData(breedKeys.lists(), (old: Breed[] = []) =>
         old.filter((breed) => !deletedIds.includes(breed._id)),
       );
+
       deletedIds.forEach((id) => {
         queryClient.removeQueries({ queryKey: breedKeys.detail(id) });
       });
+
       queryClient.invalidateQueries({ queryKey: breedKeys.all });
       toast.success(`${deletedIds.length} breeds deleted successfully!`);
     },
     onError: (error: any) => {
       const apiError = error.response?.data as ApiError;
-      const message = getErrorMessage(apiError?.errorCode, apiError?.message);
-      toast.error(message);
+
+      // ✅ Handle constraint violations
+      if (apiError?.errorCode === 'BREED_IN_USE') {
+        toast.error('Some breeds cannot be deleted', {
+          description: 'They are being used by pets.',
+          duration: 6000,
+        });
+      } else {
+        const message = getErrorMessage(apiError?.errorCode, apiError?.message);
+        toast.error(message);
+      }
     },
   });
 };

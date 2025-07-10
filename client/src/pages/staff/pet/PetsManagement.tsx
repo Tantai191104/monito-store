@@ -26,8 +26,8 @@ const PetsManagement = () => {
   }
 
   return (
-    <div className="container mx-auto p-8 py-0">
-      <div className="mb-8">
+    <div className="container mx-auto py-0">
+      <div className="mb-3 border-b p-6">
         <h1 className="text-3xl font-bold text-gray-900">Pets Management</h1>
         <p className="text-muted-foreground">
           Manage pet listings, health records, and availability.
@@ -38,7 +38,7 @@ const PetsManagement = () => {
         columns={petColumns}
         data={pets}
         isLoading={isLoading}
-        className="rounded-lg bg-white p-6 shadow"
+        className="p-6"
       />
     </div>
   );

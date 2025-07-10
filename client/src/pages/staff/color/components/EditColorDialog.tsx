@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Edit, Loader2, Palette, Pipette } from 'lucide-react';
-// import { HexColorPicker } from 'react-colorful';
+import { Edit, Loader2, Palette } from 'lucide-react';
 
 import {
   Dialog,
@@ -33,6 +32,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useUpdateColor } from '@/hooks/useColors';
 import type { Color } from '@/types/color';
+import {
+  ColorPicker,
+  ColorPickerEyeDropper,
+  ColorPickerFormat,
+  ColorPickerHue,
+  ColorPickerOutput,
+  ColorPickerSelection,
+} from '@/components/ColorPicker';
 
 const colorSchema = z.object({
   name: z
@@ -62,34 +69,6 @@ interface EditColorDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
-
-// Predefined popular colors for quick selection
-const PRESET_COLORS = [
-  '#000000',
-  '#FFFFFF',
-  '#FF0000',
-  '#00FF00',
-  '#0000FF',
-  '#FFFF00',
-  '#FF00FF',
-  '#00FFFF',
-  '#FFA500',
-  '#800080',
-  '#FFC0CB',
-  '#A52A2A',
-  '#808080',
-  '#FFD700',
-  '#C0C0C0',
-  '#8B4513',
-  '#F5F5DC',
-  '#DC143C',
-  '#FBCEB1',
-  '#704214',
-  '#8B4516',
-  '#D2B48C',
-  '#DDA0DD',
-  '#98FB98',
-];
 
 export function EditColorDialog({
   color,
@@ -153,33 +132,6 @@ export function EditColorDialog({
     setOpen(false);
   };
 
-  // Convert hex to name suggestion
-  const suggestColorName = (hex: string) => {
-    const colorMap: { [key: string]: string } = {
-      '#000000': 'Black',
-      '#FFFFFF': 'White',
-      '#FF0000': 'Red',
-      '#00FF00': 'Green',
-      '#0000FF': 'Blue',
-      '#FFFF00': 'Yellow',
-      '#FF00FF': 'Magenta',
-      '#00FFFF': 'Cyan',
-      '#FFA500': 'Orange',
-      '#800080': 'Purple',
-      '#FFC0CB': 'Pink',
-      '#A52A2A': 'Brown',
-      '#808080': 'Gray',
-      '#FFD700': 'Gold',
-      '#C0C0C0': 'Silver',
-      '#8B4513': 'Saddle Brown',
-      '#F5F5DC': 'Beige',
-      '#DC143C': 'Crimson',
-      '#FBCEB1': 'Peach',
-      '#704214': 'Sepia',
-    };
-    return colorMap[hex.toUpperCase()] || '';
-  };
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {/* Only render trigger if provided */}
@@ -199,126 +151,70 @@ export function EditColorDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Color Picker Section */}
-            <div className="space-y-4">
-              <FormLabel>Color Selection</FormLabel>
-
-              {/* Before and After Color Comparison */}
-              <div className="flex items-center justify-center gap-6">
-                <div className="text-center">
-                  <p className="mb-2 text-sm text-gray-600">Original</p>
-                  <div
-                    className="h-16 w-16 rounded-full border-4 border-gray-300 shadow-lg"
-                    style={{ backgroundColor: color.hexCode }}
-                  />
-                  <p className="mt-1 text-xs text-gray-500">{color.hexCode}</p>
-                </div>
-
-                <div className="text-center">
-                  <p className="mb-2 text-sm text-gray-600">New</p>
-                  <div
-                    className="h-16 w-16 rounded-full border-4 border-blue-300 shadow-lg"
-                    style={{ backgroundColor: watchedHexCode }}
-                  />
-                  <p className="mt-1 text-xs text-gray-500">{watchedHexCode}</p>
-                </div>
-              </div>
-
-              {/* Color Picker and Hex Input */}
-              <div className="flex items-center gap-4">
-                <Popover
-                  open={colorPickerOpen}
-                  onOpenChange={setColorPickerOpen}
-                >
-                  <PopoverTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="flex items-center gap-2"
-                    >
-                      <Pipette className="h-4 w-4" />
-                      Color Picker
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-4" align="start">
-                    <div className="space-y-4">
-                      {/* <Controller
-                        name="hexCode"
-                        control={form.control}
-                        render={({ field }) => (
-                          // <HexColorPicker
-                          //   color={field.value}
-                          //   onChange={field.onChange}
-                          // />
-                        )}
-                      /> */}
-
-                      {/* Preset Colors */}
-                      <div>
-                        <p className="mb-2 text-sm font-medium">Quick Colors</p>
-                        <div className="grid grid-cols-6 gap-2">
-                          {PRESET_COLORS.map((presetColor) => (
-                            <button
-                              key={presetColor}
-                              type="button"
-                              className={`h-8 w-8 rounded border-2 transition-colors ${
-                                watchedHexCode === presetColor
-                                  ? 'scale-110 border-blue-500'
-                                  : 'border-gray-200 hover:border-gray-400'
-                              }`}
-                              style={{ backgroundColor: presetColor }}
-                              onClick={() => {
-                                form.setValue('hexCode', presetColor);
-                              }}
-                            />
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Reset to original */}
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => form.setValue('hexCode', color.hexCode)}
-                        className="w-full"
+            {/* ✅ Color Picker with Popover - Same as AddColorDialog */}
+            <FormField
+              control={form.control}
+              name="hexCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Color</FormLabel>
+                  <FormControl>
+                    <div className="flex items-center gap-3">
+                      {/* ✅ Color Preview Button with Popover */}
+                      <Popover
+                        open={colorPickerOpen}
+                        onOpenChange={setColorPickerOpen}
                       >
-                        Reset to Original
-                      </Button>
+                        <PopoverTrigger asChild>
+                          <div
+                            className="h-10 w-10 rounded-sm border-2 border-gray-200 shadow-sm"
+                            style={{ backgroundColor: watchedHexCode }}
+                          />
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-4" align="start">
+                          <ColorPicker
+                            className="w-full max-w-[280px]"
+                            value={field.value}
+                            onChange={(color) => {
+                              field.onChange(color);
+                              // Optional: Auto close popover after selection
+                              // setColorPickerOpen(false);
+                            }}
+                          >
+                            <ColorPickerSelection />
+                            <div className="mt-4 flex items-center gap-4">
+                              <ColorPickerEyeDropper />
+                              <div className="w-full">
+                                <ColorPickerHue />
+                              </div>
+                            </div>
+                            <div className="mt-4 flex items-center gap-2">
+                              <ColorPickerOutput />
+                              <ColorPickerFormat />
+                            </div>
+                          </ColorPicker>
+                        </PopoverContent>
+                      </Popover>
+
+                      {/* ✅ Manual Hex Input */}
+                      <div className="flex-1">
+                        <Input
+                          placeholder="#000000"
+                          value={field.value}
+                          onChange={field.onChange}
+                          className="font-mono"
+                        />
+                      </div>
                     </div>
-                  </PopoverContent>
-                </Popover>
-
-                <FormField
-                  control={form.control}
-                  name="hexCode"
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormControl>
-                        <Input placeholder="#000000" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* Auto-suggestion button */}
-              {suggestColorName(watchedHexCode) &&
-                suggestColorName(watchedHexCode) !== form.getValues('name') && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      form.setValue('name', suggestColorName(watchedHexCode));
-                    }}
-                    className="text-xs"
-                  >
-                    Suggest: "{suggestColorName(watchedHexCode)}"
-                  </Button>
-                )}
-            </div>
+                  </FormControl>
+                  <FormDescription>
+                    Click the color button to open picker, or enter hex code
+                    manually
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
@@ -332,6 +228,9 @@ export function EditColorDialog({
                       {...field}
                     />
                   </FormControl>
+                  <FormDescription>
+                    Choose a descriptive name for the color
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -350,11 +249,15 @@ export function EditColorDialog({
                       {...field}
                     />
                   </FormControl>
+                  <FormDescription>
+                    Optional description to help identify this color
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
+            {/* ✅ Active Status Toggle */}
             <FormField
               control={form.control}
               name="isActive"

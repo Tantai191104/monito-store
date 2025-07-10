@@ -41,8 +41,6 @@ const colorSchema = new Schema<ColorDocument>(
   },
 );
 
-colorSchema.index({ name: 1 });
-colorSchema.index({ hexCode: 1 });
 colorSchema.index({ isActive: 1 });
 
 const ColorModel = mongoose.model<ColorDocument>('Color', colorSchema);

@@ -1,14 +1,13 @@
-import { useState } from 'react';
 import { BreedDataTable } from './components/BreedDataTable';
 import { breedColumns } from './components/BreedColumns';
-import { mockBreeds } from '@/data/mockBreeds';
+import { useBreeds } from '@/hooks/useBreeds'; // ✅ Use real hook instead of mock data
 
 const BreedsManagement = () => {
-  const [data] = useState(mockBreeds);
+  const { data: breeds = [], isLoading } = useBreeds(); // ✅ Fetch real data
 
   return (
-    <div className="container mx-auto p-8 py-0">
-      <div className="mb-8">
+    <div className="container mx-auto py-0">
+      <div className="mb-3 border-b p-6">
         <h1 className="text-3xl font-bold text-gray-900">Breeds Management</h1>
         <p className="text-muted-foreground">
           Manage pet breeds and classifications for your store.
@@ -17,8 +16,9 @@ const BreedsManagement = () => {
 
       <BreedDataTable
         columns={breedColumns}
-        data={data}
-        className="rounded-lg bg-white p-6 shadow"
+        data={breeds}
+        isLoading={isLoading} // ✅ Pass loading state
+        className="p-6"
       />
     </div>
   );

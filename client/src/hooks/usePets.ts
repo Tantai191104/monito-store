@@ -16,9 +16,10 @@ export const petKeys = {
 
 // Get all pets
 export const usePets = (params: URLSearchParams = new URLSearchParams()) => {
-  const queryKey = [petKeys.lists(), params.toString()];
+  // ✅ FIX: Flatten the query key to ensure invalidation works correctly.
+  // The key should be a flat array, not a nested one.
   return useQuery({
-    queryKey,
+    queryKey: petKeys.list(params.toString()),
     queryFn: async () => {
       const response = await petService.getPets(params);
       return response.data; // Return the data object { pets, pagination }
@@ -97,15 +98,12 @@ export const useUpdatePetAvailability = () => {
     mutationFn: ({ id, isAvailable }: { id: string; isAvailable: boolean }) =>
       petService.updateAvailability(id, isAvailable),
     onSuccess: (response, { id }) => {
-      queryClient.invalidateQueries({ queryKey: petKeys.all });
+      queryClient.invalidateQueries({ queryKey: petKeys.lists() });
+
       const updatedPet = response.data?.pet;
       if (updatedPet) {
         queryClient.setQueryData(petKeys.detail(id), updatedPet);
-        queryClient.setQueryData(petKeys.lists(), (old: Pet[] = []) =>
-          old.map((pet) => (pet._id === id ? updatedPet : pet)),
-        );
       }
-      toast.success('Pet availability updated successfully!');
       return updatedPet;
     },
     onError: (error: any) => {
@@ -122,12 +120,8 @@ export const useDeletePet = () => {
   return useMutation({
     mutationFn: (id: string) => petService.deletePet(id),
     onSuccess: (_, deletedId) => {
-      queryClient.setQueryData(petKeys.lists(), (old: Pet[] = []) =>
-        old.filter((pet) => pet._id !== deletedId),
-      );
+      queryClient.invalidateQueries({ queryKey: petKeys.lists() });
       queryClient.removeQueries({ queryKey: petKeys.detail(deletedId) });
-      queryClient.invalidateQueries({ queryKey: petKeys.all });
-      toast.success('Pet deleted successfully!');
     },
     onError: (error: any) => {
       const apiError = error.response?.data as ApiError;
@@ -184,22 +178,15 @@ export const useBulkUpdatePetAvailability = () => {
       };
     },
     onSuccess: ({ ids, isAvailable, pets }) => {
-      queryClient.setQueryData(petKeys.lists(), (old: Pet[] = []) =>
-        old.map((pet) => {
-          if (ids.includes(pet._id)) {
-            return { ...pet, isAvailable };
-          }
-          return pet;
-        }),
-      );
+      // ✅ FIX: Invalidate list queries to trigger a refetch for the table
+      queryClient.invalidateQueries({ queryKey: petKeys.lists() });
 
+      // Update detail caches for each affected pet
       pets.forEach((pet) => {
         if (pet) {
           queryClient.setQueryData(petKeys.detail(pet._id), pet);
         }
       });
-
-      queryClient.invalidateQueries({ queryKey: petKeys.all });
 
       const action = isAvailable ? 'made available' : 'marked as sold';
       toast.success(`${ids.length} pets ${action} successfully!`);

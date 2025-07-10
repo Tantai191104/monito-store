@@ -28,9 +28,9 @@ const ColorsManagement = () => {
 
   return (
     <div className="container mx-auto py-0">
-      <div className="mb-8">
+      <div className="mb-3 border-b p-6">
         <h1 className="text-3xl font-bold text-gray-900">Colors Management</h1>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           Manage pet colors for classification and identification.
         </p>
       </div>
@@ -39,7 +39,7 @@ const ColorsManagement = () => {
         columns={colorColumns}
         data={colors}
         isLoading={isLoading}
-        className="rounded-lg bg-white p-6 shadow"
+        className="p-6"
       />
     </div>
   );

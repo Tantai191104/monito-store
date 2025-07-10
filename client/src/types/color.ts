@@ -4,6 +4,7 @@ export interface Color {
   hexCode: string;
   description?: string;
   isActive: boolean;
+  petCount?: number;
   createdAt: string;
   updatedAt: string;
 }

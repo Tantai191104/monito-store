@@ -62,4 +62,6 @@ export type ProductFilters = {
   limit?: number;
   sortBy?: 'name' | 'price' | 'rating' | 'createdAt';
   sortOrder?: 'asc' | 'desc';
+  search?: string; // ✅ Add search property
+  includeInactiveCategories?: boolean; // ✅ Add includeInactiveCategories property
 };

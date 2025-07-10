@@ -390,10 +390,6 @@ const StaffManagement = () => {
                             <Edit className="mr-2 h-4 w-4" />
                             Edit Staff
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Shield className="mr-2 h-4 w-4" />
-                            Manage Permissions
-                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem className="text-red-600">
                             <Trash2 className="mr-2 h-4 w-4" />
