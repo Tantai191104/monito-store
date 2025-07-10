@@ -39,7 +39,7 @@ const ColorsManagement = () => {
         columns={colorColumns}
         data={colors}
         isLoading={isLoading}
-        className="rounded-lg bg-white p-6 shadow"
+        className="p-6"
       />
     </div>
   );
