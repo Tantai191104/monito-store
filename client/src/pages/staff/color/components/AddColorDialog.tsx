@@ -31,7 +31,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useCreateColor } from '@/hooks/useColors';
-import { ColorPicker } from '@/components/ColorPicker';
+import { ColorPicker, ColorPickerAlpha, ColorPickerEyeDropper, ColorPickerFormat, ColorPickerHue, ColorPickerOutput, ColorPickerSelection } from '@/components/ColorPicker';
 
 const colorSchema = z.object({
   name: z
@@ -127,7 +127,20 @@ export function AddColorDialog({ trigger }: AddColorDialogProps) {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Interactive Hex Input with Color Picker */}
 
-            <ColorPicker color={color} onChange={setColor} />
+            <ColorPicker className="bg-background w-full max-w-[300px] rounded-md border p-4 shadow-sm">
+              <ColorPickerSelection />
+              <div className="flex items-center gap-4">
+                <ColorPickerEyeDropper />
+                <div className="grid w-full gap-1">
+                  <ColorPickerHue />
+                  <ColorPickerAlpha />
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <ColorPickerOutput />
+                <ColorPickerFormat />
+              </div>
+            </ColorPicker>
             <FormField
               control={form.control}
               name="name"
