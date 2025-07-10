@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, Loader2, Palette, Pipette } from 'lucide-react';
-import { SketchPicker, ChromePicker, CompactPicker } from 'react-color';
+import { Plus, Loader2, Palette } from 'lucide-react';
 
 import {
   Dialog,
@@ -13,11 +12,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -31,7 +25,14 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useCreateColor } from '@/hooks/useColors';
-import { ColorPicker, ColorPickerAlpha, ColorPickerEyeDropper, ColorPickerFormat, ColorPickerHue, ColorPickerOutput, ColorPickerSelection } from '@/components/ColorPicker';
+import {
+  ColorPicker,
+  ColorPickerEyeDropper,
+  ColorPickerFormat,
+  ColorPickerHue,
+  ColorPickerOutput,
+  ColorPickerSelection,
+} from '@/components/ColorPicker';
 
 const colorSchema = z.object({
   name: z
@@ -60,8 +61,6 @@ interface AddColorDialogProps {
 
 export function AddColorDialog({ trigger }: AddColorDialogProps) {
   const [open, setOpen] = useState(false);
-  const [color, setColor] = useState('#6366f1');
-
   const createColor = useCreateColor();
 
   const form = useForm<ColorFormValues>({
@@ -80,11 +79,7 @@ export function AddColorDialog({ trigger }: AddColorDialogProps) {
         hexCode: data.hexCode,
         description: data.description || undefined,
       });
-      form.reset({
-        name: '',
-        hexCode: '#000000',
-        description: '',
-      });
+      form.reset({ name: '', hexCode: '#000000', description: '' });
       setOpen(false);
     } catch (error) {
       // Error is handled in the mutation
@@ -92,11 +87,7 @@ export function AddColorDialog({ trigger }: AddColorDialogProps) {
   };
 
   const handleCancel = () => {
-    form.reset({
-      name: '',
-      hexCode: '#000000',
-      description: '',
-    });
+    form.reset({ name: '', hexCode: '#000000', description: '' });
     setOpen(false);
   };
 
@@ -118,29 +109,48 @@ export function AddColorDialog({ trigger }: AddColorDialogProps) {
             Add New Color
           </DialogTitle>
           <DialogDescription>
-            Create a new color for pet classification. Click on the color
-            preview or "Pick" button to open the color picker.
+            Create a new color for pet classification. Use the color picker for
+            precise selection.
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Interactive Hex Input with Color Picker */}
+            {/* ✅ ColorPicker without Alpha */}
+            <FormField
+              control={form.control}
+              name="hexCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Color</FormLabel>
+                  <FormControl>
+                    <ColorPicker
+                      className="w-full max-w-[300px] rounded-md border p-4 shadow-sm"
+                      value={field.value}
+                      onChange={field.onChange}
+                    >
+                      <ColorPickerSelection />
+                      <div className="flex items-center gap-4">
+                        <ColorPickerEyeDropper />
+                        <div className="w-full">
+                          {/* ✅ Only Hue slider, no Alpha */}
+                          <ColorPickerHue />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <ColorPickerOutput />
+                        <ColorPickerFormat />
+                      </div>
+                    </ColorPicker>
+                  </FormControl>
+                  <FormDescription>
+                    Use the color picker to select the exact color
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-            <ColorPicker className="bg-background w-full max-w-[300px] rounded-md border p-4 shadow-sm">
-              <ColorPickerSelection />
-              <div className="flex items-center gap-4">
-                <ColorPickerEyeDropper />
-                <div className="grid w-full gap-1">
-                  <ColorPickerHue />
-                  <ColorPickerAlpha />
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <ColorPickerOutput />
-                <ColorPickerFormat />
-              </div>
-            </ColorPicker>
             <FormField
               control={form.control}
               name="name"
