@@ -120,35 +120,30 @@ export const colorColumns: ColumnDef<Color>[] = [
   },
   {
     accessorKey: 'isActive',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Status
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
+    header: 'Status',
     cell: ({ row }) => {
       const isActive = row.getValue('isActive') as boolean;
       return (
-        <Badge
-          variant={isActive ? 'default' : 'secondary'}
-          className={
-            isActive
-              ? 'bg-green-100 text-green-800'
-              : 'bg-gray-100 text-gray-600'
-          }
-        >
-          {isActive ? 'Active' : 'Inactive'}
-        </Badge>
+        <div className="pl-2.5">
+          <Badge
+            variant={isActive ? 'default' : 'secondary'}
+            className={
+              isActive
+                ? 'bg-green-100 text-green-800'
+                : 'bg-gray-100 text-gray-600'
+            }
+          >
+            {isActive ? 'Active' : 'Inactive'}
+          </Badge>
+        </div>
       );
     },
+    // ✅ Fix filterFn to handle string-based filtering
     filterFn: (row, id, value) => {
-      if (value === 'all') return true;
-      return value === 'active' ? row.getValue(id) : !row.getValue(id);
+      if (!value || value === 'all') return true;
+
+      const isActive = row.getValue(id) as boolean;
+      return value === 'active' ? isActive : !isActive;
     },
   },
   {

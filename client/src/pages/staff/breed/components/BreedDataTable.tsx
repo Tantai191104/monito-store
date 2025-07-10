@@ -162,7 +162,7 @@ export function BreedDataTable<TData, TValue>({
         onValueChange={(value) =>
           table
             .getColumn('isActive')
-            ?.setFilterValue(value === 'all' ? '' : value === 'active')
+            ?.setFilterValue(value === 'all' ? '' : value)
         }
         disabled={isLoading}
       >

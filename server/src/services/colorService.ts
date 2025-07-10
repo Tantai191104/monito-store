@@ -52,7 +52,7 @@ export const colorService = {
    * Get all colors
    */
   async getColors() {
-    const colors = await ColorModel.find().sort({ name: 1 });
+    const colors = await ColorModel.find().sort({ createdAt: -1 });
     return colors;
   },
 
