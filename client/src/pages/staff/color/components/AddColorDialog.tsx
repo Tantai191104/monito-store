@@ -12,6 +12,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -61,6 +66,7 @@ interface AddColorDialogProps {
 
 export function AddColorDialog({ trigger }: AddColorDialogProps) {
   const [open, setOpen] = useState(false);
+  const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const createColor = useCreateColor();
 
   const form = useForm<ColorFormValues>({
@@ -71,6 +77,8 @@ export function AddColorDialog({ trigger }: AddColorDialogProps) {
       description: '',
     },
   });
+
+  const watchedHexCode = form.watch('hexCode');
 
   const onSubmit = async (data: ColorFormValues) => {
     try {
@@ -116,7 +124,7 @@ export function AddColorDialog({ trigger }: AddColorDialogProps) {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* ✅ ColorPicker without Alpha */}
+            {/* ✅ Color Picker with Popover */}
             <FormField
               control={form.control}
               name="hexCode"
@@ -124,27 +132,57 @@ export function AddColorDialog({ trigger }: AddColorDialogProps) {
                 <FormItem>
                   <FormLabel>Color</FormLabel>
                   <FormControl>
-                    <ColorPicker
-                      className="w-full max-w-[300px] rounded-md border p-4 shadow-sm"
-                      value={field.value}
-                      onChange={field.onChange}
-                    >
-                      <ColorPickerSelection />
-                      <div className="flex items-center gap-4">
-                        <ColorPickerEyeDropper />
-                        <div className="w-full">
-                          {/* ✅ Only Hue slider, no Alpha */}
-                          <ColorPickerHue />
-                        </div>
+                    <div className="flex items-center gap-3">
+                      {/* ✅ Color Preview Button with Popover */}
+                      <Popover
+                        open={colorPickerOpen}
+                        onOpenChange={setColorPickerOpen}
+                      >
+                        <PopoverTrigger asChild>
+                          <div
+                            className="h-10 w-10 rounded-sm border-2 border-gray-200 shadow-sm"
+                            style={{ backgroundColor: watchedHexCode }}
+                          />
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-4" align="start">
+                          <ColorPicker
+                            className="w-full max-w-[280px]"
+                            value={field.value}
+                            onChange={(color) => {
+                              field.onChange(color);
+                              // Optional: Auto close popover after selection
+                              // setColorPickerOpen(false);
+                            }}
+                          >
+                            <ColorPickerSelection />
+                            <div className="mt-4 flex items-center gap-4">
+                              <ColorPickerEyeDropper />
+                              <div className="w-full">
+                                <ColorPickerHue />
+                              </div>
+                            </div>
+                            <div className="mt-4 flex items-center gap-2">
+                              <ColorPickerOutput />
+                              <ColorPickerFormat />
+                            </div>
+                          </ColorPicker>
+                        </PopoverContent>
+                      </Popover>
+
+                      {/* ✅ Manual Hex Input */}
+                      <div className="flex-1">
+                        <Input
+                          placeholder="#000000"
+                          value={field.value}
+                          onChange={field.onChange}
+                          className="font-mono"
+                        />
                       </div>
-                      <div className="flex items-center gap-2">
-                        <ColorPickerOutput />
-                        <ColorPickerFormat />
-                      </div>
-                    </ColorPicker>
+                    </div>
                   </FormControl>
                   <FormDescription>
-                    Use the color picker to select the exact color
+                    Click the color button to open picker, or enter hex code
+                    manually
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

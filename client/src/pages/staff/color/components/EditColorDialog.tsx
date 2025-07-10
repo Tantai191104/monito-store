@@ -3,6 +3,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Edit, Loader2, Palette, Pipette } from 'lucide-react';
+// import { HexColorPicker } from 'react-colorful';
 
 import {
   Dialog,
@@ -32,14 +33,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useUpdateColor } from '@/hooks/useColors';
 import type { Color } from '@/types/color';
-import {
-  ColorPicker,
-  ColorPickerEyeDropper,
-  ColorPickerFormat,
-  ColorPickerHue,
-  ColorPickerOutput,
-  ColorPickerSelection,
-} from '@/components/ColorPicker';
 
 const colorSchema = z.object({
   name: z

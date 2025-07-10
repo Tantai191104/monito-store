@@ -75,15 +75,8 @@ export const colorColumns: ColumnDef<Color>[] = [
     cell: ({ row }) => {
       const color = row.original;
       return (
-        <div className="flex items-center space-x-3">
-          <div
-            className="h-6 w-6 rounded-full border-2 border-gray-300"
-            style={{ backgroundColor: color.hexCode }}
-          />
-          <div className="max-w-[150px]">
-            <div className="font-medium">{color.name}</div>
-            <div className="text-sm text-gray-500">{color.hexCode}</div>
-          </div>
+        <div className="max-w-[150px]">
+          <div className="font-medium">{color.name}</div>
         </div>
       );
     },

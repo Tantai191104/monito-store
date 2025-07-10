@@ -36,8 +36,6 @@ import { TableSkeleton } from '@/components/ui/table-skeleton';
 import { AddColorDialog } from './AddColorDialog';
 import {
   useBulkDeleteColors,
-  useBulkActivateColors,
-  useBulkDeactivateColors,
   useBulkUpdateColorStatus,
 } from '@/hooks/useColors';
 
