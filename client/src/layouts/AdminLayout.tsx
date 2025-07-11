@@ -90,7 +90,7 @@ const AdminLayout = () => {
             </Breadcrumb>
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto bg-white p-4">
+        <main className="flex-1 overflow-y-auto bg-white">
           <Outlet />
         </main>
       </SidebarInset>

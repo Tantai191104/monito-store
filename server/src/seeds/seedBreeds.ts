@@ -12,10 +12,6 @@ export const seedBreeds = async () => {
   try {
     console.log('🌱 Starting to seed breeds...');
 
-    // Clear existing breeds
-    await BreedModel.deleteMany({});
-    console.log('🗑️  Cleared existing breeds');
-
     const createdBreeds = await BreedModel.insertMany(breedsData);
     console.log(`✅ Successfully seeded ${createdBreeds.length} breeds`);
 
