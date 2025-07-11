@@ -18,7 +18,7 @@ export const seedStaff = async () => {
     const staffData = [
       {
         name: 'Sarah Johnson',
-        email: 'sarah@monito.com',
+        email: 'staff@monito.com',
         password: hashedPassword,
         phone: '+1-555-0101',
         role: 'staff',

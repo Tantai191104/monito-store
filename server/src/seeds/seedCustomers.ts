@@ -22,6 +22,8 @@ export const seedCustomers = async () => {
         password: hashedPassword,
         phone: '+1-555-1001',
         role: 'customer',
+        avatarUrl:
+          'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
         isActive: true,
         joinDate: new Date('2024-03-15'),
         lastLogin: new Date('2024-12-20T18:30:00Z'),
@@ -34,6 +36,8 @@ export const seedCustomers = async () => {
         password: hashedPassword,
         phone: '+1-555-1002',
         role: 'customer',
+        avatarUrl:
+          'https://images.unsplash.com/photo-1494790108755-2616b66e7cd0?w=150&h=150&fit=crop&crop=face',
         isActive: true,
         joinDate: new Date('2024-04-20'),
         lastLogin: new Date('2024-12-19T14:20:00Z'),
