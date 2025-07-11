@@ -39,7 +39,7 @@ import AdminDashboard from '@/pages/admin/AdminDashboard';
 import UserManagement from '@/pages/admin/UserManagement';
 import LoadingScreen from '@/pages/common/LoadingScreen';
 import AddProduct from '@/pages/staff/product/AddProduct';
-import StaffManagement from '@/pages/admin/StaffManagement';
+import StaffManagement from '@/pages/admin/staff/StaffManagement';
 import PetDetail from '@/pages/staff/pet/PetDetail';
 import EditPet from '@/pages/staff/pet/EditPet';
 import PetsPage from '@/pages/main/pets/PetsPage';
