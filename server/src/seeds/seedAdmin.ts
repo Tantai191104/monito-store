@@ -2,6 +2,7 @@
  * Models
  */
 import UserModel from '../models/userModel';
+import { hashPassword } from '../utils/bcryptjs'; // ✅ Import hash function
 
 export const seedAdmin = async () => {
   try {
@@ -11,10 +12,13 @@ export const seedAdmin = async () => {
     await UserModel.deleteMany({ role: 'admin' });
     console.log('🗑️  Cleared existing admin users');
 
+    // ✅ Hash password trước khi tạo user
+    const hashedPassword = await hashPassword('admin123');
+
     const adminUser = new UserModel({
       name: 'Admin',
       email: 'admin@monito.com',
-      password: 'admin123',
+      password: hashedPassword, // ✅ Use hashed password
       role: 'admin',
       permissions: [
         'products',

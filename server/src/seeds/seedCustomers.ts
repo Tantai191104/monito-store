@@ -1,3 +1,4 @@
+import { hashPassword } from '../utils/bcryptjs';
 /**
  * Models
  */
@@ -11,12 +12,14 @@ export const seedCustomers = async () => {
     await UserModel.deleteMany({ role: 'customer' });
     console.log('🗑️  Cleared existing customer users');
 
+    const hashedPassword = await hashPassword('customer123');
+
     // ✅ Create multiple customers with different profiles
     const customersData = [
       {
         name: 'John Doe',
         email: 'john@example.com',
-        password: 'customer123',
+        password: hashedPassword,
         phone: '+1-555-1001',
         role: 'customer',
         isActive: true,
@@ -28,7 +31,7 @@ export const seedCustomers = async () => {
       {
         name: 'Jane Smith',
         email: 'jane@example.com',
-        password: 'customer123',
+        password: hashedPassword,
         phone: '+1-555-1002',
         role: 'customer',
         isActive: true,
@@ -40,7 +43,7 @@ export const seedCustomers = async () => {
       {
         name: 'Mike Johnson',
         email: 'mike@example.com',
-        password: 'customer123',
+        password: hashedPassword,
         phone: '+1-555-1003',
         role: 'customer',
         isActive: true,
@@ -52,7 +55,7 @@ export const seedCustomers = async () => {
       {
         name: 'Emily Davis',
         email: 'emily.davis@example.com',
-        password: 'customer123',
+        password: hashedPassword,
         phone: '+1-555-1004',
         role: 'customer',
         isActive: true,
@@ -64,7 +67,7 @@ export const seedCustomers = async () => {
       {
         name: 'Alex Wilson',
         email: 'alex@example.com',
-        password: 'customer123',
+        password: hashedPassword,
         phone: '+1-555-1005',
         role: 'customer',
         isActive: true,
@@ -76,7 +79,7 @@ export const seedCustomers = async () => {
       {
         name: 'Sarah Brown',
         email: 'sarah.brown@example.com',
-        password: 'customer123',
+        password: hashedPassword,
         phone: '+1-555-1006',
         role: 'customer',
         isActive: true,
@@ -88,7 +91,7 @@ export const seedCustomers = async () => {
       {
         name: 'David Lee',
         email: 'david@example.com',
-        password: 'customer123',
+        password: hashedPassword,
         phone: '+1-555-1007',
         role: 'customer',
         isActive: true,
@@ -100,7 +103,7 @@ export const seedCustomers = async () => {
       {
         name: 'Lisa Garcia',
         email: 'lisa@example.com',
-        password: 'customer123',
+        password: hashedPassword,
         phone: '+1-555-1008',
         role: 'customer',
         isActive: true,
@@ -112,7 +115,7 @@ export const seedCustomers = async () => {
       {
         name: 'Robert Taylor',
         email: 'robert@example.com',
-        password: 'customer123',
+        password: hashedPassword,
         phone: '+1-555-1009',
         role: 'customer',
         isActive: true,
@@ -124,7 +127,7 @@ export const seedCustomers = async () => {
       {
         name: 'Jennifer Martinez',
         email: 'jennifer@example.com',
-        password: 'customer123',
+        password: hashedPassword,
         phone: '+1-555-1010',
         role: 'customer',
         isActive: true,
@@ -136,7 +139,7 @@ export const seedCustomers = async () => {
       {
         name: 'Chris Anderson',
         email: 'chris@example.com',
-        password: 'customer123',
+        password: hashedPassword,
         phone: '+1-555-1011',
         role: 'customer',
         isActive: true,
@@ -148,7 +151,7 @@ export const seedCustomers = async () => {
       {
         name: 'Michelle White',
         email: 'michelle@example.com',
-        password: 'customer123',
+        password: hashedPassword,
         phone: '+1-555-1012',
         role: 'customer',
         isActive: true,
@@ -160,7 +163,7 @@ export const seedCustomers = async () => {
       {
         name: 'Kevin Brown',
         email: 'kevin@example.com',
-        password: 'customer123',
+        password: hashedPassword,
         role: 'customer',
         isActive: false, // ✅ Inactive customer
         joinDate: new Date('2024-08-20'),
@@ -171,7 +174,7 @@ export const seedCustomers = async () => {
       {
         name: 'Amanda Jones',
         email: 'amanda@example.com',
-        password: 'customer123',
+        password: hashedPassword,
         phone: '+1-555-1014',
         role: 'customer',
         isActive: true,
@@ -183,7 +186,7 @@ export const seedCustomers = async () => {
       {
         name: 'Daniel Miller',
         email: 'daniel@example.com',
-        password: 'customer123',
+        password: hashedPassword,
         phone: '+1-555-1015',
         role: 'customer',
         isActive: true,
