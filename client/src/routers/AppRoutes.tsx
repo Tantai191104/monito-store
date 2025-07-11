@@ -83,6 +83,14 @@ const AppRoutes = () => {
         <Route path="/register" element={<Navigate to={`/${user?.role}`} />} />
       </Route>
 
+      <Route element={<BaseLayout />}>
+        <Route index element={<HomePage />} />
+        <Route path="/pets" element={<PetsPage />} />
+        <Route path="/pets/:id" element={<PetDetailPage />} />
+        <Route path="/products" element={<ProductsPage />} />
+        <Route path="/products/:id" element={<ProductDetailPage />} />
+      </Route>
+
       <Route
         path="/customer/*"
         element={<ProtectedRoute allowedRoles={['customer']} />}

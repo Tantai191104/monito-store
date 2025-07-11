@@ -1,4 +1,4 @@
-import { ColumnDef } from '@tanstack/react-table';
+import type { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -16,23 +16,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import {
-  ArrowUpDown,
-  Copy,
-  Edit,
-  Eye,
-  EyeOff,
-  MoreHorizontal,
-  Shield,
-  Trash2,
-  Users,
-} from 'lucide-react';
+import { Copy, Edit, Eye, EyeOff, MoreHorizontal, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Staff } from '@/types/staff';
-import { DEPARTMENTS } from '@/types/staff';
 import { EditStaffDialog } from './EditStaffDialog';
+import { useDeleteStaff, useUpdateStaff } from '@/hooks/useStaff';
 
 export const staffColumns: ColumnDef<Staff>[] = [
   // ✅ Selection column
@@ -225,7 +215,7 @@ export const staffColumns: ColumnDef<Staff>[] = [
     accessorKey: 'lastLogin',
     header: 'Activity',
     cell: ({ row }) => {
-      const lastLogin = new Date(row.getValue('lastLogin'))
+      const lastLogin = new Date(row.getValue('lastLogin'));
 
       if (!lastLogin) {
         return <span className="text-sm text-gray-400 italic">Never</span>;
@@ -255,6 +245,8 @@ export const staffColumns: ColumnDef<Staff>[] = [
 // ✅ Actions Cell component
 function StaffActionsCell({ staff }: { staff: Staff }) {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const deleteStaff = useDeleteStaff();
+  const updateStaff = useUpdateStaff();
 
   const handleCopyId = () => {
     navigator.clipboard.writeText(staff._id);
@@ -268,18 +260,27 @@ function StaffActionsCell({ staff }: { staff: Staff }) {
   };
 
   const handleStatusClick = async () => {
-    // TODO: Implement status toggle logic
-    toast.info('Status toggle feature coming soon!');
+    try {
+      await updateStaff.mutateAsync({
+        id: staff._id,
+        data: { isActive: !staff.isActive },
+      });
+      toast.success(
+        `Staff ${staff.isActive ? 'deactivated' : 'activated'} successfully!`,
+      );
+    } catch (error) {
+      // Error handled in mutation
+    }
   };
 
   const handleDeleteClick = async () => {
-    if (
-      window.confirm(
-        `Are you sure you want to ${staff.isActive ? 'deactivate' : 'permanently delete'} ${staff.name}?`,
-      )
-    ) {
-      // TODO: Implement delete logic
-      toast.info('Delete feature coming soon!');
+    const action = staff.isActive ? 'deactivate' : 'permanently delete';
+    if (window.confirm(`Are you sure you want to ${action} ${staff.name}?`)) {
+      try {
+        await deleteStaff.mutateAsync(staff._id);
+      } catch (error) {
+        // Error handled in mutation
+      }
     }
   };
 

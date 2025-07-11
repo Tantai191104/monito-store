@@ -1,8 +1,6 @@
-import { useState } from 'react';
 import { useStaff } from '@/hooks/useStaff';
 import { StaffDataTable } from './components/StaffDataTable';
 import { staffColumns } from './components/StaffColumns';
-import type { Staff } from '@/types/staff';
 
 const StaffManagement = () => {
   // ✅ Use real data from API

@@ -15,10 +15,6 @@ export const seedPets = async () => {
   try {
     console.log('🌱 Starting to seed pets...');
 
-    // Clear existing pets
-    await PetModel.deleteMany({});
-    console.log('🗑️  Cleared existing pets');
-
     // Find admin user
     const adminUser = await UserModel.findOne({ role: 'admin' });
     if (!adminUser) {

@@ -12,10 +12,6 @@ export const seedCategories = async () => {
   try {
     console.log('🌱 Starting to seed categories...');
 
-    // Clear existing categories
-    await CategoryModel.deleteMany({});
-    console.log('🗑️  Cleared existing categories');
-
     const createdCategories = await CategoryModel.insertMany(categoriesData);
     console.log(
       `✅ Successfully seeded ${createdCategories.length} categories`,

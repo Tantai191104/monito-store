@@ -9,7 +9,16 @@ export interface CreateStaffPayload {
   avatarUrl?: string;
 }
 
-export type UpdateStaffPayload = Partial<CreateStaffPayload>;
+export interface UpdateStaffPayload {
+  name?: string;
+  email?: string;
+  phone?: string;
+  department?: string;
+  position?: string;
+  permissions?: string[];
+  isActive?: boolean;
+  avatarUrl?: string;
+}
 
 export interface StaffFilters {
   department?: string;

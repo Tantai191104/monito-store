@@ -45,6 +45,8 @@ import { DataTablePagination } from '@/components/ui/data-table/DataTablePaginat
 import { DEPARTMENTS } from '@/types/staff';
 import type { Staff } from '@/types/staff';
 import { AddStaffDialog } from './AddStaffDialog';
+import { useDeleteStaff, useUpdateStaff } from '@/hooks/useStaff';
+import { toast } from 'sonner';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -63,6 +65,8 @@ export function StaffDataTable<TData extends Staff, TValue>({
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
+  const deleteStaff = useDeleteStaff();
+  const updateStaff = useUpdateStaff();
 
   const table = useReactTable({
     data,
@@ -99,27 +103,85 @@ export function StaffDataTable<TData extends Staff, TValue>({
 
   // ✅ Handle bulk actions
   const handleBulkActivate = async () => {
-    const selectedIds = table
+    const selectedStaff = table
       .getFilteredSelectedRowModel()
-      .rows.map((row) => row.original._id);
-    console.log('Bulk activate:', selectedIds);
-    // TODO: Implement bulk activate
+      .rows.map((row) => row.original);
+
+    if (selectedStaff.length === 0) return;
+
+    try {
+      await Promise.all(
+        selectedStaff.map((staff) =>
+          updateStaff.mutateAsync({
+            id: staff._id,
+            data: { isActive: true },
+          }),
+        ),
+      );
+      toast.success(
+        `${selectedStaff.length} staff members activated successfully!`,
+      );
+      table.resetRowSelection();
+    } catch (error) {
+      toast.error('Failed to activate some staff members');
+    }
   };
 
   const handleBulkDeactivate = async () => {
-    const selectedIds = table
+    const selectedStaff = table
       .getFilteredSelectedRowModel()
-      .rows.map((row) => row.original._id);
-    console.log('Bulk deactivate:', selectedIds);
-    // TODO: Implement bulk deactivate
+      .rows.map((row) => row.original);
+
+    if (selectedStaff.length === 0) return;
+
+    if (
+      window.confirm(
+        `Are you sure you want to deactivate ${selectedStaff.length} staff members?`,
+      )
+    ) {
+      try {
+        await Promise.all(
+          selectedStaff.map((staff) =>
+            updateStaff.mutateAsync({
+              id: staff._id,
+              data: { isActive: false },
+            }),
+          ),
+        );
+        toast.success(
+          `${selectedStaff.length} staff members deactivated successfully!`,
+        );
+        table.resetRowSelection();
+      } catch (error) {
+        toast.error('Failed to deactivate some staff members');
+      }
+    }
   };
 
   const handleBulkDelete = async () => {
-    const selectedIds = table
+    const selectedStaff = table
       .getFilteredSelectedRowModel()
-      .rows.map((row) => row.original._id);
-    console.log('Bulk delete:', selectedIds);
-    // TODO: Implement bulk delete
+      .rows.map((row) => row.original);
+
+    if (selectedStaff.length === 0) return;
+
+    if (
+      window.confirm(
+        `Are you sure you want to delete ${selectedStaff.length} staff members? This action cannot be undone.`,
+      )
+    ) {
+      try {
+        await Promise.all(
+          selectedStaff.map((staff) => deleteStaff.mutateAsync(staff._id)),
+        );
+        toast.success(
+          `${selectedStaff.length} staff members deleted successfully!`,
+        );
+        table.resetRowSelection();
+      } catch (error) {
+        toast.error('Failed to delete some staff members');
+      }
+    }
   };
 
   if (isLoading) {

@@ -12,10 +12,6 @@ export const seedColors = async () => {
   try {
     console.log('🌱 Starting to seed colors...');
 
-    // Clear existing colors
-    await ColorModel.deleteMany({});
-    console.log('🗑️  Cleared existing colors');
-
     const createdColors = await ColorModel.insertMany(colorsData);
     console.log(`✅ Successfully seeded ${createdColors.length} colors`);
 

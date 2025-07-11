@@ -13,10 +13,6 @@ export const seedProducts = async () => {
   try {
     console.log('🌱 Starting to seed products...');
 
-    // Clear existing products
-    await ProductModel.deleteMany({});
-    console.log('🗑️  Cleared existing products');
-
     // Get category references
     const [
       foodCategory,

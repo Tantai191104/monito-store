@@ -1,4 +1,3 @@
-
 /**
  * Models
  */
@@ -8,18 +7,29 @@ export const seedAdmin = async () => {
   try {
     console.log('🌱 Starting to seed admin user...');
 
-    // Check if admin already exists
-    const existingAdmin = await UserModel.findOne({ role: 'admin' });
-    if (existingAdmin) {
-      console.log('👤 Admin user already exists');
-      return existingAdmin;
-    }
+    // ✅ Clear existing admin users
+    await UserModel.deleteMany({ role: 'admin' });
+    console.log('🗑️  Cleared existing admin users');
 
     const adminUser = new UserModel({
       name: 'Admin',
       email: 'admin@monito.com',
-      password: "admin123",
+      password: 'admin123',
       role: 'admin',
+      permissions: [
+        'products',
+        'pets',
+        'orders',
+        'customers',
+        'categories',
+        'breeds',
+        'colors',
+        'inventory',
+        'shipping',
+        'reports',
+      ],
+      joinDate: new Date('2024-01-01'),
+      lastLogin: new Date(),
     });
 
     await adminUser.save();
