@@ -50,6 +50,7 @@ import EditProduct from '@/pages/staff/product/EditProduct';
 import ProductDetailPage from '@/pages/main/products/ProductDetailPage';
 import NotFoundPage from '@/pages/common/NotFoundPage';
 import AboutPage from '@/pages/main/about/AboutPage';
+import CustomerDashboard from '@/pages/customer/CustomerDashboard';
 
 const AppRoutes = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -58,45 +59,79 @@ const AppRoutes = () => {
     return <LoadingScreen />;
   }
 
-  if (!isAuthenticated) {
-    return (
-      <Routes>
-        <Route element={<AuthLayout />}>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-        </Route>
-        <Route element={<BaseLayout />}>
-          <Route index element={<HomePage />} />
-          <Route path="/pets" element={<PetsPage />} />
-          <Route path="/pets/:id" element={<PetDetailPage />} />
-          <Route path="/products" element={<ProductsPage />} />
-          <Route path="/products/:id" element={<ProductDetailPage />} />
-          <Route path="/about" element={<AboutPage />} />
-        </Route>
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
-    );
-  }
-
   return (
     <Routes>
+      {/* ✅ Auth Routes - chỉ hiển thị khi chưa đăng nhập */}
       <Route element={<AuthLayout />}>
-        <Route path="/login" element={<Navigate to={`/${user?.role}`} />} />
-        <Route path="/register" element={<Navigate to={`/${user?.role}`} />} />
+        <Route
+          path="/login"
+          element={
+            isAuthenticated ? (
+              <Navigate to={`/${user?.role}`} replace />
+            ) : (
+              <LoginPage />
+            )
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            isAuthenticated ? (
+              <Navigate to={`/${user?.role}`} replace />
+            ) : (
+              <RegisterPage />
+            )
+          }
+        />
       </Route>
 
+      {/* ✅ Public Routes - ai cũng có thể xem, nhưng navbar khác nhau */}
       <Route element={<BaseLayout />}>
         <Route index element={<HomePage />} />
         <Route path="/pets" element={<PetsPage />} />
         <Route path="/pets/:id" element={<PetDetailPage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/products/:id" element={<ProductDetailPage />} />
+        <Route path="/about" element={<AboutPage />} />
       </Route>
 
+      {/* ✅ Customer-only Routes - cần đăng nhập */}
       <Route
         path="/customer/*"
         element={<ProtectedRoute allowedRoles={['customer']} />}
-      />
+      >
+        <Route element={<BaseLayout />}>
+          <Route index element={<Navigate replace to="/" />} />
+          <Route
+            path="profile"
+            element={<div>Profile Page - Coming Soon</div>}
+          />
+          <Route path="orders" element={<div>Orders Page - Coming Soon</div>} />
+          <Route
+            path="wishlist"
+            element={<div>Wishlist Page - Coming Soon</div>}
+          />
+          <Route
+            path="history"
+            element={<div>History Page - Coming Soon</div>}
+          />
+          <Route
+            path="payment"
+            element={<div>Payment Page - Coming Soon</div>}
+          />
+          <Route
+            path="settings"
+            element={<div>Settings Page - Coming Soon</div>}
+          />
+          <Route
+            path="notifications"
+            element={<div>Notifications Page - Coming Soon</div>}
+          />
+          <Route path="*" element={<NotFoundPage />} />
+        </Route>
+      </Route>
+
+      {/* ✅ Staff Routes */}
       <Route
         path="/staff/*"
         element={<ProtectedRoute allowedRoles={['staff', 'admin']} />}
@@ -119,7 +154,7 @@ const AppRoutes = () => {
         </Route>
       </Route>
 
-      {/* Admin Routes */}
+      {/* ✅ Admin Routes */}
       <Route
         path="/admin/*"
         element={<ProtectedRoute allowedRoles={['admin']} />}
@@ -132,9 +167,20 @@ const AppRoutes = () => {
         </Route>
       </Route>
 
-      <Route path="/" element={<Navigate to={`/${user?.role}`} />} />
+      {/* ✅ Redirect logic */}
+      <Route
+        path="/"
+        element={
+          isAuthenticated ? (
+            <Navigate to={`/${user?.role}`} replace />
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
+      />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 };
+
 export default AppRoutes;

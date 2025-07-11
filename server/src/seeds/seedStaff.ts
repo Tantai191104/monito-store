@@ -1,3 +1,4 @@
+import { hashPassword } from '../utils/bcryptjs';
 /**
  * Models
  */
@@ -11,12 +12,14 @@ export const seedStaff = async () => {
     await UserModel.deleteMany({ role: 'staff' });
     console.log('🗑️  Cleared existing staff users');
 
+    const hashedPassword = await hashPassword('staff123');
+
     // ✅ Create multiple staff members with different departments and permissions
     const staffData = [
       {
         name: 'Sarah Johnson',
-        email: 'sarah@monito.com',
-        password: 'staff123',
+        email: 'staff@monito.com',
+        password: hashedPassword,
         phone: '+1-555-0101',
         role: 'staff',
         department: 'Customer Service',
@@ -29,7 +32,7 @@ export const seedStaff = async () => {
       {
         name: 'Michael Chen',
         email: 'michael@monito.com',
-        password: 'staff123',
+        password: hashedPassword,
         phone: '+1-555-0102',
         role: 'staff',
         department: 'Product Management',
@@ -42,7 +45,7 @@ export const seedStaff = async () => {
       {
         name: 'Emily Rodriguez',
         email: 'emily@monito.com',
-        password: 'staff123',
+        password: hashedPassword,
         phone: '+1-555-0103',
         role: 'staff',
         department: 'Operations',
@@ -55,7 +58,7 @@ export const seedStaff = async () => {
       {
         name: 'David Kim',
         email: 'david@monito.com',
-        password: 'staff123',
+        password: hashedPassword,
         phone: '+1-555-0104',
         role: 'staff',
         department: 'Marketing',
@@ -68,7 +71,7 @@ export const seedStaff = async () => {
       {
         name: 'Lisa Thompson',
         email: 'lisa@monito.com',
-        password: 'staff123',
+        password: hashedPassword,
         phone: '+1-555-0105',
         role: 'staff',
         department: 'Customer Service',
@@ -81,7 +84,7 @@ export const seedStaff = async () => {
       {
         name: 'James Wilson',
         email: 'james@monito.com',
-        password: 'staff123',
+        password: hashedPassword,
         phone: '+1-555-0106',
         role: 'staff',
         department: 'Product Management',
@@ -94,7 +97,7 @@ export const seedStaff = async () => {
       {
         name: 'Anna Martinez',
         email: 'anna@monito.com',
-        password: 'staff123',
+        password: hashedPassword,
         phone: '+1-555-0107',
         role: 'staff',
         department: 'Operations',
@@ -107,7 +110,7 @@ export const seedStaff = async () => {
       {
         name: 'Robert Davis',
         email: 'robert@monito.com',
-        password: 'staff123',
+        password: hashedPassword,
         phone: '+1-555-0108',
         role: 'staff',
         department: 'Marketing',
@@ -120,7 +123,7 @@ export const seedStaff = async () => {
       {
         name: 'Jessica Brown',
         email: 'jessica@monito.com',
-        password: 'staff123',
+        password: hashedPassword,
         phone: '+1-555-0109',
         role: 'staff',
         department: 'Customer Service',
@@ -133,7 +136,7 @@ export const seedStaff = async () => {
       {
         name: 'Mark Anderson',
         email: 'mark@monito.com',
-        password: 'staff123',
+        password: hashedPassword,
         phone: '+1-555-0110',
         role: 'staff',
         department: 'Operations',
@@ -146,7 +149,7 @@ export const seedStaff = async () => {
       {
         name: 'Rachel Green',
         email: 'rachel@monito.com',
-        password: 'staff123',
+        password: hashedPassword,
         role: 'staff',
         department: 'Marketing',
         position: 'Digital Marketing Manager',
@@ -158,7 +161,7 @@ export const seedStaff = async () => {
       {
         name: 'Tom Miller',
         email: 'tom@monito.com',
-        password: 'staff123',
+        password: hashedPassword,
         phone: '+1-555-0112',
         role: 'staff',
         department: 'Product Management',

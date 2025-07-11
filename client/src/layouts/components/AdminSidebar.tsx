@@ -1,5 +1,4 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth'; // ← import hook
 import {
   BarChart3,
   Users,
@@ -80,7 +79,7 @@ const AdminSidebar = () => {
           badge: '23',
         },
       ],
-    }
+    },
   ];
 
   return (
@@ -178,11 +177,10 @@ const AdminSidebar = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-                side="right"
+                side="bottom"
                 align="end"
                 sideOffset={4}
               >
-                <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link to="/admin/profile">
                     <User2 className="mr-2 size-4" />
