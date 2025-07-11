@@ -13,6 +13,7 @@ import {
   LogOut,
   Grid3X3,
 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 import {
   Sidebar,

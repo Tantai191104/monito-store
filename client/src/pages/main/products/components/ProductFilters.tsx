@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useDebounce } from 'use-debounce';
 import { useCategories } from '@/hooks/useCategories';
+import { useInvalidateProductQueries } from '@/hooks/useProducts';
 import { formatPrice } from '@/utils/formatter';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -22,37 +23,66 @@ const ProductFilters = ({
 }: ProductFiltersProps) => {
   const { data: categories = [], isLoading: categoriesLoading } =
     useCategories();
+  const invalidateProductQueries = useInvalidateProductQueries();
 
   const [priceRange, setPriceRange] = useState<[number, number]>([
     Number(searchParams.get('minPrice') || MIN_PRICE),
     Number(searchParams.get('maxPrice') || MAX_PRICE),
   ]);
 
-  console.log(categories);
-
-  const [debouncedPriceRange] = useDebounce(priceRange, 500);
+  const [debouncedPriceRange] = useDebounce(priceRange, 100);
+  const [isResetting, setIsResetting] = useState(false);
+  const [lastResetTime, setLastResetTime] = useState(0);
 
   useEffect(() => {
+    if (isResetting) {
+      console.log('Skipping price range effect due to reset');
+      setIsResetting(false);
+      return;
+    }
+    // Don't run if we just reset (within 200ms)
+    if (Date.now() - lastResetTime < 200) {
+      console.log('Skipping price range effect due to recent reset');
+      return;
+    }
+    // Use non-debounced value if we're at default values to avoid debounce delay
+    const currentPriceRange = (priceRange[0] === MIN_PRICE && priceRange[1] === MAX_PRICE)
+      ? priceRange
+      : debouncedPriceRange;
+    console.log('Product price range effect running - min:', currentPriceRange[0], 'max:', currentPriceRange[1], 'using debounced:', currentPriceRange === debouncedPriceRange);
+    // If we're at default values, don't update URL
+    if (currentPriceRange[0] === MIN_PRICE && currentPriceRange[1] === MAX_PRICE) {
+      console.log('At default values, skipping URL update');
+      return;
+    }
     const newParams = new URLSearchParams(searchParams);
-    const [min, max] = debouncedPriceRange;
-
+    const [min, max] = currentPriceRange;
     if (min > MIN_PRICE) newParams.set('minPrice', String(min));
     else newParams.delete('minPrice');
-
     if (max < MAX_PRICE) newParams.set('maxPrice', String(max));
     else newParams.delete('maxPrice');
-
     if (newParams.toString() !== searchParams.toString()) {
       newParams.set('page', '1');
+      console.log('Updating product URL params:', newParams.toString());
       setSearchParams(newParams);
     }
-  }, [debouncedPriceRange, searchParams, setSearchParams]);
+  }, [debouncedPriceRange, priceRange, searchParams, setSearchParams, isResetting, lastResetTime]);
 
   useEffect(() => {
+    if (isResetting) {
+      console.log('Skipping product URL sync effect due to reset');
+      return;
+    }
+    // Don't run if we just reset (within 200ms)
+    if (Date.now() - lastResetTime < 200) {
+      console.log('Skipping product URL sync effect due to recent reset');
+      return;
+    }
     const min = Number(searchParams.get('minPrice') || MIN_PRICE);
     const max = Number(searchParams.get('maxPrice') || MAX_PRICE);
+    console.log('Product URL sync effect - min:', min, 'max:', max, 'searchParams:', searchParams.toString());
     setPriceRange([min, max]);
-  }, [searchParams]);
+  }, [searchParams, isResetting, lastResetTime]);
 
   const handleMultiSelectChange = (
     key: string,
@@ -64,7 +94,6 @@ const ProductFilters = ({
     const updatedValues = isChecked
       ? [...existingValues, value]
       : existingValues.filter((v) => v !== value);
-
     newParams.delete(key);
     if (updatedValues.length > 0) {
       updatedValues.forEach((v) => newParams.append(key, v));
@@ -74,7 +103,16 @@ const ProductFilters = ({
   };
 
   const handleResetFilters = () => {
+    console.log('=== PRODUCT RESET START ===');
+    setIsResetting(true);
+    setLastResetTime(Date.now());
     setSearchParams(new URLSearchParams());
+    setPriceRange([MIN_PRICE, MAX_PRICE]);
+    invalidateProductQueries();
+    setTimeout(() => {
+      console.log('=== PRODUCT RESET COMPLETE ===');
+      invalidateProductQueries();
+    }, 200);
   };
 
   const filterParamKeys = new Set(Array.from(searchParams.keys()));
@@ -139,7 +177,7 @@ const ProductFilters = ({
         <h4 className="mb-2 font-semibold">Price</h4>
         <Slider
           value={priceRange}
-          onValueChange={setPriceRange}
+          onValueChange={(value) => setPriceRange(value as [number, number])}
           min={MIN_PRICE}
           max={MAX_PRICE}
           step={50000}

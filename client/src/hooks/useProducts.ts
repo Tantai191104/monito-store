@@ -11,17 +11,36 @@ export const productKeys = {
   detail: (id: string) => [...productKeys.details(), id] as const,
 };
 
+// Hook to invalidate product queries
+export const useInvalidateProductQueries = () => {
+  const queryClient = useQueryClient();
+  return () => {
+    queryClient.invalidateQueries({ queryKey: productKeys.all });
+    queryClient.removeQueries({ queryKey: productKeys.lists() });
+  };
+};
+
 export const useProducts = (
   params: URLSearchParams = new URLSearchParams(),
 ) => {
-  const queryKey = productKeys.list(params.toString());
+  // Always add isActive=true unless already set
+  const paramsWithActive = new URLSearchParams(params.toString());
+  if (!paramsWithActive.has('isActive')) {
+    paramsWithActive.set('isActive', 'true');
+  }
+  const hasFilters = paramsWithActive.toString().length > 0;
+  const queryKey = hasFilters 
+    ? productKeys.list(paramsWithActive.toString())
+    : productKeys.list('all');
+  
   return useQuery({
     queryKey,
     queryFn: async () => {
-      const response = await productService.getProducts(params);
+      const response = await productService.getProducts(paramsWithActive);
       return response.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
   });
 };
 

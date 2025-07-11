@@ -44,18 +44,9 @@ export const Header = () => {
           ))}
         </nav>
 
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center rounded-md bg-white px-3">
-            <SearchIcon className="text-muted-foreground size-5" />
-            <Input
-              className="placeholder:text-muted-foreground/50 border-none bg-transparent shadow-none ring-0 focus-visible:border-0 focus-visible:ring-0"
-              placeholder="Search something here!"
-            />
-          </div>
-          <Button className="bg-[#003459] hover:bg-[#003459]/90" asChild>
-            <Link to="/login">Join the community</Link>
-          </Button>
-        </div>
+        <Button className="bg-[#003459] hover:bg-[#003459]/90" asChild>
+          <Link to="/login">Join the community</Link>
+        </Button>
       </div>
     </header>
   );
