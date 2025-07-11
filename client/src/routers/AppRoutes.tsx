@@ -91,12 +91,15 @@ const AppRoutes = () => {
         <Route path="/pets/:id" element={<PetDetailPage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/products/:id" element={<ProductDetailPage />} />
+        <Route path="/about" element={<AboutPage />} />
       </Route>
 
       <Route
         path="/customer/*"
         element={<ProtectedRoute allowedRoles={['customer']} />}
-      />
+      >
+        <Route index element={<Navigate to="/" replace />} />
+      </Route>
       <Route
         path="/staff/*"
         element={<ProtectedRoute allowedRoles={['staff', 'admin']} />}
