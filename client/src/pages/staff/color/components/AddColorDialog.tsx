@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, Loader2, Palette, Pipette } from 'lucide-react';
-import { SketchPicker, ChromePicker, CompactPicker } from 'react-color';
+import { Plus, Loader2, Palette } from 'lucide-react';
 
 import {
   Dialog,
@@ -31,7 +30,14 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useCreateColor } from '@/hooks/useColors';
-import { ColorPicker } from '@/components/ColorPicker';
+import {
+  ColorPicker,
+  ColorPickerEyeDropper,
+  ColorPickerFormat,
+  ColorPickerHue,
+  ColorPickerOutput,
+  ColorPickerSelection,
+} from '@/components/ColorPicker';
 
 const colorSchema = z.object({
   name: z
@@ -60,8 +66,7 @@ interface AddColorDialogProps {
 
 export function AddColorDialog({ trigger }: AddColorDialogProps) {
   const [open, setOpen] = useState(false);
-  const [color, setColor] = useState('#6366f1');
-
+  const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const createColor = useCreateColor();
 
   const form = useForm<ColorFormValues>({
@@ -73,6 +78,8 @@ export function AddColorDialog({ trigger }: AddColorDialogProps) {
     },
   });
 
+  const watchedHexCode = form.watch('hexCode');
+
   const onSubmit = async (data: ColorFormValues) => {
     try {
       await createColor.mutateAsync({
@@ -80,11 +87,7 @@ export function AddColorDialog({ trigger }: AddColorDialogProps) {
         hexCode: data.hexCode,
         description: data.description || undefined,
       });
-      form.reset({
-        name: '',
-        hexCode: '#000000',
-        description: '',
-      });
+      form.reset({ name: '', hexCode: '#000000', description: '' });
       setOpen(false);
     } catch (error) {
       // Error is handled in the mutation
@@ -92,11 +95,7 @@ export function AddColorDialog({ trigger }: AddColorDialogProps) {
   };
 
   const handleCancel = () => {
-    form.reset({
-      name: '',
-      hexCode: '#000000',
-      description: '',
-    });
+    form.reset({ name: '', hexCode: '#000000', description: '' });
     setOpen(false);
   };
 
@@ -118,16 +117,78 @@ export function AddColorDialog({ trigger }: AddColorDialogProps) {
             Add New Color
           </DialogTitle>
           <DialogDescription>
-            Create a new color for pet classification. Click on the color
-            preview or "Pick" button to open the color picker.
+            Create a new color for pet classification. Use the color picker for
+            precise selection.
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Interactive Hex Input with Color Picker */}
+            {/* ✅ Color Picker with Popover */}
+            <FormField
+              control={form.control}
+              name="hexCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Color</FormLabel>
+                  <FormControl>
+                    <div className="flex items-center gap-3">
+                      {/* ✅ Color Preview Button with Popover */}
+                      <Popover
+                        open={colorPickerOpen}
+                        onOpenChange={setColorPickerOpen}
+                      >
+                        <PopoverTrigger asChild>
+                          <div
+                            className="h-10 w-10 rounded-sm border-2 border-gray-200 shadow-sm"
+                            style={{ backgroundColor: watchedHexCode }}
+                          />
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-4" align="start">
+                          <ColorPicker
+                            className="w-full max-w-[280px]"
+                            value={field.value}
+                            onChange={(color) => {
+                              field.onChange(color);
+                              // Optional: Auto close popover after selection
+                              // setColorPickerOpen(false);
+                            }}
+                          >
+                            <ColorPickerSelection />
+                            <div className="mt-4 flex items-center gap-4">
+                              <ColorPickerEyeDropper />
+                              <div className="w-full">
+                                <ColorPickerHue />
+                              </div>
+                            </div>
+                            <div className="mt-4 flex items-center gap-2">
+                              <ColorPickerOutput />
+                              <ColorPickerFormat />
+                            </div>
+                          </ColorPicker>
+                        </PopoverContent>
+                      </Popover>
 
-            <ColorPicker color={color} onChange={setColor} />
+                      {/* ✅ Manual Hex Input */}
+                      <div className="flex-1">
+                        <Input
+                          placeholder="#000000"
+                          value={field.value}
+                          onChange={field.onChange}
+                          className="font-mono"
+                        />
+                      </div>
+                    </div>
+                  </FormControl>
+                  <FormDescription>
+                    Click the color button to open picker, or enter hex code
+                    manually
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="name"

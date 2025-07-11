@@ -13,6 +13,7 @@ import { connectDB } from '../config/connectDB';
  */
 import { seedAdmin } from './seedAdmin';
 import { seedStaff } from './seedStaff';
+import { seedCustomers } from './seedCustomers';
 import { seedBreeds } from './seedBreeds';
 import { seedColors } from './seedColors';
 import { seedCategories } from './seedCategories';
@@ -25,38 +26,89 @@ const runSeeds = async () => {
     await connectDB();
     console.log('🔗 Connected to database');
 
+    // ✅ Clear ALL data first
+    console.log('\n🗑️  Clearing all existing data...');
+
+    // Clear in reverse dependency order
+    const { default: ProductModel } = await import('../models/productModel');
+    const { default: PetModel } = await import('../models/petModel');
+    const { default: CategoryModel } = await import('../models/categoryModel');
+    const { default: ColorModel } = await import('../models/colorModel');
+    const { default: BreedModel } = await import('../models/breedModel');
+    const { default: UserModel } = await import('../models/userModel');
+
+    await ProductModel.deleteMany({});
+    await PetModel.deleteMany({});
+    await CategoryModel.deleteMany({});
+    await ColorModel.deleteMany({});
+    await BreedModel.deleteMany({});
+    await UserModel.deleteMany({});
+
+    console.log('✅ All existing data cleared');
+
     // Run seeds in order
-    console.log('🚀 Starting seed process...\n');
+    console.log('\n🚀 Starting seed process...\n');
 
     // 1. Create admin user first
     await seedAdmin();
     console.log('');
 
-    // 2. Create staff user
+    // 2. Create staff users
     await seedStaff();
     console.log('');
 
-    // 3. Seed breeds
+    // 3. Create customer users
+    await seedCustomers();
+    console.log('');
+
+    // 4. Seed breeds
     await seedBreeds();
     console.log('');
 
-    // 4. Seed colors
+    // 5. Seed colors
     await seedColors();
     console.log('');
 
-    // 5. Seed categories
+    // 6. Seed categories
     await seedCategories();
     console.log('');
 
-    // 6. Seed pets
+    // 7. Seed pets
     await seedPets();
     console.log('');
 
-    // 7. Seed products
+    // 8. Seed products
     await seedProducts();
     console.log('');
 
     console.log('🎉 All seeds completed successfully!');
+
+    // Show summary
+    const userCount = await UserModel.countDocuments();
+    const adminCount = await UserModel.countDocuments({ role: 'admin' });
+    const staffCount = await UserModel.countDocuments({ role: 'staff' });
+    const customerCount = await UserModel.countDocuments({ role: 'customer' });
+    const breedCount = await BreedModel.countDocuments();
+    const colorCount = await ColorModel.countDocuments();
+    const categoryCount = await CategoryModel.countDocuments();
+    const petCount = await PetModel.countDocuments();
+    const productCount = await ProductModel.countDocuments();
+
+    console.log('\n📊 Final Database Summary:');
+    console.log(
+      `   • Users: ${userCount} (Admin: ${adminCount}, Staff: ${staffCount}, Customers: ${customerCount})`,
+    );
+    console.log(`   • Breeds: ${breedCount}`);
+    console.log(`   • Colors: ${colorCount}`);
+    console.log(`   • Categories: ${categoryCount}`);
+    console.log(`   • Pets: ${petCount}`);
+    console.log(`   • Products: ${productCount}`);
+
+    console.log('\n🔐 Login Credentials:');
+    console.log('👤 Admin: admin@monito.com / admin123');
+    console.log('👨‍💼 Staff: sarah@monito.com / staff123');
+    console.log('👥 Customer: john@example.com / customer123');
+
     process.exit(0);
   } catch (error) {
     console.error('💥 Seed process failed:', error);

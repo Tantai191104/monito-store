@@ -1,16 +1,17 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth'; // ← import hook
 import {
   Package,
   Heart,
-  Palette,
-  Grid3X3,
-  Dog,
   ShoppingCart,
-  LayoutDashboard,
-  LogOut,
+  BarChart3,
+  Palette,
+  Dog,
   Users,
   ChevronUp,
   User2,
+  LogOut,
+  Grid3X3,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -31,44 +32,92 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const StaffSidebar = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth(); // ← get user & logout
 
-  const handleSignOut = () => {
-    logout.mutate();
+  const initials = user?.name
+    .split(' ')
+    .map((n) => n[0])
+    .join('');
+
+  // 🔧 Helper function để check active state
+  const isMenuActive = (basePath: string): boolean => {
+    const currentPath = location.pathname;
+
+    // Exact match cho dashboard
+    if (basePath === '/staff' && currentPath === '/staff') {
+      return true;
+    }
+
+    // Cho các menu khác, check nếu path bắt đầu với basePath
+    if (basePath !== '/staff' && currentPath.startsWith(basePath)) {
+      return true;
+    }
+
+    return false;
   };
 
   const navigationGroups = [
     {
-      label: 'Overview',
-      items: [{ name: 'Dashboard', href: '/staff', icon: LayoutDashboard }],
+      label: 'Dashboard',
+      items: [
+        {
+          name: 'Overview',
+          href: '/staff',
+          icon: BarChart3,
+        },
+      ],
     },
     {
       label: 'Management',
       items: [
-        { name: 'Products', href: '/staff/products', icon: Package },
-        { name: 'Pets', href: '/staff/pets', icon: Heart },
-        { name: 'Orders', href: '/staff/orders', icon: ShoppingCart },
+        {
+          name: 'Products',
+          href: '/staff/products',
+          icon: Package,
+        },
+        {
+          name: 'Pets',
+          href: '/staff/pets',
+          icon: Heart,
+        },
+        {
+          name: 'Orders',
+          href: '/staff/orders',
+          icon: ShoppingCart,
+        },
       ],
     },
     {
       label: 'Configuration',
       items: [
-        { name: 'Categories', href: '/staff/categories', icon: Grid3X3 },
-        { name: 'Colors', href: '/staff/colors', icon: Palette },
-        { name: 'Breeds', href: '/staff/breeds', icon: Dog },
+        {
+          name: 'Categories',
+          href: '/staff/categories',
+          icon: Grid3X3,
+        },
+        {
+          name: 'Colors',
+          href: '/staff/colors',
+          icon: Palette,
+        },
+        {
+          name: 'Breeds',
+          href: '/staff/breeds',
+          icon: Dog,
+        },
       ],
     },
   ];
 
   return (
-    <Sidebar collapsible="icon" className="border-r">
+    <Sidebar collapsible="icon">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -79,7 +128,7 @@ const StaffSidebar = () => {
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">Staff Portal</span>
-                  <span className="truncate text-xs text-muted-foreground">
+                  <span className="text-muted-foreground truncate text-xs">
                     Monito Store
                   </span>
                 </div>
@@ -97,11 +146,16 @@ const StaffSidebar = () => {
               <SidebarMenu>
                 {group.items.map((item) => {
                   const Icon = item.icon;
-                  const isActive = location.pathname === item.href;
+                  // 🔧 Sử dụng helper function thay vì exact match
+                  const isActive = isMenuActive(item.href);
 
                   return (
                     <SidebarMenuItem key={item.name}>
-                      <SidebarMenuButton asChild isActive={isActive} tooltip={item.name}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive}
+                        tooltip={item.name}
+                      >
                         <Link to={item.href}>
                           <Icon className="size-4" />
                           <span>{item.name}</span>
@@ -126,15 +180,18 @@ const StaffSidebar = () => {
                   className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 >
                   <Avatar className="h-8 w-8 rounded-lg">
-                    <AvatarImage src="/avatars/staff-avatar.png" alt="Staff" />
-                    <AvatarFallback className="rounded-lg bg-blue-100 text-blue-600">
-                      ST
-                    </AvatarFallback>
+                    <AvatarImage
+                      src={user?.avatarUrl || '/avatars/staff-avatar.png'}
+                      alt={user?.name || 'Staff'}
+                    />
+                    <AvatarFallback>{initials || 'ST'}</AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">Staff Member</span>
-                    <span className="truncate text-xs text-muted-foreground">
-                      staff@monito.com
+                    <span className="truncate font-semibold">
+                      {user?.name || 'Staff Member'}
+                    </span>
+                    <span className="text-muted-foreground truncate text-xs">
+                      {user?.email || '—'}
                     </span>
                   </div>
                   <ChevronUp className="ml-auto size-4" />
@@ -146,11 +203,17 @@ const StaffSidebar = () => {
                 align="end"
                 sideOffset={4}
               >
-                <DropdownMenuItem>
-                  <User2 className="mr-2 size-4" />
-                  Profile
+                <DropdownMenuItem asChild>
+                  <Link to="/staff/profile">
+                    <User2 className="mr-2 size-4" />
+                    Profile
+                  </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleSignOut}>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-red-600"
+                  onClick={() => logout.mutate()}
+                >
                   <LogOut className="mr-2 size-4" />
                   Sign Out
                 </DropdownMenuItem>

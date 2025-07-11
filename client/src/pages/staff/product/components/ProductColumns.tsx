@@ -1,6 +1,6 @@
-import type { ColumnDef } from '@tanstack/react-table';
+import type { ColumnDef, RowData } from '@tanstack/react-table';
 import { ArrowUpDown, MoreHorizontal, Eye, Edit, Trash2 } from 'lucide-react';
-
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -13,6 +13,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import type { Product } from '@/types/product';
+
+// Add this declaration to extend the table's meta type
+declare module '@tanstack/react-table' {
+  interface TableMeta<TData extends RowData> {
+    requestDelete?: (product: TData) => void;
+  }
+}
 
 export const productColumns: ColumnDef<Product>[] = [
   {
@@ -82,10 +89,11 @@ export const productColumns: ColumnDef<Product>[] = [
     },
   },
   {
-    accessorKey: 'category',
+    id: 'category',
+    accessorFn: (row) => row.category?.name, // ✅ FIX: Truy cập vào tên category để lọc
     header: 'Category',
     cell: ({ row }) => {
-      const category = row.getValue('category') as Product['category'];
+      const category = row.original.category;
       return <Badge variant="secondary">{category.name}</Badge>;
     },
   },
@@ -202,7 +210,7 @@ export const productColumns: ColumnDef<Product>[] = [
   {
     id: 'actions',
     header: 'Actions',
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
       const product = row.original;
 
       return (
@@ -221,16 +229,30 @@ export const productColumns: ColumnDef<Product>[] = [
               Copy product ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="flex items-center">
-              <Eye className="h-4 w-4" />
-              View details
+            <DropdownMenuItem asChild>
+              <Link
+                to={`/staff/products/${product._id}`}
+                className="flex cursor-pointer items-center"
+              >
+                <Eye className="mr-2 h-4 w-4" />
+                View details
+              </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center">
-              <Edit className="h-4 w-4" />
-              Edit product
+            <DropdownMenuItem asChild>
+              <Link
+                to={`/staff/products/${product._id}/edit`}
+                className="flex cursor-pointer items-center"
+              >
+                <Edit className="mr-2 h-4 w-4" />
+                Edit product
+              </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center text-red-600">
-              <Trash2 className="h-4 w-4" />
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="flex cursor-pointer items-center text-red-600"
+              onClick={() => table.options.meta?.requestDelete?.(product)}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
               Delete product
             </DropdownMenuItem>
           </DropdownMenuContent>

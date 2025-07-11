@@ -13,6 +13,25 @@ import type {
   UpdateColorPayload,
 } from '@/types/color';
 
+// ✅ Add bulk delete result type
+export interface BulkDeleteResult {
+  deleted: Color[];
+  failed: Array<{
+    colorId: string;
+    colorName: string;
+    reason: string;
+    petCount: number;
+  }>;
+}
+
+// ✅ Add color usage stats type
+export interface ColorUsageStats {
+  color: Color;
+  petCount: number;
+  samplePets: Array<{ _id: string; name: string }>;
+  canDelete: boolean;
+}
+
 export const colorService = {
   // Get all colors
   async getColors(): Promise<ApiResponse<Color[]>> {
@@ -54,6 +73,27 @@ export const colorService = {
   // Delete color
   async deleteColor(id: string): Promise<ApiResponse> {
     const response = await API.delete<ApiResponse>(`/colors/${id}`);
+    return response.data;
+  },
+
+  // ✅ New method for bulk delete
+  async bulkDeleteColors(
+    ids: string[],
+  ): Promise<ApiResponse<BulkDeleteResult>> {
+    const response = await API.post<ApiResponse<BulkDeleteResult>>(
+      '/colors/bulk-delete',
+      { ids },
+    );
+    return response.data;
+  },
+
+  // ✅ New method to get color usage stats
+  async getColorUsageStats(
+    id: string,
+  ): Promise<ApiResponse<ColorUsageStats>> {
+    const response = await API.get<ApiResponse<ColorUsageStats>>(
+      `/colors/${id}/usage-stats`,
+    );
     return response.data;
   },
 };

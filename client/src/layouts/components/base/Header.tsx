@@ -44,11 +44,9 @@ export const Header = () => {
           ))}
         </nav>
 
-        <div className="flex items-center space-x-4">
-          <Button className="bg-[#003459] hover:bg-[#003459]/90">
-            Join the community
-          </Button>
-        </div>
+        <Button className="bg-[#003459] hover:bg-[#003459]/90" asChild>
+          <Link to="/login">Join the community</Link>
+        </Button>
       </div>
     </header>
   );

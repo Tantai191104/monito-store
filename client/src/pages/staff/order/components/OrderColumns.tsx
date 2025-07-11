@@ -307,10 +307,6 @@ export const orderColumns: ColumnDef<Order>[] = [
               <Package className="h-4 w-4" />
               Update status
             </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center">
-              <Truck className="h-4 w-4" />
-              Track shipment
-            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );

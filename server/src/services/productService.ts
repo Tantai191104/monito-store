@@ -72,21 +72,23 @@ export const productService = {
       limit = 15,
       sortBy = 'createdAt',
       sortOrder = 'desc',
+      search,
+      includeInactiveCategories,
     } = filters;
 
     // Build query
     const query: any = {};
 
-    if (brand) query.brand = new RegExp(brand, 'i');
-    if (minPrice !== undefined || maxPrice !== undefined) {
-      query.price = {};
-      if (minPrice !== undefined) query.price.$gte = minPrice;
-      if (maxPrice !== undefined) query.price.$lte = maxPrice;
+    // Apply search filters
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { brand: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+      ];
     }
-    if (inStock !== undefined) query.isInStock = inStock;
-    if (isActive !== undefined) query.isActive = isActive;
 
-    // Handle category filter (can be ObjectId or category name)
+    // Apply category filter
     if (category) {
       if (mongoose.Types.ObjectId.isValid(category)) {
         query.category = category;
@@ -106,6 +108,16 @@ export const productService = {
           };
         }
       }
+    }
+
+    // Only show products with ACTIVE categories in customer view
+    // For staff view, show all products regardless of category status
+    if (!includeInactiveCategories) {
+      const activeCategories = await CategoryModel.find({
+        isActive: true,
+      }).select('_id');
+      const activeCategoryIds = activeCategories.map((cat) => cat._id);
+      query.category = { $in: activeCategoryIds };
     }
 
     // Build sort

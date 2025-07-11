@@ -1,7 +1,7 @@
 /**
  * Node modules
  */
-import { Outlet } from 'react-router-dom';
+import { Link, Outlet } from 'react-router-dom';
 
 /**
  * Assets
@@ -25,7 +25,9 @@ const AuthLayout = () => {
       <div className="absolute -top-[580px] -left-[290px] aspect-square w-[635px] rotate-[25deg] rounded-[99px] bg-[#F7DBA7]" />
       <div className="flex w-full">
         <div className="text-primary z-10 flex-1 space-y-4 p-18 pt-10">
-          <Logo className="relative z-10" />
+          <Link to="/">
+            <Logo className="relative z-10" />
+          </Link>
           <div className="relative mt-20 flex">
             <h1 className="z-10 text-6xl font-bold">One More Friend</h1>
             <div className="absolute -top-3 -left-5 size-20 rotate-12 rounded-2xl bg-[#F7DBA7]" />

@@ -110,10 +110,71 @@ export const categoryController = {
     try {
       const { id } = req.params;
 
-      await categoryService.deleteCategory(id);
+      const result = await categoryService.deleteCategory(id);
 
       res.status(STATUS_CODE.OK).json({
         message: 'Category deleted successfully',
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+  async bulkDeleteCategories(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const { ids } = req.body;
+
+      if (!Array.isArray(ids) || ids.length === 0) {
+        res.status(STATUS_CODE.BAD_REQUEST).json({
+          message: 'Category IDs array is required',
+        });
+        return;
+      }
+      const result = await categoryService.bulkDeleteCategories(ids);
+
+      // Determine response based on results
+      if (result.failed.length === 0) {
+        // All deletions successful
+        res.status(STATUS_CODE.OK).json({
+          message: `Successfully deleted ${result.deleted.length} categories`,
+          data: result,
+        });
+      } else if (result.deleted.length === 0) {
+        // All deletions failed
+        res.status(STATUS_CODE.BAD_REQUEST).json({
+          message: 'Failed to delete any categories',
+          data: result,
+          errorCode: 'BULK_DELETE_FAILED',
+        });
+      } else {
+        // Partial success
+        res.status(STATUS_CODE.MULTI_STATUS).json({
+          message: `Deleted ${result.deleted.length} categories, ${result.failed.length} failed`,
+          data: result,
+          errorCode: 'PARTIAL_DELETE_SUCCESS',
+        });
+      }
+    } catch (error) {
+      next(error);
+    }
+  },
+  async getCategoryUsageStats(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const { id } = req.params;
+
+      const stats = await categoryService.getCategoryUsageStats(id);
+
+      res.status(STATUS_CODE.OK).json({
+        message: 'Category usage stats retrieved successfully',
+        data: stats,
       });
     } catch (error) {
       next(error);

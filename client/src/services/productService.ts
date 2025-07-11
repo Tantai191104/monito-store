@@ -26,16 +26,18 @@ export const productService = {
     return response.data;
   },
 
+  async deleteProduct(id: string): Promise<ApiResponse<any>> {
+    const response = await API.delete(`/products/${id}`);
+    return response.data;
+  },
+
+  // Update product (partial update)
   async updateProduct(
     id: string,
     data: UpdateProductPayload,
   ): Promise<ApiResponse<{ product: Product }>> {
     const response = await API.patch(`/products/${id}`, data);
-    return response.data;
-  },
 
-  async deleteProduct(id: string): Promise<ApiResponse> {
-    const response = await API.delete(`/products/${id}`);
     return response.data;
   },
 };

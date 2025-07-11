@@ -1,44 +1,57 @@
 import { toast } from 'sonner';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-/**
- * Services
- */
-import { colorService } from '@/services/colorService';
-
-/**
- * Types
- */
+import { colorService, type BulkDeleteResult } from '@/services/colorService';
 import type {
   CreateColorPayload,
   UpdateColorPayload,
   Color,
 } from '@/types/color';
 import type { ApiError } from '@/types/api';
-
-/**
- * Utils
- */
 import { getErrorMessage } from '@/utils/errorHandler';
 
-// Query keys for better cache management
 export const colorKeys = {
   all: ['colors'] as const,
   lists: () => [...colorKeys.all, 'list'] as const,
   list: (filters: string) => [...colorKeys.lists(), { filters }] as const,
   details: () => [...colorKeys.all, 'detail'] as const,
   detail: (id: string) => [...colorKeys.details(), id] as const,
+  usageStats: (id: string) => [...colorKeys.all, 'usage-stats', id] as const,
 };
 
 // Get all colors
-export const useColors = () => {
+export const useColors = (params: URLSearchParams = new URLSearchParams()) => {
   return useQuery({
-    queryKey: colorKeys.lists(),
+    queryKey: colorKeys.list(params.toString()),
     queryFn: async () => {
       const response = await colorService.getColors();
-      return response.data || [];
+      const colors = response.data || [];
+
+      // ✅ Ensure petCount is always a number
+      return colors.map((color) => ({
+        ...color,
+        petCount: color.petCount || 0,
+      }));
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+// Get only active colors for pet forms
+export const useActiveColors = () => {
+  return useQuery({
+    queryKey: [...colorKeys.lists(), 'active'],
+    queryFn: async () => {
+      const response = await colorService.getColors();
+      const colors = response.data || [];
+      return colors
+        .filter((color) => color.isActive)
+        .map((color) => ({
+          ...color,
+          petCount: color.petCount || 0,
+        }));
+    },
+    staleTime: 5 * 60 * 1000,
   });
 };
 
@@ -57,22 +70,18 @@ export const useColor = (id: string) => {
 // Create color mutation
 export const useCreateColor = () => {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: (data: CreateColorPayload) => colorService.createColor(data),
     onSuccess: (response) => {
-      // Invalidate and refetch colors
       queryClient.invalidateQueries({ queryKey: colorKeys.all });
-
-      // Optional: Update cache optimistically
       const newColor = response.data?.color;
       if (newColor) {
+        // ✅ Add to BEGINNING of list with petCount = 0
         queryClient.setQueryData(colorKeys.lists(), (old: Color[] = []) => [
-          newColor,
+          { ...newColor, petCount: 0 },
           ...old,
         ]);
       }
-
       toast.success('Color created successfully!');
       return newColor;
     },
@@ -92,22 +101,24 @@ export const useUpdateColor = () => {
     mutationFn: ({ id, data }: { id: string; data: UpdateColorPayload }) =>
       colorService.updateColor(id, data),
     onSuccess: (response, { id }) => {
-      // Invalidate colors list
       queryClient.invalidateQueries({ queryKey: colorKeys.all });
 
-      // Update specific color cache
       const updatedColor = response.data?.color;
       if (updatedColor) {
-        queryClient.setQueryData(colorKeys.detail(id), updatedColor);
-
-        // Update in list cache
+        // Update the color in all relevant queries
         queryClient.setQueryData(colorKeys.lists(), (old: Color[] = []) =>
-          old.map((color) => (color._id === id ? updatedColor : color)),
+          old.map((color) =>
+            color._id === id
+              ? { ...updatedColor, petCount: color.petCount }
+              : color,
+          ),
         );
+
+        // Update individual color query
+        queryClient.setQueryData(colorKeys.detail(id), updatedColor);
       }
 
       toast.success('Color updated successfully!');
-      return updatedColor;
     },
     onError: (error: any) => {
       const apiError = error.response?.data as ApiError;
@@ -131,11 +142,75 @@ export const useDeleteColor = () => {
 
       // Remove specific color cache
       queryClient.removeQueries({ queryKey: colorKeys.detail(deletedId) });
-
-      // Invalidate to ensure consistency
+      queryClient.removeQueries({
+        queryKey: colorKeys.usageStats(deletedId),
+      });
       queryClient.invalidateQueries({ queryKey: colorKeys.all });
 
       toast.success('Color deleted successfully!');
+    },
+    onError: (error: any) => {
+      const apiError = error.response?.data as ApiError;
+
+      // ✅ Handle specific constraint violation error
+      if (apiError?.errorCode === 'COLOR_IN_USE') {
+        toast.error(apiError.message, {
+          description:
+            'Please reassign or delete pets using this color first.',
+          duration: 6000,
+        });
+      } else {
+        const message = getErrorMessage(apiError?.errorCode, apiError?.message);
+        toast.error(message);
+      }
+    },
+  });
+};
+
+// ✅ Enhanced bulk delete with constraint handling
+export const useBulkDeleteColors = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (ids: string[]) => colorService.bulkDeleteColors(ids),
+    onSuccess: (response) => {
+      const result = response.data as BulkDeleteResult;
+
+      // Remove successfully deleted colors from cache
+      if (result.deleted.length > 0) {
+        const deletedIds = result.deleted.map((color) => color._id);
+
+        queryClient.setQueryData(colorKeys.lists(), (old: Color[] = []) =>
+          old.filter((color) => !deletedIds.includes(color._id)),
+        );
+
+        deletedIds.forEach((id) => {
+          queryClient.removeQueries({ queryKey: colorKeys.detail(id) });
+          queryClient.removeQueries({ queryKey: colorKeys.usageStats(id) });
+        });
+
+        queryClient.invalidateQueries({ queryKey: colorKeys.all });
+      }
+
+      // Show detailed results
+      if (result.failed.length === 0) {
+        toast.success(
+          `Successfully deleted ${result.deleted.length} colors!`,
+        );
+      } else if (result.deleted.length === 0) {
+        toast.error('No colors could be deleted', {
+          description: 'All selected colors are being used by pets.',
+          duration: 6000,
+        });
+      } else {
+        toast.warning(
+          `Partial success: ${result.deleted.length} deleted, ${result.failed.length} failed`,
+          {
+            description: 'Some colors are being used by pets.',
+            duration: 6000,
+          },
+        );
+      }
     },
     onError: (error: any) => {
       const apiError = error.response?.data as ApiError;
@@ -146,72 +221,25 @@ export const useDeleteColor = () => {
 };
 
 // Bulk operations
-export const useBulkDeleteColors = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (ids: string[]) => {
-      // Delete colors in parallel
-      await Promise.all(ids.map((id) => colorService.deleteColor(id)));
-      return ids;
-    },
-    onSuccess: (deletedIds) => {
-      // Remove from cache
-      queryClient.setQueryData(colorKeys.lists(), (old: Color[] = []) =>
-        old.filter((color) => !deletedIds.includes(color._id)),
-      );
-
-      // Remove specific color caches
-      deletedIds.forEach((id) => {
-        queryClient.removeQueries({ queryKey: colorKeys.detail(id) });
-      });
-
-      queryClient.invalidateQueries({ queryKey: colorKeys.all });
-
-      toast.success(`${deletedIds.length} colors deleted successfully!`);
-    },
-    onError: (error: any) => {
-      const apiError = error.response?.data as ApiError;
-      const message = getErrorMessage(apiError?.errorCode, apiError?.message);
-      toast.error(message);
-    },
-  });
-};
-
-// Bulk activate colors
 export const useBulkActivateColors = () => {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: async (ids: string[]) => {
-      // Activate colors in parallel
-      const results = await Promise.all(
+      await Promise.all(
         ids.map((id) => colorService.updateColor(id, { isActive: true })),
       );
-      return { ids, colors: results.map((r) => r.data?.color).filter(Boolean) };
+      return ids;
     },
-    onSuccess: ({ ids, colors }) => {
-      // Update cache optimistically
+    onSuccess: (activatedIds) => {
       queryClient.setQueryData(colorKeys.lists(), (old: Color[] = []) =>
-        old.map((color) => {
-          if (ids.includes(color._id)) {
-            return { ...color, isActive: true };
-          }
-          return color;
-        }),
+        old.map((color) =>
+          activatedIds.includes(color._id)
+            ? { ...color, isActive: true }
+            : color,
+        ),
       );
-
-      // Update individual color caches
-      colors.forEach((color) => {
-        if (color) {
-          queryClient.setQueryData(colorKeys.detail(color._id), color);
-        }
-      });
-
-      // Invalidate to ensure consistency
       queryClient.invalidateQueries({ queryKey: colorKeys.all });
-
-      toast.success(`${ids.length} colors activated successfully!`);
+      toast.success(`${activatedIds.length} colors activated successfully!`);
     },
     onError: (error: any) => {
       const apiError = error.response?.data as ApiError;
@@ -221,40 +249,27 @@ export const useBulkActivateColors = () => {
   });
 };
 
-// Bulk deactivate colors
 export const useBulkDeactivateColors = () => {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: async (ids: string[]) => {
-      // Deactivate colors in parallel
-      const results = await Promise.all(
+      await Promise.all(
         ids.map((id) => colorService.updateColor(id, { isActive: false })),
       );
-      return { ids, colors: results.map((r) => r.data?.color).filter(Boolean) };
+      return ids;
     },
-    onSuccess: ({ ids, colors }) => {
-      // Update cache optimistically
+    onSuccess: (deactivatedIds) => {
       queryClient.setQueryData(colorKeys.lists(), (old: Color[] = []) =>
-        old.map((color) => {
-          if (ids.includes(color._id)) {
-            return { ...color, isActive: false };
-          }
-          return color;
-        }),
+        old.map((color) =>
+          deactivatedIds.includes(color._id)
+            ? { ...color, isActive: false }
+            : color,
+        ),
       );
-
-      // Update individual color caches
-      colors.forEach((color) => {
-        if (color) {
-          queryClient.setQueryData(colorKeys.detail(color._id), color);
-        }
-      });
-
-      // Invalidate to ensure consistency
       queryClient.invalidateQueries({ queryKey: colorKeys.all });
-
-      toast.success(`${ids.length} colors deactivated successfully!`);
+      toast.success(
+        `${deactivatedIds.length} colors deactivated successfully!`,
+      );
     },
     onError: (error: any) => {
       const apiError = error.response?.data as ApiError;
@@ -320,15 +335,14 @@ export const useBulkUpdateColorStatus = () => {
   });
 };
 
-// Get active colors only (useful for selects)
-export const useActiveColors = () => {
+// Get color usage stats
+export const useColorUsageStats = (id: string) => {
   return useQuery({
-    queryKey: [...colorKeys.lists(), 'active'],
+    queryKey: colorKeys.usageStats(id),
     queryFn: async () => {
-      const response = await colorService.getColors();
-      const colors = response.data || [];
-      return colors.filter((color) => color.isActive);
+      const response = await colorService.getColorUsageStats(id);
+      return response.data;
     },
-    staleTime: 5 * 60 * 1000,
+    enabled: !!id,
   });
 };

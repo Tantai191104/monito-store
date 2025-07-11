@@ -185,16 +185,10 @@ const UserManagement = () => {
             Manage all user accounts in the system
           </p>
         </div>
-        <div className="flex items-center space-x-3">
-          <Button variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            Export Users
-          </Button>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Add User
-          </Button>
-        </div>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" />
+          Add User
+        </Button>
       </div>
 
       {/* Stats Cards */}
@@ -416,15 +410,6 @@ const UserManagement = () => {
                           <DropdownMenuItem>
                             <Eye className="mr-2 h-4 w-4" />
                             View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit User
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem>
-                            <Mail className="mr-2 h-4 w-4" />
-                            Send Email
                           </DropdownMenuItem>
                           {user.status === 'Active' ? (
                             <DropdownMenuItem className="text-red-600">

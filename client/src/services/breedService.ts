@@ -56,4 +56,24 @@ export const breedService = {
     const response = await API.delete<ApiResponse>(`/breeds/${id}`);
     return response.data;
   },
+
+  // Get breed usage statistics
+  async getBreedUsageStats(id: string): Promise<
+    ApiResponse<{
+      breed: Breed;
+      petCount: number;
+      samplePets: Array<{ _id: string; name: string }>;
+      canDelete: boolean;
+    }>
+  > {
+    const response = await API.get<
+      ApiResponse<{
+        breed: Breed;
+        petCount: number;
+        samplePets: Array<{ _id: string; name: string }>;
+        canDelete: boolean;
+      }>
+    >(`/breeds/${id}/usage-stats`);
+    return response.data;
+  },
 };

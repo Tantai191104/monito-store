@@ -245,11 +245,6 @@ export function OrderDataTable<TData, TValue>({
 
         {/* Action buttons */}
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm">
-            <Download className="h-4 w-4" />
-            Export
-          </Button>
-
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline">

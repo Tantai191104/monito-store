@@ -1,4 +1,3 @@
-import React from 'react';
 import { Package } from 'lucide-react';
 
 import { CategoryDataTable } from './components/CategoryDataTable';
@@ -33,7 +32,7 @@ const CategoriesManagement = () => {
         <h1 className="text-3xl font-bold text-gray-900">
           Categories Management
         </h1>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           Organize your products with categories and manage their availability.
         </p>
       </div>
