@@ -151,7 +151,7 @@ export const colorService = {
     if (petsUsingColor > 0) {
       throw new BadRequestException(
         `Cannot delete color "${color.name}" because it is being used by ${petsUsingColor} pet(s). Please reassign or delete these pets first.`,
-        'COLOR_IN_USE',
+        'COLOR_IN_USE' as any,
       );
     }
 

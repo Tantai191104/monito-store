@@ -19,3 +19,16 @@ export const formatPrice = (value: string | number): string => {
 export const parsePrice = (value: string): string => {
   return value.replace(/[^0-9]/g, '');
 };
+
+/**
+ * Formats a date into a readable string format.
+ * @param date The date to format.
+ * @returns The formatted date string.
+ */
+export const formatDate = (date: Date): string => {
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+};

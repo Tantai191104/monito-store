@@ -183,7 +183,7 @@ export const staffService = {
       throw new NotFoundException('Staff member not found');
     }
 
-    staff.permissions = permissions;
+    (staff as any).permissions = permissions;
     await staff.save();
 
     return staff;

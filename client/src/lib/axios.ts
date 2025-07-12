@@ -21,6 +21,7 @@ APIRefresh.interceptors.response.use(
   async (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem(IS_LOGIN);
+      localStorage.setItem('logoutReason', 'session_expired');
       window.location.href = '/login';
     }
     return Promise.reject(error);
@@ -48,6 +49,7 @@ API.interceptors.response.use(
         return API(originalRequest);
       } catch (refreshError) {
         localStorage.removeItem(IS_LOGIN);
+        localStorage.setItem('logoutReason', 'session_expired');
         window.location.href = '/login';
         return Promise.reject(refreshError);
       }
