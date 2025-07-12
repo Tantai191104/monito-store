@@ -2,6 +2,7 @@
  * Node modules
  */
 import mongoose from 'mongoose';
+import crypto from 'crypto';
 
 /**
  * Types
@@ -19,6 +20,11 @@ import UserModel from '../models/userModel';
 import { BadRequestException, NotFoundException, UnauthorizedException } from '../utils/errors';
 import { generateTokens, verifyToken } from '../utils/jwt';
 import { ERROR_CODE_ENUM } from '../constants';
+
+/**
+ * Services
+ */
+import { emailService } from './emailService';
 
 export const authService = {
   async register({ name, email, password }: RegisterPayload) {
@@ -114,6 +120,74 @@ export const authService = {
         );
       }
       throw error;
+    }
+  },
+  async forgotPassword(email: string) {
+    // Check if email service is configured
+    if (!emailService.isEmailServiceConfigured()) {
+      throw new BadRequestException(
+        'Email service is not configured. Please contact administrator.',
+        ERROR_CODE_ENUM.INTERNAL_SERVER_ERROR,
+      );
+    }
+
+    const session = await mongoose.startSession();
+    try {
+      return await session.withTransaction(async () => {
+        const user = await UserModel.findOne({ email }).session(session);
+
+        if (!user) {
+          throw new NotFoundException('User not found', ERROR_CODE_ENUM.AUTH_USER_NOT_FOUND);
+        }
+
+        // Generate reset token
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+        // Save reset token to user
+        user.resetPasswordToken = resetToken;
+        user.resetPasswordExpires = resetTokenExpiry;
+        await user.save({ session });
+
+        // Send email
+        await emailService.sendPasswordResetEmail(email, resetToken);
+
+        return { message: 'Password reset email sent successfully' };
+      });
+    } catch (error) {
+      throw error;
+    } finally {
+      session.endSession();
+    }
+  },
+  async resetPassword(token: string, newPassword: string) {
+    const session = await mongoose.startSession();
+    try {
+      return await session.withTransaction(async () => {
+        const user = await UserModel.findOne({
+          resetPasswordToken: token,
+          resetPasswordExpires: { $gt: new Date() },
+        }).session(session);
+
+        if (!user) {
+          throw new BadRequestException(
+            'Invalid or expired reset token',
+            ERROR_CODE_ENUM.INVALID_RESET_TOKEN,
+          );
+        }
+
+        // Update password and clear reset token
+        user.password = newPassword;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+        await user.save({ session });
+
+        return { message: 'Password reset successfully' };
+      });
+    } catch (error) {
+      throw error;
+    } finally {
+      session.endSession();
     }
   },
 };
