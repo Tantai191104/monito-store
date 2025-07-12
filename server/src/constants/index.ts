@@ -55,6 +55,7 @@ export const ERROR_CODE_ENUM = {
   // Password reset
   INVALID_RESET_TOKEN: 'INVALID_RESET_TOKEN',
   RESET_TOKEN_EXPIRED: 'RESET_TOKEN_EXPIRED',
+  PASSWORD_SAME_AS_CURRENT: 'PASSWORD_SAME_AS_CURRENT',
 } as const;
 
 export type ErrorCodeEnumType =

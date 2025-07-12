@@ -176,6 +176,15 @@ export const authService = {
           );
         }
 
+        // Check if new password is same as current password
+        const isSamePassword = await user.comparePassword(newPassword);
+        if (isSamePassword) {
+          throw new BadRequestException(
+            'New password must be different from your current password',
+            ERROR_CODE_ENUM.PASSWORD_SAME_AS_CURRENT,
+          );
+        }
+
         // Update password and clear reset token
         user.password = newPassword;
         user.resetPasswordToken = undefined;

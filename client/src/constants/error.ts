@@ -31,6 +31,10 @@ export const ERROR_MESSAGES = {
   AUTH_UNAUTHORIZED_ACCESS: 'Unauthorized access to this resource.',
   AUTH_TOKEN_NOT_FOUND: 'Authentication token not found.',
 
+  // Password reset errors
+  INVALID_RESET_TOKEN: 'Invalid or expired reset token. Please request a new password reset.',
+  PASSWORD_SAME_AS_CURRENT: 'New password must be different from your current password.',
+
   // Default
   UNKNOWN_ERROR: 'Something went wrong. Please try again.',
 } as const;

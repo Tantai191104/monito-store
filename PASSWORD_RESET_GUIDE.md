@@ -104,6 +104,7 @@ CLIENT_URL=http://localhost:5173
 ### 3. Password Validation
 - Minimum password length requirements
 - Password confirmation matching
+- New password must be different from current password
 - Secure password hashing with bcrypt
 
 ## Usage Instructions
@@ -163,6 +164,7 @@ POST /api/auth/reset-password
 ### Error Codes
 - `AUTH_USER_NOT_FOUND`: Email not registered in system
 - `INVALID_RESET_TOKEN`: Token is invalid or expired
+- `PASSWORD_SAME_AS_CURRENT`: New password is the same as current password
 - `VALIDATION_ERROR`: Input validation failed
 
 ## Dependencies Added
