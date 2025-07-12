@@ -50,7 +50,9 @@ import EditProduct from '@/pages/staff/product/EditProduct';
 import ProductDetailPage from '@/pages/main/products/ProductDetailPage';
 import NotFoundPage from '@/pages/common/NotFoundPage';
 import AboutPage from '@/pages/main/about/AboutPage';
-import CustomerDashboard from '@/pages/customer/CustomerDashboard';
+import CartPage from '@/pages/customer/CartPage';
+import CheckoutPage from '@/pages/customer/CheckoutPage';
+import OrdersPage from '@/pages/customer/OrdersPage';
 
 const AppRoutes = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -106,14 +108,13 @@ const AppRoutes = () => {
             path="profile"
             element={<div>Profile Page - Coming Soon</div>}
           />
-          <Route path="orders" element={<div>Orders Page - Coming Soon</div>} />
+          <Route path="cart" element={<CartPage />} />
+          <Route path="checkout" element={<CheckoutPage />} />
+          <Route path="orders" element={<OrdersPage />} />
+          <Route path="orders/:id" element={<div>Order Detail Page - Coming Soon</div>} />
           <Route
             path="wishlist"
             element={<div>Wishlist Page - Coming Soon</div>}
-          />
-          <Route
-            path="history"
-            element={<div>History Page - Coming Soon</div>}
           />
           <Route
             path="payment"

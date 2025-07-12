@@ -20,6 +20,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import type { Order } from '@/types/order';
+import { useUpdateOrderStatus } from '@/hooks/useOrders';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Helper function to get status badge variant
 const getStatusVariant = (status: Order['status']) => {
@@ -190,10 +192,28 @@ export const orderColumns: ColumnDef<Order>[] = [
     header: 'Order Status',
     cell: ({ row }) => {
       const status = row.getValue('status') as Order['status'];
+      const id = row.original._id;
+      const mutation = useUpdateOrderStatus();
+      const statusOptions = [
+        'pending', 'processing', 'delivered', 'cancelled', 'refunded'
+      ];
       return (
-        <Badge variant={getStatusVariant(status)} className="capitalize">
-          {status}
-        </Badge>
+        <Select
+          value={status}
+          onValueChange={value => mutation.mutate({ id, status: value })}
+          disabled={mutation.status === 'pending'}
+        >
+          <SelectTrigger className="w-[120px] capitalize">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            {statusOptions.map(opt => (
+              <SelectItem key={opt} value={opt} className="capitalize">
+                {opt}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       );
     },
     filterFn: (row, id, value) => {
