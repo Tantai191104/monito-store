@@ -337,6 +337,40 @@ export const orderService = {
       throw new BadRequestException(`Cannot change status from ${order.status} to ${status}`);
     }
 
+    // Xử lý cập nhật stock khi chuyển trạng thái
+    if (order.status === 'pending' && status === 'processing') {
+      // Giảm stock khi đơn được xác nhận
+      for (const item of order.items) {
+        if (item.type === 'product') {
+          await ProductModel.findByIdAndUpdate(
+            item.item,
+            { $inc: { stock: -item.quantity } }
+          );
+        } else if (item.type === 'pet') {
+          await PetModel.findByIdAndUpdate(
+            item.item,
+            { isAvailable: false }
+          );
+        }
+      }
+    }
+    if (status === 'refunded') {
+      // Cộng lại stock khi hoàn tiền
+      for (const item of order.items) {
+        if (item.type === 'product') {
+          await ProductModel.findByIdAndUpdate(
+            item.item,
+            { $inc: { stock: item.quantity } }
+          );
+        } else if (item.type === 'pet') {
+          await PetModel.findByIdAndUpdate(
+            item.item,
+            { isAvailable: true }
+          );
+        }
+      }
+    }
+
     order.status = status;
     await order.save();
 
