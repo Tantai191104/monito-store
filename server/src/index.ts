@@ -12,6 +12,11 @@ import express, { NextFunction, Request, Response } from 'express';
 import { connectDB } from './config/connectDB';
 
 /**
+ * Services
+ */
+import { emailService } from './services/emailService';
+
+/**
  * Import Middlewares
  */
 import { errorHandler } from './middlewares/errorHandler';
@@ -92,4 +97,5 @@ app.use(errorHandler);
 app.listen(PORT, async () => {
   console.log(`Server is running on http://localhost:${PORT}`);
   await connectDB();
+  await emailService.verifyConnection();
 });

@@ -76,7 +76,7 @@ export const uploadService = {
     try {
       const result = await cloudinary.search
         .expression(`folder:monito-store/${folder}`)
-        .sort_by([['created_at', 'desc']])
+        .sort_by('created_at', 'desc')
         .max_results(100)
         .execute();
 
@@ -91,7 +91,7 @@ export const uploadService = {
   async getFolderStats() {
     try {
       const folders = ['products', 'pets', 'categories'];
-      const stats = {};
+      const stats: { [key: string]: number } = {};
 
       for (const folder of folders) {
         const result = await cloudinary.search

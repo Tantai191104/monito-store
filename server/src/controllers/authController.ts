@@ -7,7 +7,7 @@ import { NextFunction, Request, Response } from 'express';
 /**
  * Validations
  */
-import { loginSchema, registerSchema } from '../validations/authValidation';
+import { loginSchema, registerSchema, forgotPasswordSchema, resetPasswordSchema } from '../validations/authValidation';
 
 /**
  * Services
@@ -109,6 +109,30 @@ export const authController = {
       res.status(STATUS_CODE.OK).json({
         message: 'Logout successfully',
       });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async forgotPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const body = forgotPasswordSchema.parse(req.body);
+
+      const result = await authService.forgotPassword(body.email);
+
+      res.status(STATUS_CODE.OK).json(result);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async resetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const body = resetPasswordSchema.parse(req.body);
+
+      const result = await authService.resetPassword(body.token, body.password);
+
+      res.status(STATUS_CODE.OK).json(result);
     } catch (error) {
       next(error);
     }
