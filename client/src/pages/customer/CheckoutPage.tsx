@@ -234,11 +234,11 @@ const CheckoutPage = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="street">Street Address</Label>
+                  <Label htmlFor="street" className="mb-2">Street Address</Label>
                   <Input
                     id="street"
                     {...register('street')}
-                    placeholder="Nhập số nhà, tên đường..."
+                    placeholder="Enter house number, street name..."
                     className={errors.street ? 'border-red-500' : ''}
                   />
                   {errors.street && (
@@ -248,7 +248,7 @@ const CheckoutPage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Select Tỉnh/Thành phố */}
                   <div>
-                    <Label>Tỉnh/Thành phố</Label>
+                    <Label className="mb-2">Province/City</Label>
                     <Select
                       options={provinceOptions}
                       value={provinceOptions.find(opt => opt.value === province) || null}
@@ -257,7 +257,7 @@ const CheckoutPage = () => {
                         setProvince(opt ? opt.value : '');
                         setDistrict('');
                       }}
-                      placeholder="Tìm tỉnh/thành..."
+                      placeholder="Find province/city..."
                       isSearchable
                       classNamePrefix="react-select"
                       styles={{ menu: (base: any) => ({ ...base, zIndex: 100 }) } as StylesConfig}
@@ -266,7 +266,7 @@ const CheckoutPage = () => {
                   </div>
                   {/* Select Quận/Huyện */}
                   <div>
-                    <Label>Quận/Huyện</Label>
+                    <Label className="mb-2">District</Label>
                     <Select
                       options={districtOptions}
                       value={districtOptions.find((opt: any) => opt.value === district) || null}
@@ -274,7 +274,7 @@ const CheckoutPage = () => {
                         const opt: { value: string; label: string } | null = newValue as any;
                         setDistrict(opt ? opt.value : '');
                       }}
-                      placeholder="Tìm quận/huyện..."
+                      placeholder="Find district..."
                       isSearchable
                       isDisabled={!province}
                       classNamePrefix="react-select"
@@ -284,7 +284,7 @@ const CheckoutPage = () => {
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="notes">Order Notes (Optional)</Label>
+                  <Label htmlFor="notes" className="mb-2">Order Notes (Optional)</Label>
                   <Textarea
                     id="notes"
                     {...register('notes')}
@@ -423,7 +423,7 @@ const CheckoutPage = () => {
               orderId={createdOrderId}
               orderUrl={orderUrl}
               amount={total}
-              description={`Thanh toán đơn hàng #${createdOrderId}`}
+              description={`Pay for order #${createdOrderId}`}
               onPaymentSuccess={handlePaymentSuccess}
               onPaymentFailed={handlePaymentFailed}
             />

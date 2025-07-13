@@ -74,12 +74,12 @@ const getStatusIcon = (status: string) => {
 };
 
 const ORDER_STATUS = [
-  { value: 'all', label: 'Tất cả' },
-  { value: 'pending', label: 'Chờ xác nhận' },
-  { value: 'processing', label: 'Đang xử lý/giao' },
-  { value: 'delivered', label: 'Đã giao' },
-  { value: 'cancelled', label: 'Đã hủy' },
-  { value: 'refunded', label: 'Hoàn tiền' },
+  { value: 'all', label: 'All' },
+  { value: 'pending', label: 'Pending Confirmation' },
+  { value: 'processing', label: 'Processing/Shipping' },
+  { value: 'delivered', label: 'Delivered' },
+  { value: 'cancelled', label: 'Cancelled' },
+  { value: 'refunded', label: 'Refunded' },
 ];
 
 const OrdersPage = () => {
@@ -222,7 +222,7 @@ const OrdersPage = () => {
         rating: review.rating,
         content: review.content,
       });
-      toast.success('Đã gửi đánh giá!');
+      toast.success('Review submitted!');
       setEditingReview(null);
       // Cập nhật lại reviewStates để ẩn form
       setReviewStates(prev => {
@@ -233,14 +233,14 @@ const OrdersPage = () => {
       // Refetch đơn hàng (nếu muốn realtime)
       queryClient.invalidateQueries({ queryKey: ['orders'] });
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Gửi đánh giá thất bại');
+      toast.error(err?.response?.data?.message || 'Failed to submit review');
     }
   };
 
   const handleDeleteReview = async (orderId: string) => {
     try {
       await API.delete(`/orders/${orderId}/review`);
-      toast.success('Đã xóa đánh giá!');
+      toast.success('Review deleted!');
       setEditingReview(null);
       setReviewStates(prev => {
         const newState = { ...prev };
@@ -249,7 +249,7 @@ const OrdersPage = () => {
       });
       queryClient.invalidateQueries({ queryKey: ['orders'] });
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Xóa đánh giá thất bại');
+      toast.error(err?.response?.data?.message || 'Failed to delete review');
     }
   };
 
@@ -489,26 +489,26 @@ const OrdersPage = () => {
                       // Đã đánh giá, hiển thị review và nút sửa
                       return (
                         <div className="mt-6 p-4 bg-yellow-50 rounded-lg">
-                          <h4 className="font-medium text-gray-900 mb-2">Đánh giá của bạn</h4>
+                          <h4 className="font-medium text-gray-900 mb-2">Your Review</h4>
                           <div className="flex items-center mb-2">
                             {[1,2,3,4,5].map(star => (
                               <Star key={star} className={star <= myReview.rating ? 'text-yellow-400' : 'text-gray-300'} fill="currentColor" />
                             ))}
-                            <span className="ml-2 text-sm text-gray-600">{myReview.rating} sao</span>
+                            <span className="ml-2 text-sm text-gray-600">{myReview.rating} stars</span>
                           </div>
                           <div className="text-sm text-gray-800 mb-2">{myReview.content}</div>
                           <Button size="sm" variant="outline" onClick={() => {
                             setEditingReview(order._id);
                             setReviewStates(prev => ({ ...prev, [order._id]: { rating: myReview.rating, content: myReview.content } }));
-                          }}>Sửa đánh giá</Button>
-                          <Button size="sm" variant="destructive" className="ml-2" onClick={() => handleDeleteReview(order._id)}>Xóa đánh giá</Button>
+                          }}>Edit Review</Button>
+                          <Button size="sm" variant="destructive" className="ml-2" onClick={() => handleDeleteReview(order._id)}>Delete Review</Button>
                         </div>
                       );
                     }
                     // Chưa đánh giá hoặc đang sửa
                     return (
                       <div className="mt-6 p-4 bg-yellow-50 rounded-lg">
-                        <h4 className="font-medium text-gray-900 mb-2">Đánh giá đơn hàng</h4>
+                        <h4 className="font-medium text-gray-900 mb-2">Order Review</h4>
                         <div className="flex items-center mb-2">
                           {[1,2,3,4,5].map(star => (
                             <button
@@ -525,13 +525,13 @@ const OrdersPage = () => {
                             </button>
                           ))}
                           <span className="ml-2 text-sm text-gray-600">
-                            {reviewStates[order._id]?.rating ? `${reviewStates[order._id].rating} sao` : 'Chọn số sao'}
+                            {reviewStates[order._id]?.rating ? `${reviewStates[order._id].rating} stars` : 'Select stars'}
                           </span>
                         </div>
                         <textarea
                           className="w-full border rounded p-2 text-sm mb-2"
                           rows={3}
-                          placeholder="Nội dung đánh giá..."
+                          placeholder="Review content..."
                           value={reviewStates[order._id]?.content || ''}
                           onChange={e => handleContentChange(order._id, e.target.value)}
                         />
@@ -541,10 +541,10 @@ const OrdersPage = () => {
                           onClick={() => handleSubmitReview(order._id)}
                           disabled={!(reviewStates[order._id]?.rating && reviewStates[order._id]?.content)}
                         >
-                          Gửi đánh giá
+                          Submit Review
                         </Button>
                         {myReview && (
-                          <Button size="sm" variant="ghost" className="ml-2" onClick={() => setEditingReview(null)}>Huỷ sửa</Button>
+                          <Button size="sm" variant="ghost" className="ml-2" onClick={() => setEditingReview(null)}>Cancel Edit</Button>
                         )}
                       </div>
                     );

@@ -175,29 +175,35 @@ const PaymentQRCode: React.FC<PaymentQRCodeProps> = ({
     }
   }, [orderId, orderUrl]);
 
+  // Thêm useEffect để setCountdown khi orderUrl vừa xuất hiện
   useEffect(() => {
-    if (!orderUrl || paymentStatus === 'success') {
-      if (countdownRef.current) clearInterval(countdownRef.current);
+    if (orderUrl) {
       setCountdown(remainingSeconds ?? 300);
-      return;
     }
-    setCountdown(remainingSeconds ?? 300);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderUrl]);
+
+  // useEffect countdown chỉ giảm số đếm, không set lại countdown
+  useEffect(() => {
+    if (!orderUrl || paymentStatus !== 'pending') return;
+    if (countdownRef.current) clearInterval(countdownRef.current);
     countdownRef.current = setInterval(() => {
-      setCountdown((prev) => {
+      setCountdown(prev => {
         if (prev <= 1) {
           if (countdownRef.current) clearInterval(countdownRef.current);
-          if ((paymentStatus as string) !== 'success' && !cancelledRef.current) {
+          if (!cancelledRef.current) {
             cancelledRef.current = true;
             cancelOrderMutation.mutate(orderId);
           }
+          return 0;
         }
-        return prev > 0 ? prev - 1 : 0;
+        return prev - 1;
       });
     }, 1000);
     return () => {
       if (countdownRef.current) clearInterval(countdownRef.current);
     };
-  }, [orderUrl, paymentStatus, remainingSeconds, orderId, cancelOrderMutation]);
+  }, [orderUrl, paymentStatus, orderId, cancelOrderMutation]);
 
   useEffect(() => {
     return () => {
