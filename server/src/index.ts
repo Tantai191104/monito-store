@@ -47,6 +47,7 @@ import uploadRoute from './routes/uploadRoute';
 import staffRoutes from './routes/staffRoutes';
 import orderRoute from './routes/orderRoute';
 import paymentRoute from './routes/paymentRoute';
+import adminRoute from './routes/adminRoute';
 
 /**
  * App
@@ -88,6 +89,7 @@ app.use(`${BASE_PATH}/upload`, uploadRoute);
 app.use(`${BASE_PATH}/staff`, staffRoutes);
 app.use(`${BASE_PATH}/orders`, orderRoute);
 app.use(`${BASE_PATH}/payment`, paymentRoute);
+app.use(`${BASE_PATH}/admin`, adminRoute);
 
 /**
  * Error Handler
