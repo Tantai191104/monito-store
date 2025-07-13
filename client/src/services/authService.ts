@@ -7,7 +7,13 @@ import API from '@/lib/axios';
  * Types
  */
 import type { ApiResponse } from '@/types/api';
-import type { LoginPayload, RegisterPayload, User } from '@/types/user';
+import type {
+  LoginPayload,
+  RegisterPayload,
+  User,
+  ForgotPasswordPayload,
+  ResetPasswordPayload,
+} from '@/types/user';
 
 export const authService = {
   async register(data: RegisterPayload): Promise<ApiResponse> {
@@ -36,6 +42,16 @@ export const authService = {
   async getCurrentUser(): Promise<ApiResponse<{ user: User }>> {
     const response =
       await API.get<ApiResponse<{ user: User }>>('/user/current-user');
+    return response.data;
+  },
+
+  async forgotPassword(data: ForgotPasswordPayload): Promise<ApiResponse> {
+    const response = await API.post<ApiResponse>('/auth/forgot-password', data);
+    return response.data;
+  },
+
+  async resetPassword(data: ResetPasswordPayload): Promise<ApiResponse> {
+    const response = await API.post<ApiResponse>('/auth/reset-password', data);
     return response.data;
   },
 };

@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 
 /**
  * Components
@@ -20,6 +21,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { GoogleIcon } from '@/components/icons/GoogleIcon';
+import ForgotPasswordModal from '@/components/auth/ForgotPasswordModal';
 
 /**
  * Hooks
@@ -43,6 +45,7 @@ const formSchema = z.object({
 
 const LoginPage = () => {
   const { login } = useAuth();
+  const [open, setOpen] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -89,8 +92,8 @@ const LoginPage = () => {
                 <div className="flex items-center justify-between">
                   <FormLabel>Password</FormLabel>
                   <a
-                    href=""
-                    className="text-sm underline-offset-4 hover:underline"
+                    onClick={() => setOpen(true)}
+                    className="cursor-pointer text-sm underline-offset-4 hover:underline"
                   >
                     Forgot your password?
                   </a>
@@ -135,6 +138,7 @@ const LoginPage = () => {
           </div>
         </form>
       </Form>
+      <ForgotPasswordModal open={open} onOpenChange={setOpen} />
     </div>
   );
 };
