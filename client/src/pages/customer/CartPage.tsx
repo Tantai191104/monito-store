@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { useOrders, useCancelOrder } from '@/hooks/useOrders';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import '@/styles/hideArrows.css';
 
 const ORDER_STATUS = [
   { value: 'all', label: 'All', icon: Clock },
@@ -59,7 +60,6 @@ const CartPage = () => {
     setIsUpdating(id);
     try {
       updateQuantity(id, newQuantity);
-      toast.success('Cart updated successfully!');
     } catch (error) {
       toast.error('Failed to update cart');
     } finally {
@@ -160,7 +160,7 @@ const CartPage = () => {
                   min={1}
                   value={item.quantity}
                   onChange={e => handleQuantityChange(item.id, Number(e.target.value))}
-                  className="w-14 text-center"
+                  className="w-14 text-center hide-arrows"
                   disabled={isUpdating === item.id}
                 />
                 <Button size="icon" variant="outline" onClick={() => handleQuantityChange(item.id, item.quantity + 1)} disabled={isUpdating === item.id}>+</Button>
@@ -168,7 +168,7 @@ const CartPage = () => {
               <div className="col-span-2 text-center font-semibold text-[#003459]">{formatPrice(item.price * item.quantity)} VND</div>
               <div className="col-span-1 flex justify-center">
                 <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(item.id)}>
-                  Remove
+                  <Trash2 className="w-5 h-5" />
                 </Button>
               </div>
             </div>
