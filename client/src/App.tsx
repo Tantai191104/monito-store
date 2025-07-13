@@ -12,20 +12,26 @@ import AppRoutes from '@/routers/AppRoutes';
  * Providers
  */
 import { QueryProvider } from '@/providers/QueryProvider';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 
 /**
  * Components
  */
 import { Toaster } from '@/components/ui/sonner';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 const App = () => {
   return (
-    <QueryProvider>
-      <BrowserRouter>
-        <AppRoutes />
-        <Toaster richColors />
-      </BrowserRouter>
-    </QueryProvider>
+    <ErrorBoundary>
+      <QueryProvider>
+        <BrowserRouter>
+          <ThemeProvider>
+            <AppRoutes />
+            <Toaster richColors />
+          </ThemeProvider>
+        </BrowserRouter>
+      </QueryProvider>
+    </ErrorBoundary>
   );
 };
 
