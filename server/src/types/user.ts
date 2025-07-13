@@ -17,3 +17,13 @@ export type RegisterPayload = Pick<User, 'name' | 'email'> & {
 export type LoginPayload = Pick<User, 'email'> & {
   password: string;
 };
+
+export type ForgotPasswordPayload = {
+  email: string;
+};
+
+export type ResetPasswordPayload = {
+  token: string;
+  password: string;
+  confirmPassword: string;
+};

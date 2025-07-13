@@ -27,6 +27,7 @@ import { useAuth } from '@/hooks/useAuth';
 import HomePage from '@/pages/main/home/HomePage';
 import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
+import ResetPasswordPage from '@/pages/auth/ResetPasswordPage';
 import StaffDashboard from '@/pages/staff/StaffDashboard';
 import ProductsManagement from '@/pages/staff/product/ProductsManagement';
 import PetsManagement from '@/pages/staff/pet/PetsManagement';
@@ -82,6 +83,16 @@ const AppRoutes = () => {
               <Navigate to={`/${user?.role}`} replace />
             ) : (
               <RegisterPage />
+            )
+          }
+        />
+        <Route
+          path="/reset-password"
+          element={
+            isAuthenticated ? (
+              <Navigate to={`/${user?.role}`} replace />
+            ) : (
+              <ResetPasswordPage />
             )
           }
         />
