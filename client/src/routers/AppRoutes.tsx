@@ -10,6 +10,7 @@ import AuthLayout from '@/layouts/AuthLayout';
 import BaseLayout from '@/layouts/BaseLayout';
 import StaffLayout from '@/layouts/StaffLayout';
 import AdminLayout from '@/layouts/AdminLayout';
+import BlankLayout from '@/layouts/BlankLayout';
 
 /**
  * Components
@@ -28,6 +29,7 @@ import HomePage from '@/pages/main/home/HomePage';
 import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
 import ResetPasswordPage from '@/pages/auth/ResetPasswordPage';
+import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage';
 import StaffDashboard from '@/pages/staff/StaffDashboard';
 import ProductsManagement from '@/pages/staff/product/ProductsManagement';
 import PetsManagement from '@/pages/staff/pet/PetsManagement';
@@ -84,13 +86,28 @@ const AppRoutes = () => {
             )
           }
         />
+      </Route>
+
+      <Route path="/reset-password" element={<BlankLayout />}>
         <Route
-          path="/reset-password"
+          index
           element={
             isAuthenticated ? (
               <Navigate to={`/${user?.role}`} replace />
             ) : (
               <ResetPasswordPage />
+            )
+          }
+        />
+      </Route>
+      <Route path="/forgot-password" element={<BlankLayout />}>
+        <Route
+          index
+          element={
+            isAuthenticated ? (
+              <Navigate to={`/${user?.role}`} replace />
+            ) : (
+              <ForgotPasswordPage />
             )
           }
         />

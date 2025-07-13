@@ -68,9 +68,9 @@ const ResetPasswordPage = () => {
     mutationFn: (data: ResetPasswordPayload) => authService.resetPassword(data),
     onSuccess: () => {
       toast.success('Password reset successfully!');
-      // Redirect to login page after 2 seconds
+      // Use replace to prevent going back to reset page
       setTimeout(() => {
-        navigate('/login');
+        navigate('/login', { replace: true });
       }, 2000);
     },
     onError: (error: any) => {
@@ -83,7 +83,7 @@ const ResetPasswordPage = () => {
   useEffect(() => {
     if (!token) {
       toast.error('Invalid reset token');
-      navigate('/login');
+      navigate('/login', { replace: true });
     }
   }, [token, navigate]);
 
@@ -103,37 +103,35 @@ const ResetPasswordPage = () => {
 
   if (resetPassword.isSuccess) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="flex w-[400px] flex-col gap-6 rounded-lg bg-white p-8 text-center">
-          <CheckCircle className="mx-auto size-16 text-green-600" />
-          <div>
-            <h1 className="text-primary text-2xl font-bold">
-              Password Reset Successful!
-            </h1>
-            <p className="text-muted-foreground text-sm mt-2">
-              Your password has been successfully reset. Redirecting to login...
-            </p>
-          </div>
-          <Link
-            to="/login"
-            className="text-primary hover:underline text-sm"
-          >
-            Go to Login
-          </Link>
+      <div className="flex w-full flex-col gap-6 rounded-lg bg-white p-8 text-center shadow-lg border border-gray-200">
+        <CheckCircle className="mx-auto size-16 text-green-600" />
+        <div>
+          <h1 className="text-primary text-2xl font-bold">
+            Password Reset Successful!
+          </h1>
+          <p className="text-muted-foreground text-sm mt-2">
+            Your password has been successfully reset. Redirecting to login...
+          </p>
         </div>
+        <Link
+          to="/login"
+          className="text-primary hover:underline text-sm"
+          replace
+        >
+          Go to Login
+        </Link>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="flex w-[400px] flex-col gap-6 rounded-lg bg-white p-8">
-        <div className="flex flex-col items-center gap-2 text-center">
-          <h1 className="text-primary text-2xl font-bold">Reset Password</h1>
-          <p className="text-muted-foreground text-sm text-balance">
-            Enter your new password below
-          </p>
-        </div>
+    <div className="flex w-full flex-col gap-6 rounded-lg bg-white p-8 shadow-lg border border-gray-200">
+      <div className="flex flex-col items-center gap-2 text-center">
+        <h1 className="text-primary text-2xl font-bold">Reset Password</h1>
+        <p className="text-muted-foreground text-sm text-balance">
+          Enter your new password below
+        </p>
+      </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -184,16 +182,11 @@ const ResetPasswordPage = () => {
                 'Reset Password'
               )}
             </Button>
-
-            <div className="text-center text-sm">
-              Remember your password?{' '}
               <Link to="/login" className="underline underline-offset-4">
                 Back to Login
               </Link>
-            </div>
           </form>
         </Form>
-      </div>
     </div>
   );
 };
