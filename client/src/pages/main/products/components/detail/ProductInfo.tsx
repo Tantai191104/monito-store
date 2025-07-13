@@ -1,9 +1,27 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { formatPrice } from '@/utils/formatter';
 import type { Product } from '@/types/product';
 import { ShoppingCart, Gift, MessageCircle } from 'lucide-react';
+import { useCart } from '@/contexts/CartContext';
+import { toast } from 'sonner';
 
 const ProductInfo = ({ product }: { product: Product }) => {
+  const { addItem } = useCart();
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+
+  const handleAddToCart = async () => {
+    setIsAddingToCart(true);
+    try {
+      addItem(product, 'product');
+      toast.success('Product added to cart!');
+    } catch (error) {
+      toast.error('Failed to add product to cart');
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -15,9 +33,14 @@ const ProductInfo = ({ product }: { product: Product }) => {
       <p className="text-gray-600">{product.description}</p>
 
       <div className="flex space-x-4">
-        <Button size="lg" className="flex-1 bg-[#003459] hover:bg-[#003459]/90">
+        <Button 
+          size="lg" 
+          className="flex-1 bg-[#003459] hover:bg-[#003459]/90"
+          onClick={handleAddToCart}
+          disabled={isAddingToCart || !product.isInStock}
+        >
           <ShoppingCart className="mr-2 h-5 w-5" />
-          Add to cart
+          {isAddingToCart ? 'Adding...' : 'Add to cart'}
         </Button>
         <Button
           size="lg"

@@ -10,6 +10,7 @@ import AuthLayout from '@/layouts/AuthLayout';
 import BaseLayout from '@/layouts/BaseLayout';
 import StaffLayout from '@/layouts/StaffLayout';
 import AdminLayout from '@/layouts/AdminLayout';
+import BlankLayout from '@/layouts/BlankLayout';
 
 /**
  * Components
@@ -28,6 +29,7 @@ import HomePage from '@/pages/main/home/HomePage';
 import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
 import ResetPasswordPage from '@/pages/auth/ResetPasswordPage';
+import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage';
 import StaffDashboard from '@/pages/staff/StaffDashboard';
 import ProductsManagement from '@/pages/staff/product/ProductsManagement';
 import PetsManagement from '@/pages/staff/pet/PetsManagement';
@@ -51,7 +53,9 @@ import EditProduct from '@/pages/staff/product/EditProduct';
 import ProductDetailPage from '@/pages/main/products/ProductDetailPage';
 import NotFoundPage from '@/pages/common/NotFoundPage';
 import AboutPage from '@/pages/main/about/AboutPage';
-import CustomerDashboard from '@/pages/customer/CustomerDashboard';
+import CartPage from '@/pages/customer/CartPage';
+import CheckoutPage from '@/pages/customer/CheckoutPage';
+import OrdersPage from '@/pages/customer/OrdersPage';
 
 const AppRoutes = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -84,13 +88,28 @@ const AppRoutes = () => {
             )
           }
         />
+      </Route>
+
+      <Route path="/reset-password" element={<BlankLayout />}>
         <Route
-          path="/reset-password"
+          index
           element={
             isAuthenticated ? (
               <Navigate to={`/${user?.role}`} replace />
             ) : (
               <ResetPasswordPage />
+            )
+          }
+        />
+      </Route>
+      <Route path="/forgot-password" element={<BlankLayout />}>
+        <Route
+          index
+          element={
+            isAuthenticated ? (
+              <Navigate to={`/${user?.role}`} replace />
+            ) : (
+              <ForgotPasswordPage />
             )
           }
         />
@@ -117,14 +136,13 @@ const AppRoutes = () => {
             path="profile"
             element={<div>Profile Page - Coming Soon</div>}
           />
-          <Route path="orders" element={<div>Orders Page - Coming Soon</div>} />
+          <Route path="cart" element={<CartPage />} />
+          <Route path="checkout" element={<CheckoutPage />} />
+          <Route path="orders" element={<OrdersPage />} />
+          <Route path="orders/:id" element={<div>Order Detail Page - Coming Soon</div>} />
           <Route
             path="wishlist"
             element={<div>Wishlist Page - Coming Soon</div>}
-          />
-          <Route
-            path="history"
-            element={<div>History Page - Coming Soon</div>}
           />
           <Route
             path="payment"

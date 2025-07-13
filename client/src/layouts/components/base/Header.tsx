@@ -24,6 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
+import { useCart } from '@/contexts/CartContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -45,7 +46,7 @@ const navLinks = [
 export const Header = () => {
   const location = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
-  const [cartItemCount] = useState(3);
+  const { state: cartState } = useCart();
 
   const isActive = (path: string) => {
     if (path === '/') {
@@ -96,16 +97,19 @@ export const Header = () => {
                   variant="ghost"
                   size="icon"
                   className="hover:!bg-primary/5 relative"
+                  asChild
                 >
-                  <ShoppingCart className="!h-5.5 !w-5.5" />
-                  {cartItemCount > 0 && (
-                    <Badge
-                      variant="destructive"
-                      className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full p-0 text-xs"
-                    >
-                      {cartItemCount}
-                    </Badge>
-                  )}
+                  <Link to="/customer/cart">
+                    <ShoppingCart className="!h-5.5 !w-5.5" />
+                    {cartState.totalItems > 0 && (
+                      <Badge
+                        variant="destructive"
+                        className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full p-0 text-xs"
+                      >
+                        {cartState.totalItems}
+                      </Badge>
+                    )}
+                  </Link>
                 </Button>
               </div>
               {/* ✅ Customer Avatar Dropdown */}
@@ -148,13 +152,6 @@ export const Header = () => {
                     <Link to="/customer/orders">
                       <Package className="mr-2 h-4 w-4" />
                       <span>My Orders</span>
-                    </Link>
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem asChild>
-                    <Link to="/customer/history">
-                      <History className="mr-2 h-4 w-4" />
-                      <span>Order History</span>
                     </Link>
                   </DropdownMenuItem>
 
