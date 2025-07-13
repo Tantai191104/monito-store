@@ -1,5 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { useMutation } from '@tanstack/react-query';
+import { orderService } from '@/services/orderService';
+import { handleApiError } from '@/utils/globalErrorHandler';
 
 interface OrderPaymentCountdownProps {
   orderId: string;
@@ -7,8 +10,6 @@ interface OrderPaymentCountdownProps {
   duration?: number; // seconds, default 300 (5 phút)
   onCancelled?: () => void;
 }
-
-const API_BASE = import.meta.env.VITE_API_URL;
 
 const OrderPaymentCountdown: React.FC<OrderPaymentCountdownProps> = ({ orderId, createdAt, duration = 300, onCancelled }) => {
   const [remaining, setRemaining] = useState<number>(() => {
@@ -19,18 +20,22 @@ const OrderPaymentCountdown: React.FC<OrderPaymentCountdownProps> = ({ orderId, 
   });
   const cancelledRef = useRef(false);
 
+  const cancelOrderMutation = useMutation({
+    mutationFn: (id: string) => orderService.cancelOrder(id),
+    onSuccess: () => {
+      toast.error('Order was cancelled due to payment timeout');
+      if (typeof onCancelled === 'function') onCancelled();
+    },
+    onError: (error: any) => {
+      handleApiError(error);
+      if (typeof onCancelled === 'function') onCancelled();
+    },
+  });
+
   useEffect(() => {
     if (remaining <= 0 && !cancelledRef.current) {
       cancelledRef.current = true;
-      fetch(`${API_BASE}/orders/${orderId}/cancel`, {
-        method: 'PUT',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-      })
-        .then(() => {
-          toast.error('Order was cancelled due to payment timeout');
-          if (typeof onCancelled === 'function') onCancelled();
-        });
+      cancelOrderMutation.mutate(orderId);
       return;
     }
     if (remaining > 0) {
@@ -39,7 +44,7 @@ const OrderPaymentCountdown: React.FC<OrderPaymentCountdownProps> = ({ orderId, 
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, [remaining, orderId, onCancelled]);
+  }, [remaining, orderId, cancelOrderMutation]);
 
   const formatCountdown = (sec: number) => {
     const m = Math.floor(sec / 60).toString().padStart(2, '0');

@@ -7,6 +7,7 @@ import {
   Truck,
   Package,
 } from 'lucide-react';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -18,10 +19,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import type { Order } from '@/types/order';
 import { useUpdateOrderStatus } from '@/hooks/useOrders';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
 
 // Helper function to get status badge variant
 const getStatusVariant = (status: Order['status']) => {
@@ -56,6 +68,100 @@ const getPaymentStatusVariant = (status: Order['paymentStatus']) => {
     default:
       return 'secondary';
   }
+};
+
+// Status Change Cell Component with Confirmation
+const StatusChangeCell = ({ order }: { order: Order }) => {
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [newStatus, setNewStatus] = useState<Order['status'] | null>(null);
+  const mutation = useUpdateOrderStatus();
+  
+  const statusOptions = [
+    'pending', 'processing', 'delivered', 'cancelled', 'refunded'
+  ];
+
+  const handleStatusChange = (value: string) => {
+    if (value === order.status) return; // No change needed
+    
+    setNewStatus(value as Order['status']);
+    setIsConfirmOpen(true);
+  };
+
+  const confirmStatusChange = () => {
+    if (!newStatus) return;
+    
+    mutation.mutate(
+      { id: order._id, status: newStatus },
+      {
+        onSuccess: () => {
+          toast.success(`Order status updated to ${newStatus}`);
+          setIsConfirmOpen(false);
+          setNewStatus(null);
+        },
+        onError: () => {
+          toast.error('Failed to update order status');
+          setIsConfirmOpen(false);
+          setNewStatus(null);
+        }
+      }
+    );
+  };
+
+  const cancelStatusChange = () => {
+    setIsConfirmOpen(false);
+    setNewStatus(null);
+  };
+
+  return (
+    <>
+      <Select
+        value={order.status}
+        onValueChange={handleStatusChange}
+        disabled={mutation.isPending}
+      >
+        <SelectTrigger className="w-[120px] capitalize">
+          <SelectValue placeholder="Status" />
+        </SelectTrigger>
+        <SelectContent>
+          {statusOptions.map(opt => (
+            <SelectItem key={opt} value={opt} className="capitalize">
+              {opt}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Status Change</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to change the order status from{' '}
+              <span className="font-semibold capitalize">{order.status}</span> to{' '}
+              <span className="font-semibold capitalize">{newStatus}</span>?
+              <br />
+              <br />
+              <span className="text-sm text-gray-600">
+                Order: {order.orderNumber}
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelStatusChange}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmStatusChange}
+              disabled={mutation.isPending}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {mutation.isPending ? 'Updating...' : 'Confirm Change'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
 };
 
 export const orderColumns: ColumnDef<Order>[] = [
@@ -191,30 +297,7 @@ export const orderColumns: ColumnDef<Order>[] = [
     accessorKey: 'status',
     header: 'Order Status',
     cell: ({ row }) => {
-      const status = row.getValue('status') as Order['status'];
-      const id = row.original._id;
-      const mutation = useUpdateOrderStatus();
-      const statusOptions = [
-        'pending', 'processing', 'delivered', 'cancelled', 'refunded'
-      ];
-      return (
-        <Select
-          value={status}
-          onValueChange={value => mutation.mutate({ id, status: value })}
-          disabled={mutation.status === 'pending'}
-        >
-          <SelectTrigger className="w-[120px] capitalize">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            {statusOptions.map(opt => (
-              <SelectItem key={opt} value={opt} className="capitalize">
-                {opt}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      );
+      return <StatusChangeCell order={row.original} />;
     },
     filterFn: (row, id, value) => {
       return value.includes(row.getValue(id));

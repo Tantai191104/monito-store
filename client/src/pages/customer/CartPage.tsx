@@ -13,26 +13,26 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const ORDER_STATUS = [
-  { value: 'all', label: 'Tất cả', icon: Clock },
-  { value: 'pending', label: 'Chờ xác nhận', icon: Clock },
-  { value: 'processing', label: 'Đang xử lý/giao', icon: RefreshCcw },
-  { value: 'delivered', label: 'Đã giao', icon: CheckCircle },
-  { value: 'cancelled', label: 'Đã hủy', icon: XCircle },
-  { value: 'refunded', label: 'Hoàn tiền', icon: Package },
+  { value: 'all', label: 'All', icon: Clock },
+  { value: 'pending', label: 'Pending', icon: Clock },
+  { value: 'processing', label: 'Processing', icon: RefreshCcw },
+  { value: 'delivered', label: 'Delivered', icon: CheckCircle },
+  { value: 'cancelled', label: 'Cancelled', icon: XCircle },
+  { value: 'refunded', label: 'Refunded', icon: Package },
 ];
 
 const getStatusBadge = (status: string) => {
   switch (status) {
     case 'pending':
-      return <Badge variant="secondary">Chờ xác nhận</Badge>;
+      return <Badge variant="secondary">Pending</Badge>;
     case 'processing':
-      return <Badge variant="default">Đang xử lý/giao</Badge>;
+      return <Badge variant="default">Processing</Badge>;
     case 'delivered':
-      return <Badge variant="default">Đã giao</Badge>;
+      return <Badge variant="default">Delivered</Badge>;
     case 'cancelled':
-      return <Badge variant="destructive">Đã hủy</Badge>;
+      return <Badge variant="destructive">Cancelled</Badge>;
     case 'refunded':
-      return <Badge variant="outline">Hoàn tiền</Badge>;
+      return <Badge variant="outline">Refunded</Badge>;
     default:
       return <Badge variant="secondary">{status}</Badge>;
   }
@@ -43,13 +43,13 @@ const CartPage = () => {
   const navigate = useNavigate();
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
-  // State lưu các id sản phẩm được chọn (luôn khai báo ở đầu component)
+  // State to store selected product IDs (always declare at the beginning of component)
   const [selectedIds, setSelectedIds] = useState<string[]>(state.items.map(item => item.id));
-  // Mặc định sort theo 'pending' nếu có
+  // Default sort by 'pending' if available
   const statusFilter = searchParams.get('status') || 'pending';
   const cancelOrder = useCancelOrder();
 
-  // Lấy orders của user
+  // Get user orders
   const { data, isLoading } = useOrders();
   const orders = data?.orders || [];
 
@@ -99,12 +99,12 @@ const CartPage = () => {
     ? orders.filter((order) => order.status === statusFilter)
     : orders;
 
-  // Chọn/bỏ chọn 1 sản phẩm
+  // Select/deselect a product
   const handleSelectItem = (id: string) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
 
-  // Chọn/bỏ chọn tất cả
+  // Select/deselect all
   const handleSelectAll = () => {
     if (selectedIds.length === state.items.length) {
       setSelectedIds([]);
@@ -113,29 +113,29 @@ const CartPage = () => {
     }
   };
 
-  // Tổng tiền các sản phẩm đã chọn
+  // Total price of selected products
   const selectedTotal = state.items
     .filter(item => selectedIds.includes(item.id))
     .reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  // Hiển thị cart items nếu còn sản phẩm trong giỏ hàng
+  // Display cart items if there are products in cart
   if (state.items.length > 0) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Giỏ hàng của bạn</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Your Cart</h1>
         <div className="mb-4 border rounded-lg overflow-hidden">
           {/* Header */}
           <div className="grid grid-cols-12 bg-gray-100 py-3 px-4 font-semibold text-gray-700 text-sm">
             <div className="col-span-1 flex items-center">
               <input type="checkbox" checked={selectedIds.length === state.items.length} onChange={handleSelectAll} />
             </div>
-            <div className="col-span-4">Sản phẩm</div>
-            <div className="col-span-2 text-center">Đơn giá</div>
-            <div className="col-span-2 text-center">Số lượng</div>
-            <div className="col-span-2 text-center">Thành tiền</div>
-            <div className="col-span-1 text-center">Thao tác</div>
+            <div className="col-span-4">Product</div>
+            <div className="col-span-2 text-center">Unit Price</div>
+            <div className="col-span-2 text-center">Quantity</div>
+            <div className="col-span-2 text-center">Total</div>
+            <div className="col-span-1 text-center">Action</div>
           </div>
-          {/* Danh sách sản phẩm */}
+          {/* Product list */}
           {state.items.map(item => (
             <div key={item.id} className="grid grid-cols-12 items-center border-t py-4 px-4 text-sm">
               <div className="col-span-1 flex items-center">
@@ -149,7 +149,7 @@ const CartPage = () => {
                 />
                 <div>
                   <div className="font-medium text-gray-900">{item.item.name}</div>
-                  <div className="text-xs text-gray-500">Loại: {item.type === 'product' ? 'Sản phẩm' : 'Thú cưng'}</div>
+                  <div className="text-xs text-gray-500">Type: {item.type === 'product' ? 'Product' : 'Pet'}</div>
                 </div>
               </div>
               <div className="col-span-2 text-center font-semibold text-[#003459]">{formatPrice(item.price)} VND</div>
@@ -168,29 +168,29 @@ const CartPage = () => {
               <div className="col-span-2 text-center font-semibold text-[#003459]">{formatPrice(item.price * item.quantity)} VND</div>
               <div className="col-span-1 flex justify-center">
                 <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(item.id)}>
-                  Xóa
+                  Remove
                 </Button>
               </div>
             </div>
           ))}
         </div>
-        {/* Thanh tổng kết */}
+        {/* Summary section */}
         <div className="flex items-center justify-between bg-gray-50 p-4 rounded-lg border mt-4">
           <div className="flex items-center gap-4">
             <input type="checkbox" checked={selectedIds.length === state.items.length} onChange={handleSelectAll} />
-            <span>Chọn tất cả ({state.items.length})</span>
-            <Button variant="outline" size="sm" onClick={() => selectedIds.forEach(id => handleRemoveItem(id))} disabled={selectedIds.length === 0} className="ml-2">Xóa đã chọn</Button>
+            <span>Select all ({state.items.length})</span>
+            <Button variant="outline" size="sm" onClick={() => selectedIds.forEach(id => handleRemoveItem(id))} disabled={selectedIds.length === 0} className="ml-2">Remove Selected</Button>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-lg">Tổng tiền: <span className="text-2xl font-bold text-[#003459]">{formatPrice(selectedTotal)} VND</span></span>
-            <Button size="lg" className="bg-[#FF5722] hover:bg-[#FF5722]/90 text-white" onClick={() => handleCheckout()} disabled={selectedIds.length === 0}>Mua hàng</Button>
+            <span className="text-lg">Total: <span className="text-2xl font-bold text-[#003459]">{formatPrice(selectedTotal)} VND</span></span>
+            <Button size="lg" className="bg-[#FF5722] hover:bg-[#FF5722]/90 text-white" onClick={() => handleCheckout()} disabled={selectedIds.length === 0}>Checkout</Button>
           </div>
         </div>
       </div>
     );
   }
 
-  // Nếu cart rỗng, luôn trả về empty cart UI
+  // If cart is empty, always return empty cart UI
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="text-center">

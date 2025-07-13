@@ -43,9 +43,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Thanh toán đơn hàng</DialogTitle>
+          <DialogTitle>Order Payment</DialogTitle>
           <DialogDescription>
-            Vui lòng quét mã QR để hoàn tất thanh toán
+            Please scan the QR code to complete your payment
           </DialogDescription>
         </DialogHeader>
         <PaymentQRCode

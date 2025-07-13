@@ -16,16 +16,16 @@ const API = axios.create(options);
 
 const APIRefresh = axios.create(options);
 
-// Request interceptor - no need to manually add token since it's in httpOnly cookies
-API.interceptors.request.use(
-  (config) => {
-    // Token is automatically sent via httpOnly cookies
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+// // Request interceptor - no need to manually add token since it's in httpOnly cookies
+// API.interceptors.request.use(
+//   (config) => {
+//     // Token is automatically sent via httpOnly cookies
+//     return config;
+//   },
+//   (error) => {
+//     return Promise.reject(error);
+//   }
+// );
 
 APIRefresh.interceptors.response.use(
   (response) => response,
