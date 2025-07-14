@@ -17,7 +17,6 @@ export interface UserDocument extends Document {
   role: 'admin' | 'staff' | 'customer';
   isActive: boolean;
   lastLogin: Date | null;
-  tokenVersion: number;
 
   // ✅ Staff-specific fields
   department?: string;
@@ -89,10 +88,6 @@ const userSchema = new Schema<UserDocument>(
     joinDate: {
       type: Date,
       default: Date.now,
-    },
-    tokenVersion: {
-      type: Number,
-      default: 0,
     },
 
     // ✅ Staff-specific fields

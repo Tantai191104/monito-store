@@ -70,7 +70,7 @@ export const authService = {
           );
         }
 
-        const tokens = generateTokens({ userId: user._id as string, tokenVersion: user.tokenVersion });
+        const tokens = generateTokens({ userId: user._id as string });
 
         user.lastLogin = new Date();
 
@@ -103,7 +103,7 @@ export const authService = {
         );
       }
 
-      const tokens = generateTokens({ userId: user._id as string, tokenVersion: user.tokenVersion });
+      const tokens = generateTokens({ userId: user._id as string });
 
       return tokens;
     } catch (error) {

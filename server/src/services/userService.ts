@@ -180,7 +180,6 @@ export const userService = {
           );
         }
         user.password = newPassword;
-        user.tokenVersion = (user.tokenVersion || 0) + 1;
         await user.save({ session });
         return user;
       });

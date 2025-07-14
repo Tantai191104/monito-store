@@ -186,12 +186,8 @@ const ProfilePage = () => {
       setPasswordSuccess(true);
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setTimeout(() => {
-        // Assuming logout is part of useAuth or passed as a prop
-        // For now, we'll just set showSuccess and setTimeout
-        // If logout is a separate function, it needs to be imported or passed
-        // setShowSuccess(true); 
-        // setTimeout(() => setShowSuccess(false), 3000);
-      }, 1500);
+        setPasswordSuccess(false);
+      }, 3000);
     } catch (err: any) {
       setPasswordError(err?.response?.data?.message || 'Failed to change password.');
     } finally {
@@ -241,13 +237,6 @@ const ProfilePage = () => {
                         {getInitials(user?.name || '')}
                       </AvatarFallback>
                     </Avatar>
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-white border-[#F7DBA7] hover:border-[#003459]"
-                    >
-                      <Camera className="h-4 w-4" />
-                    </Button>
                   </div>
                   
                   <h2 className="text-xl font-semibold text-[#003459] mb-2">
@@ -320,15 +309,12 @@ const ProfilePage = () => {
           {/* Right Column - Profile Details */}
           <div className="lg:col-span-2">
             <Tabs defaultValue="personal" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-3 bg-[#F7DBA7]">
+              <TabsList className="grid w-full grid-cols-2 bg-[#F7DBA7]">
                 <TabsTrigger value="personal" className="data-[state=active]:bg-[#003459] data-[state=active]:text-white">
                   Personal Info
                 </TabsTrigger>
                 <TabsTrigger value="security" className="data-[state=active]:bg-[#003459] data-[state=active]:text-white">
                   Security
-                </TabsTrigger>
-                <TabsTrigger value="preferences" className="data-[state=active]:bg-[#003459] data-[state=active]:text-white">
-                  Preferences
                 </TabsTrigger>
               </TabsList>
 
@@ -579,44 +565,7 @@ const ProfilePage = () => {
                 </Card>
               </TabsContent>
 
-              {/* Preferences Tab */}
-              <TabsContent value="preferences" className="space-y-6">
-                <Card className="border-2 border-[#F7DBA7]">
-                  <CardHeader>
-                    <CardTitle className="text-[#003459]">Account Preferences</CardTitle>
-                    <CardDescription>
-                      Customize your account settings and notifications
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div>
-                      <Label htmlFor="language" className="text-[#003459]">Language</Label>
-                      <select
-                        id="language"
-                        className="w-full p-2 border border-[#F7DBA7] rounded-md focus:border-[#003459] focus:outline-none"
-                      >
-                        <option value="en">English</option>
-                        <option value="vi">Tiếng Việt</option>
-                      </select>
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="timezone" className="text-[#003459]">Timezone</Label>
-                      <select
-                        id="timezone"
-                        className="w-full p-2 border border-[#F7DBA7] rounded-md focus:border-[#003459] focus:outline-none"
-                      >
-                        <option value="Asia/Ho_Chi_Minh">Asia/Ho Chi Minh (GMT+7)</option>
-                        <option value="UTC">UTC (GMT+0)</option>
-                      </select>
-                    </div>
-                    
-                    <Button className="bg-[#003459] hover:bg-[#003459]/90">
-                      Save Preferences
-                    </Button>
-                  </CardContent>
-                </Card>
-              </TabsContent>
+
             </Tabs>
           </div>
         </div>
