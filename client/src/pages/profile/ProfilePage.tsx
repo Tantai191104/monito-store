@@ -316,15 +316,12 @@ const ProfilePage = () => {
           {/* Right Column - Profile Details */}
           <div className="lg:col-span-2">
             <Tabs defaultValue="personal" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-3 bg-[#F7DBA7]">
+              <TabsList className="grid w-full grid-cols-2 bg-[#F7DBA7]">
                 <TabsTrigger value="personal" className="data-[state=active]:bg-[#003459] data-[state=active]:text-white">
                   Personal Info
                 </TabsTrigger>
                 <TabsTrigger value="security" className="data-[state=active]:bg-[#003459] data-[state=active]:text-white">
                   Security
-                </TabsTrigger>
-                <TabsTrigger value="preferences" className="data-[state=active]:bg-[#003459] data-[state=active]:text-white">
-                  Preferences
                 </TabsTrigger>
               </TabsList>
 
@@ -575,44 +572,7 @@ const ProfilePage = () => {
                 </Card>
               </TabsContent>
 
-              {/* Preferences Tab */}
-              <TabsContent value="preferences" className="space-y-6">
-                <Card className="border-2 border-[#F7DBA7]">
-                  <CardHeader>
-                    <CardTitle className="text-[#003459]">Account Preferences</CardTitle>
-                    <CardDescription>
-                      Customize your account settings and notifications
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div>
-                      <Label htmlFor="language" className="text-[#003459]">Language</Label>
-                      <select
-                        id="language"
-                        className="w-full p-2 border border-[#F7DBA7] rounded-md focus:border-[#003459] focus:outline-none"
-                      >
-                        <option value="en">English</option>
-                        <option value="vi">Tiếng Việt</option>
-                      </select>
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="timezone" className="text-[#003459]">Timezone</Label>
-                      <select
-                        id="timezone"
-                        className="w-full p-2 border border-[#F7DBA7] rounded-md focus:border-[#003459] focus:outline-none"
-                      >
-                        <option value="Asia/Ho_Chi_Minh">Asia/Ho Chi Minh (GMT+7)</option>
-                        <option value="UTC">UTC (GMT+0)</option>
-                      </select>
-                    </div>
-                    
-                    <Button className="bg-[#003459] hover:bg-[#003459]/90">
-                      Save Preferences
-                    </Button>
-                  </CardContent>
-                </Card>
-              </TabsContent>
+
             </Tabs>
           </div>
         </div>
