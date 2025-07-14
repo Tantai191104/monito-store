@@ -168,6 +168,17 @@ const ProfilePage = () => {
     setIsChangingPassword(true);
     setPasswordSuccess(false);
     setPasswordError('');
+    // Client-side validation
+    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      setPasswordError('Please fill in all password fields.');
+      setIsChangingPassword(false);
+      return;
+    }
+    if (passwordForm.newPassword.length < 8) {
+      setPasswordError('New password must be at least 8 characters.');
+      setIsChangingPassword(false);
+      return;
+    }
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       setPasswordError('New passwords do not match.');
       setIsChangingPassword(false);
@@ -189,7 +200,13 @@ const ProfilePage = () => {
         setPasswordSuccess(false);
       }, 3000);
     } catch (err: any) {
-      setPasswordError(err?.response?.data?.message || 'Failed to change password.');
+      // Hiển thị lỗi trả về từ server nếu có, hoặc lỗi mặc định
+      const serverMsg = err?.response?.data?.message || err?.message;
+      if (serverMsg) {
+        setPasswordError(serverMsg);
+      } else {
+        setPasswordError('Failed to change password. Please try again.');
+      }
     } finally {
       setIsChangingPassword(false);
     }

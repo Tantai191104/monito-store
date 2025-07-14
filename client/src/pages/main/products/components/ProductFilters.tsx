@@ -148,23 +148,24 @@ const ProductFilters = ({
               ))
             : categories.map((category) => (
                 <div key={category._id} className="flex items-center space-x-2">
-                  <Checkbox
+                  <input
+                    type="radio"
                     id={`category-${category._id}`}
-                    checked={searchParams
-                      .getAll('category')
-                      .includes(category.name)}
-                    onCheckedChange={(checked) =>
-                      handleMultiSelectChange(
-                        'category',
-                        category.name,
-                        !!checked,
-                      )
-                    }
+                    name="category"
+                    value={category._id}
+                    checked={searchParams.get('category') === category._id}
+                    onChange={(e) => {
+                      const newParams = new URLSearchParams(searchParams);
+                      if (e.target.checked) {
+                        newParams.set('category', category._id);
+                      } else {
+                        newParams.delete('category');
+                      }
+                      newParams.set('page', '1');
+                      setSearchParams(newParams);
+                    }}
                   />
-                  <label
-                    htmlFor={`category-${category._id}`}
-                    className="text-sm"
-                  >
+                  <label htmlFor={`category-${category._id}`} className="text-sm">
                     {category.name}
                   </label>
                 </div>
