@@ -237,13 +237,6 @@ const ProfilePage = () => {
                         {getInitials(user?.name || '')}
                       </AvatarFallback>
                     </Avatar>
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-white border-[#F7DBA7] hover:border-[#003459]"
-                    >
-                      <Camera className="h-4 w-4" />
-                    </Button>
                   </div>
                   
                   <h2 className="text-xl font-semibold text-[#003459] mb-2">
