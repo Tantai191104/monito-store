@@ -16,22 +16,12 @@ const API = axios.create(options);
 
 const APIRefresh = axios.create(options);
 
-// // Request interceptor - no need to manually add token since it's in httpOnly cookies
-// API.interceptors.request.use(
-//   (config) => {
-//     // Token is automatically sent via httpOnly cookies
-//     return config;
-//   },
-//   (error) => {
-//     return Promise.reject(error);
-//   }
-// );
-
 APIRefresh.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem(IS_LOGIN);
+      localStorage.setItem('logoutReason', 'session_expired');
       window.location.href = '/login';
     }
     return Promise.reject(error);
@@ -59,6 +49,7 @@ API.interceptors.response.use(
         return API(originalRequest);
       } catch (refreshError) {
         localStorage.removeItem(IS_LOGIN);
+        localStorage.setItem('logoutReason', 'session_expired');
         window.location.href = '/login';
         return Promise.reject(refreshError);
       }

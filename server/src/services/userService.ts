@@ -39,7 +39,14 @@ export const userService = {
     const now = new Date();
     const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+    const endOfLastMonth = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      0,
+      23,
+      59,
+      59,
+    );
 
     const startOfThisWeek = new Date(now);
     startOfThisWeek.setDate(now.getDate() - now.getDay());
@@ -52,10 +59,12 @@ export const userService = {
       suspendedUsers,
       suspendedUsersThisWeek,
       newUsersThisMonth,
-      newUsersLastMonth
+      newUsersLastMonth,
     ] = await Promise.all([
       UserModel.countDocuments(),
-      UserModel.countDocuments({ createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth } }),
+      UserModel.countDocuments({
+        createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth },
+      }),
 
       UserModel.countDocuments({ isActive: true }),
       UserModel.countDocuments({
@@ -70,7 +79,9 @@ export const userService = {
       }),
 
       UserModel.countDocuments({ createdAt: { $gte: startOfThisMonth } }),
-      UserModel.countDocuments({ createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth } })
+      UserModel.countDocuments({
+        createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth },
+      }),
     ]);
 
     const percent = (current: number, prev: number) => {
@@ -94,7 +105,7 @@ export const userService = {
       newUsersThisMonth: {
         count: newUsersThisMonth,
         percentChange: percent(newUsersThisMonth, newUsersLastMonth),
-      }
+      },
     };
   },
   async getAllUsers() {
@@ -102,19 +113,81 @@ export const userService = {
       const users = await UserModel.find().sort({ createdAt: -1 });
       return users;
     } catch (error) {
-      throw new Error("Failed to fetch all users");
+      throw new Error('Failed to fetch all users');
     }
   },
   async updateUserStatus(userId: string, newStatus: boolean) {
     const user = await UserModel.findById(userId);
 
     if (!user) {
-      throw new NotFoundException("User not found");
+      throw new NotFoundException('User not found');
     }
 
     user.isActive = newStatus;
     await user.save();
 
     return user;
+  },
+  async updateProfile(
+    userId: string,
+    update: Partial<{
+      name: string;
+      email: string;
+      phone: string;
+      department: string;
+      position: string;
+    }>,
+  ) {
+    const session = await mongoose.startSession();
+    try {
+      return await session.withTransaction(async () => {
+        const user = await UserModel.findByIdAndUpdate(
+          userId,
+          { $set: update },
+          { new: true, runValidators: true, session },
+        );
+        if (!user) {
+          throw new NotFoundException('User not found');
+        }
+        return user;
+      });
+    } catch (error) {
+      throw error;
+    } finally {
+      session.endSession();
+    }
+  },
+
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ) {
+    const session = await mongoose.startSession();
+    try {
+      return await session.withTransaction(async () => {
+        const user = await UserModel.findById(userId).session(session);
+        if (!user) {
+          throw new NotFoundException('User not found');
+        }
+        const isMatch = await user.comparePassword(currentPassword);
+        if (!isMatch) {
+          throw new Error('Current password is incorrect');
+        }
+        if (await user.comparePassword(newPassword)) {
+          throw new Error(
+            'New password must be different from the current password.',
+          );
+        }
+        user.password = newPassword;
+        user.tokenVersion = (user.tokenVersion || 0) + 1;
+        await user.save({ session });
+        return user;
+      });
+    } catch (error) {
+      throw error;
+    } finally {
+      session.endSession();
+    }
   },
 };

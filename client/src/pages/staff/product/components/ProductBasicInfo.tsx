@@ -1,4 +1,3 @@
-// client/src/pages/staff/product/components/ProductBasicInfo.tsx
 import {
   FormField,
   FormItem,
@@ -48,7 +47,9 @@ const ProductBasicInfo = ({ control }: ProductBasicInfoProps) => {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Product Name</FormLabel>
+              <FormLabel>
+                Product Name <span className="text-red-500">*</span>
+              </FormLabel>
               <FormControl>
                 <Input placeholder="Enter product name" {...field} />
               </FormControl>
@@ -63,7 +64,9 @@ const ProductBasicInfo = ({ control }: ProductBasicInfoProps) => {
             name="category"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Category</FormLabel>
+                <FormLabel>
+                  Category <span className="text-red-500">*</span>
+                </FormLabel>
                 {categoriesLoading ? (
                   <Skeleton className="h-10 w-full" />
                 ) : (
@@ -93,7 +96,9 @@ const ProductBasicInfo = ({ control }: ProductBasicInfoProps) => {
             name="brand"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Brand</FormLabel>
+                <FormLabel>
+                  Brand <span className="text-red-500">*</span>
+                </FormLabel>
                 <FormControl>
                   <Input placeholder="Enter brand name" {...field} />
                 </FormControl>
@@ -108,7 +113,9 @@ const ProductBasicInfo = ({ control }: ProductBasicInfoProps) => {
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
+              <FormLabel>
+                Description <span className="text-red-500">*</span>
+              </FormLabel>
               <FormControl>
                 <Textarea
                   placeholder="Describe your product..."

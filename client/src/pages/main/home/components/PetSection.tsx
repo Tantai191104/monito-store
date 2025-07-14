@@ -2,6 +2,7 @@
  * Node modules
  */
 import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowRightIcon, Package } from 'lucide-react';
 
 /**
@@ -16,6 +17,8 @@ import { usePets } from '@/hooks/usePets';
 import PetCard from '@/pages/main/pets/components/PetCard';
 
 const PetSection = () => {
+  const navigate = useNavigate();
+  
   const params = useMemo(() => {
     const p = new URLSearchParams();
     p.append('limit', '8');
@@ -27,6 +30,10 @@ const PetSection = () => {
 
   const { data, isLoading, error } = usePets(params);
   const pets = data?.pets || [];
+
+  const handleViewMore = () => {
+    navigate('/pets');
+  };
 
   return (
     <section className="bg-white px-8 py-16">
@@ -41,6 +48,7 @@ const PetSection = () => {
           <Button
             variant="outline"
             className="border-[#003459] bg-transparent text-[#003459] hover:bg-[#003459] hover:text-white"
+            onClick={handleViewMore}
           >
             View more
             <ArrowRightIcon className="size-4" />
