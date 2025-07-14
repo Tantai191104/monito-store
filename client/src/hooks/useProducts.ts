@@ -2,6 +2,8 @@ import { toast } from 'sonner';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { productService } from '@/services/productService';
 import { getErrorMessage } from '@/utils/errorHandler';
+import type { ApiError } from '@/types/api';
+import type { Product } from '@/types/product';
 
 export const productKeys = {
   all: ['products'] as const,
@@ -29,10 +31,10 @@ export const useProducts = (
     paramsWithActive.set('isActive', 'true');
   }
   const hasFilters = paramsWithActive.toString().length > 0;
-  const queryKey = hasFilters 
+  const queryKey = hasFilters
     ? productKeys.list(paramsWithActive.toString())
     : productKeys.list('all');
-  
+
   return useQuery({
     queryKey,
     queryFn: async () => {
@@ -121,6 +123,31 @@ export const useUpdateProduct = () => {
     },
     onError: (error: any) => {
       console.error('❌ Update product error:', error);
+      throw error;
+    },
+  });
+};
+
+export const useAddProduct = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (newProductData: any) => {
+      const response = await productService.createProduct(newProductData);
+      return response.data.product;
+    },
+    onSuccess: () => {
+      // ✅ Vô hiệu hóa các query liên quan đến danh sách sản phẩm
+      // Điều này sẽ buộc React Query phải fetch lại dữ liệu mới
+      queryClient.invalidateQueries({ queryKey: productKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: productKeys.all });
+    },
+    onError: (error: any) => {
+      // Xử lý lỗi tập trung tại đây
+      const apiError = error.response?.data as ApiError;
+      const message = getErrorMessage(apiError?.errorCode, apiError?.message);
+      toast.error(message || 'Failed to add product.');
+      // Ném lỗi ra ngoài để component có thể xử lý nếu cần
       throw error;
     },
   });
