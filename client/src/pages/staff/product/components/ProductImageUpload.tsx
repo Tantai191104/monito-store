@@ -1,6 +1,12 @@
 // client/src/pages/staff/product/components/ProductImageUpload.tsx
 import { useState, useCallback } from 'react';
-import { Upload, Package, X, AlertCircle, Loader2 } from 'lucide-react';
+import {
+  Upload,
+  X,
+  AlertCircle,
+  Loader2,
+  Star, // ✅ Import icon ngôi sao
+} from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -143,10 +149,23 @@ const ProductImageUpload = ({
     onImagesChange(newImages);
   };
 
+  const setAsMainImage = (indexToMakeMain: number) => {
+    if (indexToMakeMain <= 0 || indexToMakeMain >= images.length) return;
+
+    const newImages = [...images];
+    // Lấy ảnh được chọn ra khỏi mảng
+    const [itemToMove] = newImages.splice(indexToMakeMain, 1);
+    // Đưa ảnh đó lên đầu mảng
+    newImages.unshift(itemToMove);
+    onImagesChange(newImages);
+  };
+
   return (
     <Card className="!rounded-sm shadow-none">
       <CardHeader>
-        <CardTitle>Product Images</CardTitle>
+        <CardTitle>
+          Product Images <span className="text-red-500">*</span>
+        </CardTitle>
         <CardDescription>
           Add up to 5 high-quality images. Images will be uploaded to
           Cloudinary.
@@ -213,38 +232,46 @@ const ProductImageUpload = ({
         {/* Image Previews */}
         {images.length > 0 && (
           <div>
-            <h4 className="mb-3 flex items-center gap-2 text-sm font-medium">
-              <Package className="h-4 w-4" />
-              Uploaded Images ({images.length}/5)
-            </h4>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-5">
+            <h3 className="mb-4 text-lg font-medium">Image Previews</h3>
+            <div className="grid grid-cols-3 gap-4 md:grid-cols-4 lg:grid-cols-5">
               {images.map((url, index) => (
-                <div key={index} className="group relative">
-                  <div className="aspect-square overflow-hidden rounded-lg border-2 border-gray-200 bg-gray-50">
-                    <img
-                      src={url}
-                      alt={`Product ${index + 1}`}
-                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src =
-                          'https://via.placeholder.com/300x300?text=Error+Loading';
-                      }}
-                    />
-                  </div>
+                <div
+                  key={`${url}-${index}`}
+                  className="group relative aspect-square"
+                >
+                  <img
+                    src={url}
+                    alt={`Product image ${index + 1}`}
+                    className="h-full w-full rounded-lg object-cover"
+                  />
+                  {/* Remove Button */}
                   <Button
-                    type="button"
                     variant="destructive"
-                    size="sm"
+                    size="icon"
                     className="absolute -top-2 -right-2 h-6 w-6 p-0 opacity-0 transition-opacity group-hover:opacity-100"
                     onClick={() => removeImage(index)}
                     disabled={uploading}
                   >
                     <X className="h-3 w-3" />
                   </Button>
+                  {/* Main Image Badge */}
                   {index === 0 && (
                     <Badge className="absolute bottom-2 left-2 bg-blue-600 text-xs">
                       Main
                     </Badge>
+                  )}
+                  {/* ✅ Set as Main Button */}
+                  {index > 0 && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="absolute top-2 left-2 h-auto p-1.5 opacity-0 transition-opacity group-hover:opacity-100"
+                      onClick={() => setAsMainImage(index)}
+                      disabled={uploading}
+                      title="Set as main image"
+                    >
+                      <Star className="h-3 w-3" />
+                    </Button>
                   )}
                 </div>
               ))}

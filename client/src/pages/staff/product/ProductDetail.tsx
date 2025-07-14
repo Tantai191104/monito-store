@@ -1,4 +1,3 @@
-// client/src/pages/staff/product/ProductDetail.tsx
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
@@ -8,11 +7,7 @@ import {
   Eye,
   EyeOff,
   Package,
-  Tag,
-  Gift,
   Star,
-  ShoppingCart,
-  Loader2,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -26,68 +21,24 @@ import {
 } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { toast } from 'sonner';
 
-import {
-  useProduct,
-  useDeleteProduct,
-  useToggleProductStatus,
-} from '@/hooks/useProducts';
+import { useProduct } from '@/hooks/useProducts';
 import ImageGallery from '@/components/ImageGallery';
+import { DeactivateProductDialog } from './components/DeactivateProductDialog'; // ✅ Import
+import { DeleteProductDialog } from './components/DeleteProductDialog'; // ✅ Import
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showDeactivateDialog, setShowDeactivateDialog] = useState(false); // ✅ Add state
 
   const { data: product, isLoading, error } = useProduct(id!);
-  const deleteProduct = useDeleteProduct();
-  const toggleProductStatus = useToggleProductStatus();
-
-  const handleDelete = async () => {
-    if (!product) return;
-
-    try {
-      await deleteProduct.mutateAsync(product._id);
-      toast.success('Product deleted successfully!');
-      navigate('/staff/products');
-    } catch (error: any) {
-      toast.error(error?.message || 'Failed to delete product');
-    }
-  };
-
-  const handleToggleStatus = async () => {
-    if (!product) return;
-
-    try {
-      await toggleProductStatus.mutateAsync({
-        id: product._id,
-        isActive: !product.isActive,
-      });
-      toast.success(
-        `Product ${product.isActive ? 'deactivated' : 'activated'} successfully!`,
-      );
-    } catch (error: any) {
-      toast.error(error?.message || 'Failed to update product status');
-    }
-  };
 
   const handleBack = () => {
     navigate('/staff/products');
   };
 
-  // Loading state
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -178,15 +129,12 @@ const ProductDetail = () => {
             Product Details • SKU: #{product._id.slice(-8).toUpperCase()}
           </p>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center gap-2">
           <Button
-            variant={product.isActive ? 'outline' : 'default'}
-            onClick={handleToggleStatus}
-            disabled={toggleProductStatus.isPending}
+            variant="outline"
+            onClick={() => setShowDeactivateDialog(true)} // ✅ Mở dialog
           >
-            {toggleProductStatus.isPending ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : product.isActive ? (
+            {product.isActive ? (
               <EyeOff className="mr-2 h-4 w-4" />
             ) : (
               <Eye className="mr-2 h-4 w-4" />
@@ -201,43 +149,13 @@ const ProductDetail = () => {
             </Link>
           </Button>
 
-          <AlertDialog
-            open={showDeleteDialog}
-            onOpenChange={setShowDeleteDialog}
+          <Button
+            variant="destructive"
+            onClick={() => setShowDeleteDialog(true)} // ✅ Mở dialog
           >
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive">
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Product</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to delete "{product.name}"? This action
-                  cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleDelete}
-                  className="bg-red-600 hover:bg-red-700"
-                  disabled={deleteProduct.isPending}
-                >
-                  {deleteProduct.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Deleting...
-                    </>
-                  ) : (
-                    'Delete Product'
-                  )}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete
+          </Button>
         </div>
       </div>
 
@@ -457,6 +375,17 @@ const ProductDetail = () => {
           </div>
         </div>
       </div>
+
+      <DeactivateProductDialog
+        product={product}
+        open={showDeactivateDialog}
+        onOpenChange={setShowDeactivateDialog}
+      />
+      <DeleteProductDialog
+        product={product}
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+      />
     </div>
   );
 };

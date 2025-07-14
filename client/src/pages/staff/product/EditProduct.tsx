@@ -8,13 +8,11 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
-import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 
 import { useProduct, useUpdateProduct } from '@/hooks/useProducts';
-import { productService } from '@/services/productService';
 
 // Import components (reuse từ AddProduct)
 import ProductBasicInfo from './components/ProductBasicInfo';
@@ -25,13 +23,25 @@ import ProductTagsAndGifts from './components/ProductTagsAndGifts';
 
 // Validation schema (same as AddProduct)
 const editProductSchema = z.object({
-  name: z.string().min(1, 'Product name is required').max(200, 'Name too long'),
+  name: z
+    .string()
+    .trim()
+    .min(1, 'Product name is required')
+    .max(200, 'Name too long'),
   category: z.string().min(1, 'Category is required'),
-  brand: z.string().min(1, 'Brand is required').max(100, 'Brand name too long'),
+  brand: z
+    .string()
+    .trim()
+    .min(1, 'Brand is required')
+    .max(100, 'Brand name too long'),
   price: z.number().min(1, 'Price must be greater than 0'),
-  originalPrice: z.number().optional(),
+  originalPrice: z
+    .number()
+    .min(0, 'Original price cannot be negative')
+    .optional(),
   description: z
     .string()
+    .trim()
     .min(10, 'Description must be at least 10 characters')
     .max(2000, 'Description too long'),
   specifications: z.object({
@@ -92,7 +102,7 @@ const EditProduct = () => {
       // Reset form with product data
       form.reset({
         name: product.name || '',
-        category: product.category._id || product.category || '',
+        category: product.category._id || '',
         brand: product.brand || '',
         price: product.price || 0,
         originalPrice: product.originalPrice || undefined,

@@ -3,13 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, Save } from 'lucide-react';
+import { Save, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
-import { Separator } from '@/components/ui/separator';
-import { productService } from '@/services/productService';
+import { useAddProduct } from '@/hooks/useProducts';
 
 // Import components
 import ProductBasicInfo from './components/ProductBasicInfo';
@@ -20,13 +19,25 @@ import ProductTagsAndGifts from './components/ProductTagsAndGifts';
 
 // Validation schema
 const addProductSchema = z.object({
-  name: z.string().min(1, 'Product name is required').max(200, 'Name too long'),
+  name: z
+    .string()
+    .trim()
+    .min(1, 'Product name is required')
+    .max(200, 'Name too long'),
   category: z.string().min(1, 'Category is required'),
-  brand: z.string().min(1, 'Brand is required').max(100, 'Brand name too long'),
+  brand: z
+    .string()
+    .trim()
+    .min(1, 'Brand is required')
+    .max(100, 'Brand name too long'),
   price: z.number().min(1, 'Price must be greater than 0'),
-  originalPrice: z.number().optional(),
+  originalPrice: z
+    .number()
+    .min(0, 'Original price cannot be negative')
+    .optional(),
   description: z
     .string()
+    .trim()
     .min(10, 'Description must be at least 10 characters')
     .max(2000, 'Description too long'),
   specifications: z.object({
@@ -43,6 +54,7 @@ export type AddProductFormValues = z.infer<typeof addProductSchema>;
 
 const AddProduct = () => {
   const navigate = useNavigate();
+  const addProduct = useAddProduct();
 
   // Form state
   const [images, setImages] = useState<string[]>([]); // Changed to string array (URLs)
@@ -52,7 +64,6 @@ const AddProduct = () => {
   const [currentGift, setCurrentGift] = useState('');
   const [ingredients, setIngredients] = useState<string[]>([]);
   const [currentIngredient, setCurrentIngredient] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<AddProductFormValues>({
     resolver: zodResolver(addProductSchema),
@@ -80,8 +91,6 @@ const AddProduct = () => {
       return;
     }
 
-    setIsSubmitting(true);
-
     try {
       const payload = {
         ...data,
@@ -94,20 +103,15 @@ const AddProduct = () => {
         },
       };
 
-      const response = await productService.createProduct(payload);
+      await addProduct.mutateAsync(payload);
 
-      if (response) {
-        toast.success('Product has been added successfully!');
-        navigate('/staff/products');
-      } else {
-        toast.error(response.message || 'Failed to add product.');
-      }
-    } catch (error: any) {
+      toast.success('Product has been added successfully!');
+      navigate('/staff/products');
+    } catch (error) {
+      // Lỗi đã được xử lý trong hook, không cần toast ở đây nữa
       console.error('Error adding product:', error);
-      toast.error(error?.message || 'Failed to add product. Please try again.');
-    } finally {
-      setIsSubmitting(false);
     }
+    // ❌ Không cần finally
   };
 
   return (
@@ -123,10 +127,19 @@ const AddProduct = () => {
 
         <Button
           onClick={form.handleSubmit(onSubmit)}
-          disabled={isSubmitting || images.length === 0}
+          disabled={addProduct.isPending || images.length === 0}
         >
-          <Save className="mr-2 h-4 w-4" />
-          {isSubmitting ? 'Creating...' : 'Create Product'}
+          {addProduct.isPending ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Creating...
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              Create Product
+            </>
+          )}
         </Button>
       </div>
 

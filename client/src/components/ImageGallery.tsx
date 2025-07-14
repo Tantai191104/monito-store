@@ -1,5 +1,13 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Package } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Expand, X } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogClose,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface ImageGalleryProps {
   images: string[];
@@ -7,88 +15,121 @@ interface ImageGalleryProps {
 }
 
 const ImageGallery = ({ images, name }: ImageGalleryProps) => {
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [mainImageIndex, setMainImageIndex] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalImageIndex, setModalImageIndex] = useState(0);
 
   if (!images || images.length === 0) {
     return (
       <div className="flex aspect-square w-full items-center justify-center rounded-lg bg-gray-100">
-        <div className="text-center text-gray-500">
-          <Package className="mx-auto h-12 w-12" />
-          <p>No images available</p>
-        </div>
+        <p className="text-gray-500">No Image</p>
       </div>
     );
   }
 
-  const handlePrev = () => {
-    setSelectedIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+  const openModal = (index: number) => {
+    setModalImageIndex(index);
+    setIsModalOpen(true);
   };
 
-  const handleNext = () => {
-    setSelectedIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+  const nextModalImage = () => {
+    setModalImageIndex((prevIndex) => (prevIndex + 1) % images.length);
+  };
+
+  const prevModalImage = () => {
+    setModalImageIndex(
+      (prevIndex) => (prevIndex - 1 + images.length) % images.length,
+    );
   };
 
   return (
-    <div className="space-y-4">
-      <div className="group relative aspect-square w-full overflow-hidden rounded-lg">
+    <div>
+      {/* Main Image */}
+      <div className="group relative aspect-square w-full cursor-pointer overflow-hidden rounded-lg">
         <img
-          src={images[selectedIndex]}
-          alt={`${name} - Image ${selectedIndex + 1}`}
-          className="h-full w-full object-cover"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src =
-              'https://via.placeholder.com/600x600?text=No+Image';
-          }}
+          src={images[mainImageIndex]}
+          alt={`${name} - image ${mainImageIndex + 1}`}
+          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          onClick={() => openModal(mainImageIndex)}
         />
-        {images.length > 1 && (
-          <>
-            <button
-              onClick={handlePrev}
-              className="absolute top-1/2 left-3 -translate-y-1/2 rounded-full bg-white/80 p-2 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-white"
-            >
-              <ChevronLeft className="h-6 w-6" />
-            </button>
-            <button
-              onClick={handleNext}
-              className="absolute top-1/2 right-3 -translate-y-1/2 rounded-full bg-white/80 p-2 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-white"
-            >
-              <ChevronRight className="h-6 w-6" />
-            </button>
-          </>
-        )}
-        {/* Image counter */}
-        {images.length > 1 && (
-          <div className="absolute right-3 bottom-3 rounded-full bg-black/50 px-2 py-1 text-xs text-white">
-            {selectedIndex + 1} / {images.length}
-          </div>
-        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/30 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-black/50"
+          onClick={() => openModal(mainImageIndex)}
+          title="View full screen"
+        >
+          <Expand className="h-4 w-4" />
+        </Button>
       </div>
-      {/* Thumbnail navigation - only show if more than 1 image */}
+
+      {/* Thumbnails */}
       {images.length > 1 && (
-        <div className="grid grid-cols-5 gap-3">
+        <div className="mt-4 grid grid-cols-5 gap-4">
           {images.map((image, index) => (
-            <button
+            <div
               key={index}
-              onClick={() => setSelectedIndex(index)}
-              className={`aspect-square overflow-hidden rounded-md border-2 transition-colors ${
-                index === selectedIndex
+              className={cn(
+                'aspect-square cursor-pointer overflow-hidden rounded-md border-2 transition-all',
+                mainImageIndex === index
                   ? 'border-blue-500'
-                  : 'border-transparent hover:border-gray-300'
-              }`}
+                  : 'border-transparent hover:border-blue-300',
+              )}
+              onClick={() => setMainImageIndex(index)}
             >
               <img
                 src={image}
-                alt={`${name} thumbnail ${index + 1}`}
+                alt={`${name} - thumbnail ${index + 1}`}
                 className="h-full w-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src =
-                    'https://via.placeholder.com/100x100?text=Error';
-                }}
               />
-            </button>
+            </div>
           ))}
         </div>
       )}
+
+      {/* Full Screen Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-4xl p-0">
+          <DialogHeader className="absolute top-2 right-2 z-10">
+            <DialogClose asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-full bg-black/30 text-white hover:bg-black/50"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </DialogClose>
+          </DialogHeader>
+          <div className="relative flex h-[80vh] items-center justify-center bg-black">
+            <img
+              src={images[modalImageIndex]}
+              alt={`${name} - full view ${modalImageIndex + 1}`}
+              className="h-full w-full object-contain"
+            />
+            {images.length > 1 && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute left-4 h-10 w-10 rounded-full bg-black/30 text-white hover:bg-black/50"
+                  onClick={prevModalImage}
+                >
+                  <ChevronLeft className="h-6 w-6" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-4 h-10 w-10 rounded-full bg-black/30 text-white hover:bg-black/50"
+                  onClick={nextModalImage}
+                >
+                  <ChevronRight className="h-6 w-6" />
+                </Button>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

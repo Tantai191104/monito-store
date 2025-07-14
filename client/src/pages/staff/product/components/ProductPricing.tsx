@@ -1,4 +1,3 @@
-// client/src/pages/staff/product/components/ProductPricing.tsx
 import {
   FormField,
   FormItem,
@@ -39,13 +38,20 @@ const ProductPricing = ({ control, watch }: ProductPricingProps) => {
           name="price"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Price (VND)</FormLabel>
+              <FormLabel>
+                Price (VND) <span className="text-red-500">*</span>
+              </FormLabel>
               <FormControl>
                 <Input
                   type="number"
                   placeholder="0"
+                  min={1}
                   {...field}
-                  onChange={(e) => field.onChange(Number(e.target.value))}
+                  value={field.value || ''}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    field.onChange(isNaN(val) ? 0 : val);
+                  }}
                 />
               </FormControl>
               <FormMessage />
@@ -63,12 +69,13 @@ const ProductPricing = ({ control, watch }: ProductPricingProps) => {
                 <Input
                   type="number"
                   placeholder="0"
+                  min={0}
                   {...field}
-                  onChange={(e) =>
-                    field.onChange(
-                      e.target.value ? Number(e.target.value) : undefined,
-                    )
-                  }
+                  value={field.value || ''}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    field.onChange(isNaN(val) ? undefined : val);
+                  }}
                 />
               </FormControl>
               <FormDescription>For discount calculation</FormDescription>
@@ -89,13 +96,20 @@ const ProductPricing = ({ control, watch }: ProductPricingProps) => {
           name="stock"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Stock</FormLabel>
+              <FormLabel>
+                Stock <span className="text-red-500">*</span>
+              </FormLabel>
               <FormControl>
                 <Input
                   type="number"
                   placeholder="0"
+                  min={0}
                   {...field}
-                  onChange={(e) => field.onChange(Number(e.target.value))}
+                  value={field.value || ''}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    field.onChange(isNaN(val) ? 0 : val);
+                  }}
                 />
               </FormControl>
               <FormMessage />
