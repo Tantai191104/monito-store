@@ -186,12 +186,8 @@ const ProfilePage = () => {
       setPasswordSuccess(true);
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setTimeout(() => {
-        // Assuming logout is part of useAuth or passed as a prop
-        // For now, we'll just set showSuccess and setTimeout
-        // If logout is a separate function, it needs to be imported or passed
-        // setShowSuccess(true); 
-        // setTimeout(() => setShowSuccess(false), 3000);
-      }, 1500);
+        setPasswordSuccess(false);
+      }, 3000);
     } catch (err: any) {
       setPasswordError(err?.response?.data?.message || 'Failed to change password.');
     } finally {
