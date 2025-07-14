@@ -1,10 +1,13 @@
 import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowRightIcon, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useProducts } from '@/hooks/useProducts';
 import ProductCard from '@/pages/main/products/components/ProductCard';
 
 const ProductSection = () => {
+  const navigate = useNavigate();
+  
   const params = useMemo(() => {
     const p = new URLSearchParams();
     p.append('limit', '8');
@@ -16,6 +19,10 @@ const ProductSection = () => {
 
   const { data, isLoading, error } = useProducts(params);
   const products = data?.products || [];
+
+  const handleViewMore = () => {
+    navigate('/products');
+  };
 
   return (
     <section className="bg-[#FDFDFD] px-8 py-16">
@@ -30,6 +37,7 @@ const ProductSection = () => {
           <Button
             variant="outline"
             className="border-[#003459] bg-transparent text-[#003459] hover:bg-[#003459] hover:text-white"
+            onClick={handleViewMore}
           >
             View more
             <ArrowRightIcon className="ml-2 size-4" />

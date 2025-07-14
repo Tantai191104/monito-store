@@ -32,8 +32,12 @@ export const useAuth = () => {
   const { data: user, isLoading } = useQuery({
     queryKey: ['auth-user'],
     queryFn: async () => {
-      const response = await authService.getCurrentUser();
-      return response.data?.user;
+      try {
+        const user = await authService.getCurrentUser();
+        return user ?? null; // Always return null if user is undefined
+      } catch {
+        return null; // Return null on error
+      }
     },
     enabled: hasToken,
   });
