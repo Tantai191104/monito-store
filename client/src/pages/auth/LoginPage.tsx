@@ -105,12 +105,12 @@ const LoginPage = () => {
               <FormItem>
                 <div className="flex items-center justify-between">
                   <FormLabel>Password</FormLabel>
-                  <a
-                    href=""
+                  <Link
+                    to="/forgot-password"
                     className="text-sm underline-offset-4 hover:underline"
                   >
                     Forgot your password?
-                  </a>
+                  </Link>
                 </div>
                 <FormControl>
                   <Input

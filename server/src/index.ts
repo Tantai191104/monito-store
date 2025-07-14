@@ -12,9 +12,26 @@ import express, { NextFunction, Request, Response } from 'express';
 import { connectDB } from './config/connectDB';
 
 /**
+ * Services
+ */
+import { emailService } from './services/emailService';
+
+/**
  * Import Middlewares
  */
 import { errorHandler } from './middlewares/errorHandler';
+
+/**
+ * Import Models (to ensure they are registered)
+ */
+import './models/userModel';
+import './models/productModel';
+import './models/petModel';
+import './models/breedModel';
+import './models/colorModel';
+import './models/categoryModel';
+import './models/orderModel';
+import './models/paymentTransactionModel';
 
 /**
  * Routes
@@ -28,6 +45,8 @@ import colorRoute from './routes/colorRoute';
 import categoryRoute from './routes/categoryRoute';
 import uploadRoute from './routes/uploadRoute';
 import staffRoutes from './routes/staffRoutes';
+import orderRoute from './routes/orderRoute';
+import paymentRoute from './routes/paymentRoute';
 
 /**
  * App
@@ -67,6 +86,8 @@ app.use(`${BASE_PATH}/colors`, colorRoute);
 app.use(`${BASE_PATH}/categories`, categoryRoute);
 app.use(`${BASE_PATH}/upload`, uploadRoute);
 app.use(`${BASE_PATH}/staff`, staffRoutes);
+app.use(`${BASE_PATH}/orders`, orderRoute);
+app.use(`${BASE_PATH}/payment`, paymentRoute);
 
 /**
  * Error Handler
@@ -76,4 +97,5 @@ app.use(errorHandler);
 app.listen(PORT, async () => {
   console.log(`Server is running on http://localhost:${PORT}`);
   await connectDB();
+  await emailService.verifyConnection();
 });

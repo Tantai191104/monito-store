@@ -30,6 +30,10 @@ export interface UserDocument extends Document {
   orders?: number;
   totalSpent?: number;
 
+  // ✅ Password reset fields
+  resetPasswordToken?: string;
+  resetPasswordExpires?: Date;
+
   comparePassword(value: string): Promise<boolean>;
 }
 
@@ -146,6 +150,16 @@ const userSchema = new Schema<UserDocument>(
       type: Number,
       default: 0,
       min: [0, 'Total spent cannot be negative'],
+    },
+
+    // ✅ Password reset fields
+    resetPasswordToken: {
+      type: String,
+      default: null,
+    },
+    resetPasswordExpires: {
+      type: Date,
+      default: null,
     },
   },
   {

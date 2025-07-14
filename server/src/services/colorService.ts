@@ -18,6 +18,7 @@ import PetModel from '../models/petModel'; // ✅ Import PetModel for constraint
  * Utils
  */
 import { NotFoundException, BadRequestException } from '../utils/errors';
+import { ERROR_CODE_ENUM } from '../constants';
 
 export const colorService = {
   /**
@@ -151,7 +152,7 @@ export const colorService = {
     if (petsUsingColor > 0) {
       throw new BadRequestException(
         `Cannot delete color "${color.name}" because it is being used by ${petsUsingColor} pet(s). Please reassign or delete these pets first.`,
-        'COLOR_IN_USE' as any,
+        ERROR_CODE_ENUM.COLOR_IN_USE,
       );
     }
 
