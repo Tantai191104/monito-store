@@ -72,6 +72,18 @@ export const useDeleteProduct = () => {
       queryClient.invalidateQueries({ queryKey: productKeys.all });
     },
     onError: (error: any) => {
+      const apiError = error.response?.data as ApiError;
+      // ✅ Handle specific constraint violation error
+      if (apiError?.errorCode === 'PRODUCT_IN_USE') {
+        toast.error(apiError.message, {
+          description:
+            'Products that have been ordered cannot be deleted to preserve order history.',
+          duration: 6000,
+        });
+      } else {
+        const message = getErrorMessage(apiError?.errorCode, apiError?.message);
+        toast.error(message || 'Failed to delete product.');
+      }
       console.error('Delete product error:', error);
       throw error;
     },

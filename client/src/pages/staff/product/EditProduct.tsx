@@ -102,7 +102,7 @@ const EditProduct = () => {
       // Reset form with product data
       form.reset({
         name: product.name || '',
-        category: product.category._id || product.category || '',
+        category: product.category._id || '',
         brand: product.brand || '',
         price: product.price || 0,
         originalPrice: product.originalPrice || undefined,
