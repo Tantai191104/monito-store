@@ -1,5 +1,12 @@
 import type { ColumnDef, RowData } from '@tanstack/react-table';
-import { ArrowUpDown, MoreHorizontal, Eye, Edit, Trash2 } from 'lucide-react';
+import {
+  ArrowUpDown,
+  MoreHorizontal,
+  Eye,
+  Edit,
+  Trash2,
+  EyeOff,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -11,14 +18,80 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { DeactivateProductDialog } from './DeactivateProductDialog'; // ✅ Import
+import { DeleteProductDialog } from './DeleteProductDialog'; // ✅ Import
 import { Badge } from '@/components/ui/badge';
 import type { Product } from '@/types/product';
+import { useState } from 'react';
 
 // Add this declaration to extend the table's meta type
 declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
     requestDelete?: (product: TData) => void;
   }
+}
+
+function ProductActionsCell({ product }: { product: Product }) {
+  const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuItem asChild>
+            <Link to={`/staff/products/${product._id}`}>
+              <Eye className="mr-2 h-4 w-4" />
+              View Details
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to={`/staff/products/${product._id}/edit`}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          {/* ✅ Activate/Deactivate Action */}
+          <DropdownMenuItem onClick={() => setDeactivateDialogOpen(true)}>
+            {product.isActive ? (
+              <EyeOff className="mr-2 h-4 w-4" />
+            ) : (
+              <Eye className="mr-2 h-4 w-4" />
+            )}
+            {product.isActive ? 'Deactivate' : 'Activate'}
+          </DropdownMenuItem>
+          {/* ✅ Delete Action */}
+          <DropdownMenuItem
+            onClick={() => setDeleteDialogOpen(true)}
+            className="text-red-600 focus:text-red-600"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* ✅ Dialogs */}
+      <DeactivateProductDialog
+        product={product}
+        open={deactivateDialogOpen}
+        onOpenChange={setDeactivateDialogOpen}
+      />
+      <DeleteProductDialog
+        product={product}
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+      />
+    </>
+  );
 }
 
 export const productColumns: ColumnDef<Product>[] = [
@@ -210,54 +283,9 @@ export const productColumns: ColumnDef<Product>[] = [
   {
     id: 'actions',
     header: 'Actions',
-    cell: ({ row, table }) => {
+    cell: ({ row }) => {
       const product = row.original;
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(product._id)}
-            >
-              Copy product ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link
-                to={`/staff/products/${product._id}`}
-                className="flex cursor-pointer items-center"
-              >
-                <Eye className="mr-2 h-4 w-4" />
-                View details
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link
-                to={`/staff/products/${product._id}/edit`}
-                className="flex cursor-pointer items-center"
-              >
-                <Edit className="mr-2 h-4 w-4" />
-                Edit product
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="flex cursor-pointer items-center text-red-600"
-              onClick={() => table.options.meta?.requestDelete?.(product)}
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete product
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
+      return <ProductActionsCell product={product} />;
     },
   },
 ];

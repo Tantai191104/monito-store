@@ -17,11 +17,8 @@ import {
  */
 import ProductModel from '../models/productModel';
 import CategoryModel from '../models/categoryModel';
-
-/**
- * Utils
- */
-import { NotFoundException, BadRequestException } from '../utils/errors';
+import OrderModel from '../models/orderModel'; // ✅ Import OrderModel
+import { BadRequestException, NotFoundException } from '../utils/errors';
 import { ERROR_CODE_ENUM } from '../constants';
 
 export const productService = {
@@ -222,6 +219,18 @@ export const productService = {
           throw new NotFoundException(
             'Product not found',
             ERROR_CODE_ENUM.PRODUCT_NOT_FOUND,
+          );
+        }
+
+        // ✅ Check if the product is used in any orders
+        const orderCount = await OrderModel.countDocuments({
+          'items.item': productId,
+        }).session(session);
+
+        if (orderCount > 0) {
+          throw new BadRequestException(
+            `Cannot delete product "${product.name}" because it is part of ${orderCount} order(s). Please deactivate it instead.`,
+            'PRODUCT_IN_USE',
           );
         }
 

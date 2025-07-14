@@ -53,6 +53,8 @@ import EditProduct from '@/pages/staff/product/EditProduct';
 import ProductDetailPage from '@/pages/main/products/ProductDetailPage';
 import NotFoundPage from '@/pages/common/NotFoundPage';
 import AboutPage from '@/pages/main/about/AboutPage';
+import ContactPage from '@/pages/main/contact/ContactPage';
+import ProfilePage from '@/pages/profile/ProfilePage';
 import CartPage from '@/pages/customer/CartPage';
 import CheckoutPage from '@/pages/customer/CheckoutPage';
 import OrdersPage from '@/pages/customer/OrdersPage';
@@ -123,6 +125,7 @@ const AppRoutes = () => {
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/products/:id" element={<ProductDetailPage />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
       </Route>
 
       {/* ✅ Customer-only Routes - cần đăng nhập */}
@@ -134,7 +137,7 @@ const AppRoutes = () => {
           <Route index element={<Navigate replace to="/" />} />
           <Route
             path="profile"
-            element={<div>Profile Page - Coming Soon</div>}
+            element={<ProfilePage />}
           />
           <Route path="cart" element={<CartPage />} />
           <Route path="checkout" element={<CheckoutPage />} />
@@ -179,6 +182,7 @@ const AppRoutes = () => {
           <Route path="categories" element={<CategoriesManagement />} />
           <Route path="colors" element={<ColorsManagement />} />
           <Route path="breeds" element={<BreedsManagement />} />
+          <Route path="profile" element={<ProfilePage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Route>
@@ -192,6 +196,7 @@ const AppRoutes = () => {
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<UserManagement />} />
           <Route path="staff" element={<StaffManagement />} />
+          <Route path="profile" element={<ProfilePage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Route>
