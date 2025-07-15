@@ -91,7 +91,7 @@ export function EditBreedDialog({
   const onSubmit = async (data: BreedFormValues) => {
     // Kiểm tra trùng lặp tên breed (không phân biệt hoa/thường, loại bỏ khoảng trắng), loại trừ chính breed đang sửa
     const isNameDuplicate = breeds.some(
-      (breed) => breed._id !== breed._id && breed.name.trim().toLowerCase() === data.name.trim().toLowerCase()
+      (b) => b._id !== breed._id && b.name.trim().toLowerCase() === data.name.trim().toLowerCase()
     );
     if (isNameDuplicate) {
       setNameError('This breed name already exists.');
