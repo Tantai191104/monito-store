@@ -71,6 +71,7 @@ export function AddColorDialog({ trigger }: AddColorDialogProps) {
   const createColor = useCreateColor();
   const { data: colors = [] } = useColors();
   const [hexCodeError, setHexCodeError] = useState<string | null>(null);
+  const [nameError, setNameError] = useState<string | null>(null);
 
   const form = useForm<ColorFormValues>({
     resolver: zodResolver(colorSchema),
@@ -84,14 +85,24 @@ export function AddColorDialog({ trigger }: AddColorDialogProps) {
   const watchedHexCode = form.watch('hexCode');
 
   const onSubmit = async (data: ColorFormValues) => {
-    const isDuplicate = colors.some(
+    const isHexDuplicate = colors.some(
       (color) => color.hexCode.toLowerCase() === data.hexCode.trim().toLowerCase()
     );
-    if (isDuplicate) {
+    if (isHexDuplicate) {
       setHexCodeError('This hex code already exists.');
-      return;
     } else {
       setHexCodeError(null);
+    }
+    const isNameDuplicate = colors.some(
+      (color) => color.name.trim().toLowerCase() === data.name.trim().toLowerCase()
+    );
+    if (isNameDuplicate) {
+      setNameError('This color name already exists.');
+    } else {
+      setNameError(null);
+    }
+    if (isHexDuplicate || isNameDuplicate) {
+      return;
     }
     try {
       await createColor.mutateAsync({
@@ -220,6 +231,9 @@ export function AddColorDialog({ trigger }: AddColorDialogProps) {
                     Choose a descriptive name for the color
                   </FormDescription>
                   <FormMessage />
+                  {nameError && (
+                    <div className="text-sm text-red-600 mt-1">{nameError}</div>
+                  )}
                 </FormItem>
               )}
             />

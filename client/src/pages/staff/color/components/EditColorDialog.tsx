@@ -82,6 +82,7 @@ export function EditColorDialog({
   const updateColor = useUpdateColor();
   const { data: colors = [] } = useColors();
   const [hexCodeError, setHexCodeError] = useState<string | null>(null);
+  const [nameError, setNameError] = useState<string | null>(null);
 
   // Determine if controlled or uncontrolled
   const isControlled = controlledOpen !== undefined;
@@ -113,14 +114,24 @@ export function EditColorDialog({
   }, [color, form, open]);
 
   const onSubmit = async (data: ColorFormValues) => {
-    const isDuplicate = colors.some(
+    const isHexDuplicate = colors.some(
       (c) => c._id !== color._id && c.hexCode.toLowerCase() === data.hexCode.trim().toLowerCase()
     );
-    if (isDuplicate) {
+    if (isHexDuplicate) {
       setHexCodeError('This hex code already exists.');
-      return;
     } else {
       setHexCodeError(null);
+    }
+    const isNameDuplicate = colors.some(
+      (c) => c._id !== color._id && c.name.trim().toLowerCase() === data.name.trim().toLowerCase()
+    );
+    if (isNameDuplicate) {
+      setNameError('This color name already exists.');
+    } else {
+      setNameError(null);
+    }
+    if (isHexDuplicate || isNameDuplicate) {
+      return;
     }
     try {
       await updateColor.mutateAsync({
@@ -246,6 +257,9 @@ export function EditColorDialog({
                     Choose a descriptive name for the color
                   </FormDescription>
                   <FormMessage />
+                  {nameError && (
+                    <div className="text-sm text-red-600 mt-1">{nameError}</div>
+                  )}
                 </FormItem>
               )}
             />
