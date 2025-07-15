@@ -21,6 +21,9 @@ const ProductInfo = ({ product }: { product: Product }) => {
       setIsAddingToCart(false);
     }
   };
+  const handleZaloContact = () => {
+    window.open('https://zalo.me/0352195876', '_blank');
+  };
 
   return (
     <div className="space-y-6">
@@ -43,6 +46,7 @@ const ProductInfo = ({ product }: { product: Product }) => {
           {isAddingToCart ? 'Adding...' : 'Add to cart'}
         </Button>
         <Button
+          onClick={handleZaloContact}
           size="lg"
           variant="outline"
           className="flex-1 border-[#003459] text-[#003459] hover:bg-[#003459] hover:text-white"
