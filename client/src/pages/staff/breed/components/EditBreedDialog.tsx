@@ -25,7 +25,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useUpdateBreed } from '@/hooks/useBreeds';
+import { useUpdateBreed, useBreeds } from '@/hooks/useBreeds';
 import type { Breed } from '@/types/breed';
 
 // ✅ Schema validation for breed editing
@@ -61,6 +61,8 @@ export function EditBreedDialog({
 }: EditBreedDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const updateBreed = useUpdateBreed();
+  const { data: breeds = [] } = useBreeds();
+  const [nameError, setNameError] = useState<string | null>(null);
 
   // Use controlled state if provided, otherwise use internal state
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
@@ -87,6 +89,16 @@ export function EditBreedDialog({
   }, [breed, form, open]);
 
   const onSubmit = async (data: BreedFormValues) => {
+    // Kiểm tra trùng lặp tên breed (không phân biệt hoa/thường, loại bỏ khoảng trắng), loại trừ chính breed đang sửa
+    const isNameDuplicate = breeds.some(
+      (breed) => breed._id !== breed._id && breed.name.trim().toLowerCase() === data.name.trim().toLowerCase()
+    );
+    if (isNameDuplicate) {
+      setNameError('This breed name already exists.');
+      return;
+    } else {
+      setNameError(null);
+    }
     try {
       await updateBreed.mutateAsync({
         id: breed._id,
@@ -97,7 +109,7 @@ export function EditBreedDialog({
         },
       });
       setOpen(false);
-    } catch (error) {
+    } catch {
       // Error is handled in the mutation
     }
   };
@@ -143,6 +155,9 @@ export function EditBreedDialog({
                       Choose a descriptive name for your breed
                     </FormDescription>
                     <FormMessage />
+                    {nameError && (
+                      <div className="text-sm text-red-600 mt-1">{nameError}</div>
+                    )}
                   </FormItem>
                 )}
               />

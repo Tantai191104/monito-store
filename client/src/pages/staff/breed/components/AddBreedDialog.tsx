@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useCreateBreed } from '@/hooks/useBreeds';
+import { useCreateBreed, useBreeds } from '@/hooks/useBreeds';
 
 // ✅ Schema validation for breed
 const breedSchema = z.object({
@@ -50,6 +50,8 @@ interface AddBreedDialogProps {
 export function AddBreedDialog({ trigger }: AddBreedDialogProps) {
   const [open, setOpen] = useState(false);
   const createBreed = useCreateBreed();
+  const { data: breeds = [] } = useBreeds();
+  const [nameError, setNameError] = useState<string | null>(null);
 
   const form = useForm<BreedFormValues>({
     resolver: zodResolver(breedSchema),
@@ -60,6 +62,16 @@ export function AddBreedDialog({ trigger }: AddBreedDialogProps) {
   });
 
   const onSubmit = async (data: BreedFormValues) => {
+    // Kiểm tra trùng lặp tên breed (không phân biệt hoa/thường, loại bỏ khoảng trắng)
+    const isNameDuplicate = breeds.some(
+      (breed) => breed.name.trim().toLowerCase() === data.name.trim().toLowerCase()
+    );
+    if (isNameDuplicate) {
+      setNameError('This breed name already exists.');
+      return;
+    } else {
+      setNameError(null);
+    }
     try {
       await createBreed.mutateAsync({
         name: data.name,
@@ -67,7 +79,7 @@ export function AddBreedDialog({ trigger }: AddBreedDialogProps) {
       });
       form.reset();
       setOpen(false);
-    } catch (error) {
+    } catch {
       // Error is handled in the mutation
     }
   };
@@ -109,6 +121,9 @@ export function AddBreedDialog({ trigger }: AddBreedDialogProps) {
                     Choose a descriptive name for your breed
                   </FormDescription>
                   <FormMessage />
+                  {nameError && (
+                    <div className="text-sm text-red-600 mt-1">{nameError}</div>
+                  )}
                 </FormItem>
               )}
             />
