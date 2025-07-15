@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Edit, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 import {
   Dialog,
@@ -25,7 +25,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useUpdateCategory } from '@/hooks/useCategories';
+import { useUpdateCategory, useCategories } from '@/hooks/useCategories';
 import type { Category } from '@/types/category';
 
 const categorySchema = z.object({
@@ -61,6 +61,8 @@ export function EditCategoryDialog({
   // ✅ Use internal state only if not controlled
   const [internalOpen, setInternalOpen] = useState(false);
   const updateCategory = useUpdateCategory();
+  const { data: categories = [] } = useCategories();
+  const [nameError, setNameError] = useState<string | null>(null);
 
   // ✅ Determine if controlled or uncontrolled
   const isControlled = controlledOpen !== undefined;
@@ -88,6 +90,16 @@ export function EditCategoryDialog({
   }, [category, form, open]);
 
   const onSubmit = async (data: CategoryFormValues) => {
+    // Kiểm tra trùng lặp tên category (không phân biệt hoa/thường, loại bỏ khoảng trắng), loại trừ chính category đang sửa
+    const isDuplicate = categories.some(
+      (cat) => cat._id !== category._id && cat.name.trim().toLowerCase() === data.name.trim().toLowerCase()
+    );
+    if (isDuplicate) {
+      setNameError('This category name already exists.');
+      return;
+    } else {
+      setNameError(null);
+    }
     try {
       await updateCategory.mutateAsync({
         id: category._id,
@@ -98,7 +110,7 @@ export function EditCategoryDialog({
         },
       });
       setOpen(false);
-    } catch (error) {
+    } catch {
       // Error is handled in the mutation
     }
   };
@@ -133,6 +145,9 @@ export function EditCategoryDialog({
                     <Input placeholder="e.g., Dog Food, Cat Toys" {...field} />
                   </FormControl>
                   <FormMessage />
+                  {nameError && (
+                    <div className="text-sm text-red-600 mt-1">{nameError}</div>
+                  )}
                 </FormItem>
               )}
             />
