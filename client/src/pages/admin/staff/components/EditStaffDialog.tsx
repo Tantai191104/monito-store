@@ -32,7 +32,7 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useUpdateStaff } from '@/hooks/useStaff';
-import { DEPARTMENTS, PERMISSIONS } from '@/types/staff';
+import { DEPARTMENTS, PERMISSIONS, POSITIONS } from '@/types/staff';
 import type { Staff } from '@/types/staff';
 
 const editStaffSchema = z.object({
@@ -46,14 +46,21 @@ const editStaffSchema = z.object({
     .trim()
     .email('Invalid email format')
     .min(1, 'Email is required'),
-  phone: z.string().trim().optional().or(z.literal('')),
+  phone: z
+    .string()
+    .trim()
+    .min(1, 'Phone number is required')
+    .regex(
+      /^\+?(\d{1,3})?[-. (]*\d{3}[-. )]*\d{3}[-. ]*\d{4}$/,
+      'Invalid phone number format',
+    ),
   department: z.string().min(1, 'Department is required'),
   position: z
     .string()
     .trim()
     .min(1, 'Position is required')
     .max(50, 'Position must be less than 50 characters'),
-  permissions: z.array(z.string()).default([]),
+  permissions: z.array(z.string()),
   isActive: z.boolean(),
 });
 
@@ -136,7 +143,7 @@ export function EditStaffDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
 
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
+      <DialogContent className="overflow-y-auto sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Edit className="h-5 w-5" />
@@ -192,7 +199,7 @@ export function EditStaffDialog({
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Phone Number</FormLabel>
+                    <FormLabel>Phone Number *</FormLabel>
                     <FormControl>
                       <Input placeholder="e.g., +1 (555) 123-4567" {...field} />
                     </FormControl>
@@ -218,7 +225,7 @@ export function EditStaffDialog({
                         defaultValue={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select department" />
                           </SelectTrigger>
                         </FormControl>
@@ -241,12 +248,23 @@ export function EditStaffDialog({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Position *</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="e.g., Senior Staff, Manager"
-                          {...field}
-                        />
-                      </FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select position" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {POSITIONS.map((pos) => (
+                            <SelectItem key={pos} value={pos}>
+                              {pos}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

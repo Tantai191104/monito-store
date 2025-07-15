@@ -23,7 +23,9 @@ export const ERROR_MESSAGES = {
   TOKEN_EXPIRED: 'Session expired. Please login again.',
   INVALID_TOKEN: 'Invalid token provided.',
 
-  AUTH_EMAIL_ALREADY_EXISTS: 'Email already exists. Please try another email.',
+  AUTH_EMAIL_ALREADY_EXISTS: 'Email already exists.',
+  STAFF_NAME_ALREADY_EXISTS: 'Staff name already exists.',
+  STAFF_PHONE_ALREADY_EXISTS: 'Phone number already exists.',
   AUTH_INVALID_TOKEN: 'Invalid authentication token.',
   AUTH_USER_NOT_FOUND: 'Account not found.',
   AUTH_NOT_FOUND: 'Authentication not found.',

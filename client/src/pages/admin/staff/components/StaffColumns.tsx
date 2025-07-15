@@ -24,6 +24,13 @@ import type { Staff } from '@/types/staff';
 import { EditStaffDialog } from './EditStaffDialog';
 import { useDeleteStaff, useUpdateStaff } from '@/hooks/useStaff';
 
+// ✅ Thêm khai báo này để TypeScript hiểu rõ hơn về table meta
+declare module '@tanstack/react-table' {
+  interface ColumnMeta<TData, TValue> {
+    // Bạn có thể thêm các thuộc tính meta tùy chỉnh ở đây nếu cần
+  }
+}
+
 export const staffColumns: ColumnDef<Staff>[] = [
   // ✅ Selection column
   {
@@ -169,12 +176,12 @@ export const staffColumns: ColumnDef<Staff>[] = [
                 <TooltipContent side="top" className="max-w-[300px]">
                   <div className="space-y-1">
                     <p className="font-medium">All Permissions:</p>
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-1 pb-2">
                       {permissions.map((permission) => (
                         <Badge
                           key={permission}
                           variant="outline"
-                          className="text-xs"
+                          className="text-xs text-white"
                         >
                           {permission}
                         </Badge>

@@ -67,6 +67,11 @@ const userSchema = new Schema<UserDocument>(
       type: String,
       trim: true,
       maxLength: [20, 'Phone number must be less than 20 characters'],
+      unique: true,
+      sparse: true, // ✅ Allow multiple nulls, but enforce uniqueness on provided values
+      required: function (this: UserDocument) {
+        return this.role === 'staff';
+      },
     },
     isActive: {
       type: Boolean,

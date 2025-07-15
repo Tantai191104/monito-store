@@ -185,7 +185,11 @@ export function StaffDataTable<TData extends Staff, TValue>({
   };
 
   if (isLoading) {
-    return <TableSkeleton />;
+    return (
+      <div className={cn('', className)}>
+        <TableSkeleton />
+      </div>
+    );
   }
 
   return (
@@ -209,6 +213,7 @@ export function StaffDataTable<TData extends Staff, TValue>({
           </div>
 
           {/* Department Filter */}
+          {/* NOTE: NEU CO BAO LOI VUI LONG KE ME DOAN PHAN NAY */}
           <Select
             value={
               (table.getColumn('department')?.getFilterValue() as string) ??
@@ -268,7 +273,6 @@ export function StaffDataTable<TData extends Staff, TValue>({
                 table.getColumn('department')?.setFilterValue('');
                 table.getColumn('isActive')?.setFilterValue('');
               }}
-              className="h-8 px-2 lg:px-3"
             >
               Reset
             </Button>
@@ -290,7 +294,7 @@ export function StaffDataTable<TData extends Staff, TValue>({
                 onClick={handleBulkActivate}
                 className="text-green-600"
               >
-                <Eye className="mr-2 h-4 w-4" />
+                <Eye className="h-4 w-4" />
                 Activate
               </Button>
 
@@ -300,7 +304,7 @@ export function StaffDataTable<TData extends Staff, TValue>({
                 onClick={handleBulkDeactivate}
                 className="text-orange-600"
               >
-                <EyeOff className="mr-2 h-4 w-4" />
+                <EyeOff className="h-4 w-4" />
                 Deactivate
               </Button>
 
@@ -310,23 +314,17 @@ export function StaffDataTable<TData extends Staff, TValue>({
                 onClick={handleBulkDelete}
                 className="text-red-600"
               >
-                <Trash2 className="mr-2 h-4 w-4" />
+                <Trash2 className="h-4 w-4" />
                 Delete
               </Button>
             </div>
           )}
 
-          {/* Export button */}
-          <Button variant="outline" size="sm">
-            <Download className="mr-2 h-4 w-4" />
-            Export
-          </Button>
-
           {/* Add staff button */}
           <AddStaffDialog
             trigger={
-              <Button size="sm">
-                <Plus className="mr-2 h-4 w-4" />
+              <Button>
+                <Plus className="h-4 w-4" />
                 Add Staff
               </Button>
             }

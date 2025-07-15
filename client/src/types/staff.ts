@@ -52,6 +52,18 @@ export const DEPARTMENTS = [
   'Marketing',
 ] as const;
 
+export const POSITIONS = [
+  'Store Manager',
+  'Assistant Manager',
+  'Sales Associate',
+  'Pet Care Specialist',
+  'Professional Groomer',
+  'Inventory Coordinator',
+  'Customer Support Agent',
+  'Marketing Specialist',
+  'Content Creator',
+];
+
 export const PERMISSIONS = [
   'products',
   'pets',

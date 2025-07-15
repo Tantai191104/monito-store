@@ -17,6 +17,7 @@ import UserModel from '../models/userModel';
  * Utils
  */
 import { NotFoundException, BadRequestException } from '../utils/errors';
+import { ERROR_CODE_ENUM } from '../constants';
 
 export const staffService = {
   /**
@@ -26,13 +27,37 @@ export const staffService = {
     const session = await mongoose.startSession();
     try {
       return await session.withTransaction(async () => {
-        // Check if email already exists
-        const existingUser = await UserModel.findOne({
+        // ✅ Step 1: Check for existing email
+        const existingEmail = await UserModel.findOne({
           email: data.email,
         }).session(session);
+        if (existingEmail) {
+          throw new BadRequestException(
+            'Email already exists',
+            ERROR_CODE_ENUM.AUTH_EMAIL_ALREADY_EXISTS,
+          );
+        }
 
-        if (existingUser) {
-          throw new BadRequestException('Email already exists');
+        // ✅ Step 2: Check for existing name
+        const existingName = await UserModel.findOne({
+          name: data.name,
+        }).session(session);
+        if (existingName) {
+          throw new BadRequestException(
+            'Staff name already exists',
+            ERROR_CODE_ENUM.STAFF_NAME_ALREADY_EXISTS,
+          );
+        }
+
+        // ✅ Step 3: Check for existing phone
+        const existingPhone = await UserModel.findOne({
+          phone: data.phone,
+        }).session(session);
+        if (existingPhone) {
+          throw new BadRequestException(
+            'Phone number already exists',
+            ERROR_CODE_ENUM.STAFF_PHONE_ALREADY_EXISTS,
+          );
         }
 
         const newStaff = new UserModel({
@@ -48,11 +73,25 @@ export const staffService = {
       if (error.code === 11000) {
         const duplicateField = Object.keys(error.keyPattern)[0];
         if (duplicateField === 'email') {
-          throw new BadRequestException('Email already exists');
+          throw new BadRequestException(
+            'Email already exists',
+            ERROR_CODE_ENUM.AUTH_EMAIL_ALREADY_EXISTS,
+          );
         } else if (duplicateField === 'name') {
-          throw new BadRequestException('Username already exists');
+          throw new BadRequestException(
+            'Username already exists',
+            ERROR_CODE_ENUM.STAFF_NAME_ALREADY_EXISTS,
+          );
+        } else if (duplicateField === 'phone') {
+          throw new BadRequestException(
+            'Phone number already exists',
+            ERROR_CODE_ENUM.STAFF_PHONE_ALREADY_EXISTS,
+          );
         }
-        throw new BadRequestException('User already exists');
+        throw new BadRequestException(
+          'A user with the same information already exists.',
+          ERROR_CODE_ENUM.RESOURCE_CONFLICT,
+        );
       }
       throw error;
     } finally {
@@ -128,6 +167,40 @@ export const staffService = {
           throw new NotFoundException('Staff member not found');
         }
 
+        if (data.email && data.email !== staff.email) {
+          const existingUser = await UserModel.findOne({
+            email: data.email,
+          }).session(session);
+          if (existingUser) {
+            throw new BadRequestException(
+              'Email already exists',
+              ERROR_CODE_ENUM.AUTH_EMAIL_ALREADY_EXISTS,
+            );
+          }
+        }
+        if (data.name && data.name !== staff.name) {
+          const existingUser = await UserModel.findOne({
+            name: data.name,
+          }).session(session);
+          if (existingUser) {
+            throw new BadRequestException(
+              'Staff name already exists',
+              ERROR_CODE_ENUM.STAFF_NAME_ALREADY_EXISTS,
+            );
+          }
+        }
+        if (data.phone && data.phone !== staff.phone) {
+          const existingUser = await UserModel.findOne({
+            phone: data.phone,
+          }).session(session);
+          if (existingUser) {
+            throw new BadRequestException(
+              'Phone number already exists',
+              ERROR_CODE_ENUM.STAFF_PHONE_ALREADY_EXISTS,
+            );
+          }
+        }
+
         // Update fields
         Object.assign(staff, data);
         await staff.save({ session });
@@ -138,11 +211,25 @@ export const staffService = {
       if (error.code === 11000) {
         const duplicateField = Object.keys(error.keyPattern)[0];
         if (duplicateField === 'email') {
-          throw new BadRequestException('Email already exists');
+          throw new BadRequestException(
+            'Email already exists',
+            ERROR_CODE_ENUM.AUTH_EMAIL_ALREADY_EXISTS,
+          );
         } else if (duplicateField === 'name') {
-          throw new BadRequestException('Username already exists');
+          throw new BadRequestException(
+            'Staff name already exists',
+            ERROR_CODE_ENUM.STAFF_NAME_ALREADY_EXISTS,
+          );
+        } else if (duplicateField === 'phone') {
+          throw new BadRequestException(
+            'Phone number already exists',
+            ERROR_CODE_ENUM.STAFF_PHONE_ALREADY_EXISTS,
+          );
         }
-        throw new BadRequestException('User already exists');
+        throw new BadRequestException(
+          'A user with the same information already exists.',
+          ERROR_CODE_ENUM.RESOURCE_CONFLICT,
+        );
       }
       throw error;
     } finally {
