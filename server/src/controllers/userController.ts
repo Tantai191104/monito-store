@@ -73,13 +73,13 @@ export const userController = {
   ): Promise<void> {
     try {
       const { userId } = req.params;
-      const { isActive } = req.body;
+      const { isActive, reason, email } = req.body;
 
       if (typeof isActive !== 'boolean') {
         throw new BadRequestException('isActive must be a boolean');
       }
 
-      const updatedUser = await userService.updateUserStatus(userId, isActive);
+      const updatedUser = await userService.updateUserStatus(userId, isActive, reason, email);
 
       res.status(STATUS_CODE.OK).json({
         success: true,

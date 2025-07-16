@@ -1,27 +1,19 @@
 /**
  * Node modules
- */
+*/
 import { Link, useLocation } from 'react-router-dom';
 import {
   ShoppingCart,
   User,
   LogOut,
-  Settings,
-  Heart,
-  Package,
-  History,
-  CreditCard,
-  Bell,
+  Settings, Package
 } from 'lucide-react';
-import { useState } from 'react';
-
 /**
  * Components
  */
 import { Logo } from '@/components/Logo';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/contexts/CartContext';
@@ -47,13 +39,6 @@ export const Header = () => {
   const location = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
   const { state: cartState } = useCart();
-
-  const isActive = (path: string) => {
-    if (path === '/') {
-      return location.pathname === '/';
-    }
-    return location.pathname.startsWith(path);
-  };
 
   const handleLogout = async () => {
     await logout.mutateAsync();

@@ -16,13 +16,38 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Copy, Edit, Eye, EyeOff, MoreHorizontal, Trash2 } from 'lucide-react';
+import {
+  Copy,
+  Edit,
+  Eye,
+  EyeOff,
+  Loader2,
+  MoreHorizontal,
+  Trash2,
+} from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Staff } from '@/types/staff';
 import { EditStaffDialog } from './EditStaffDialog';
 import { useDeleteStaff, useUpdateStaff } from '@/hooks/useStaff';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+
+// ✅ Thêm khai báo này để TypeScript hiểu rõ hơn về table meta
+declare module '@tanstack/react-table' {
+  interface ColumnMeta<TData, TValue> {
+    // Bạn có thể thêm các thuộc tính meta tùy chỉnh ở đây nếu cần
+  }
+}
 
 export const staffColumns: ColumnDef<Staff>[] = [
   // ✅ Selection column
@@ -169,12 +194,12 @@ export const staffColumns: ColumnDef<Staff>[] = [
                 <TooltipContent side="top" className="max-w-[300px]">
                   <div className="space-y-1">
                     <p className="font-medium">All Permissions:</p>
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-1 pb-2">
                       {permissions.map((permission) => (
                         <Badge
                           key={permission}
                           variant="outline"
-                          className="text-xs"
+                          className="text-xs text-white"
                         >
                           {permission}
                         </Badge>
@@ -215,11 +240,15 @@ export const staffColumns: ColumnDef<Staff>[] = [
     accessorKey: 'lastLogin',
     header: 'Activity',
     cell: ({ row }) => {
-      const lastLogin = new Date(row.getValue('lastLogin'));
+      const lastLoginValue = row.getValue('lastLogin');
 
-      if (!lastLogin) {
-        return <span className="text-sm text-gray-400 italic">Never</span>;
+      if (!lastLoginValue) {
+        return (
+          <span className="pl-2.5 text-sm text-gray-400 italic">Never</span>
+        );
       }
+
+      const lastLogin = new Date(lastLoginValue as string);
 
       return (
         <div className="pl-2.5 text-sm">
@@ -245,6 +274,7 @@ export const staffColumns: ColumnDef<Staff>[] = [
 // ✅ Actions Cell component
 function StaffActionsCell({ staff }: { staff: Staff }) {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const deleteStaff = useDeleteStaff();
   const updateStaff = useUpdateStaff();
 
@@ -265,22 +295,17 @@ function StaffActionsCell({ staff }: { staff: Staff }) {
         id: staff._id,
         data: { isActive: !staff.isActive },
       });
-      toast.success(
-        `Staff ${staff.isActive ? 'deactivated' : 'activated'} successfully!`,
-      );
     } catch (error) {
       // Error handled in mutation
     }
   };
 
   const handleDeleteClick = async () => {
-    const action = staff.isActive ? 'deactivate' : 'permanently delete';
-    if (window.confirm(`Are you sure you want to ${action} ${staff.name}?`)) {
-      try {
-        await deleteStaff.mutateAsync(staff._id);
-      } catch (error) {
-        // Error handled in mutation
-      }
+    try {
+      await deleteStaff.mutateAsync(staff._id);
+      setDeleteDialogOpen(false); // Close dialog on success
+    } catch (error) {
+      // Error is handled in the mutation hook
     }
   };
 
@@ -309,32 +334,23 @@ function StaffActionsCell({ staff }: { staff: Staff }) {
           </DropdownMenuItem>
 
           {/* ✅ Toggle Status action */}
-          <DropdownMenuItem
-            onClick={handleStatusClick}
-            className={staff.isActive ? 'text-orange-600' : 'text-green-600'}
-          >
+          <DropdownMenuItem onClick={handleStatusClick}>
             {staff.isActive ? (
-              <>
-                <EyeOff className="h-4 w-4" />
-                Deactivate
-              </>
+              <EyeOff className="h-4 w-4" />
             ) : (
-              <>
-                <Eye className="h-4 w-4" />
-                Activate
-              </>
+              <Eye className="h-4 w-4" />
             )}
+            {staff.isActive ? 'Deactivate' : 'Activate'}
           </DropdownMenuItem>
 
           <DropdownMenuSeparator />
 
-          {/* ✅ Delete action */}
           <DropdownMenuItem
-            onClick={handleDeleteClick}
-            className="text-red-600"
+            onClick={() => setDeleteDialogOpen(true)}
+            className="text-red-500"
           >
             <Trash2 className="h-4 w-4" />
-            {staff.isActive ? 'Deactivate' : 'Delete'} staff
+            Delete staff
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -345,6 +361,35 @@ function StaffActionsCell({ staff }: { staff: Staff }) {
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
       />
+
+      {/* ✅ Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action will permanently delete the staff member "
+              <strong>{staff.name}</strong>" and hide them from the list. This
+              cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteStaff.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteClick}
+              disabled={deleteStaff.isPending}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {deleteStaff.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
