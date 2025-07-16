@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -32,7 +32,17 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useUpdateStaff } from '@/hooks/useStaff';
-import { DEPARTMENTS, PERMISSIONS, POSITIONS } from '@/types/staff';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+// ✅ Sửa lại import để lấy đúng hằng số từ config
+import { ROLE_CONFIG } from '@/config/roles';
 import type { Staff } from '@/types/staff';
 
 const editStaffSchema = z.object({
@@ -99,6 +109,45 @@ export function EditStaffDialog({
       isActive: staff?.isActive ?? true,
     },
   });
+
+  // ✅ Watch for changes in department and position
+  const watchedDepartment = form.watch('department');
+  const watchedPosition = form.watch('position');
+
+  // ✅ Memoize available positions based on selected department
+  const availablePositions = useMemo(() => {
+    if (!watchedDepartment) return [];
+    return (
+      ROLE_CONFIG.find((dept) => dept.name === watchedDepartment)?.positions ||
+      []
+    );
+  }, [watchedDepartment]);
+
+  // ✅ Memoize available permissions based on selected position
+  const availablePermissions = useMemo(() => {
+    if (!watchedPosition) return [];
+    return (
+      availablePositions.find((pos) => pos.name === watchedPosition)
+        ?.permissions || []
+    );
+  }, [watchedPosition, availablePositions]);
+
+  // ✅ Effect to reset position and permissions when department changes
+  useEffect(() => {
+    // Chỉ chạy khi người dùng đã tương tác với form
+    if (form.formState.isDirty) {
+      form.setValue('position', '');
+      form.setValue('permissions', []);
+    }
+  }, [watchedDepartment, form]);
+
+  // ✅ Effect to set default permissions when position changes
+  useEffect(() => {
+    // Chỉ chạy khi người dùng đã tương tác với form
+    if (form.formState.isDirty) {
+      form.setValue('permissions', availablePermissions);
+    }
+  }, [watchedPosition, availablePermissions, form]);
 
   // Reset form when staff changes or dialog opens
   useEffect(() => {
@@ -222,7 +271,7 @@ export function EditStaffDialog({
                       <FormLabel>Department *</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value} // ✅ Sử dụng value thay cho defaultValue
                       >
                         <FormControl>
                           <SelectTrigger className="w-full">
@@ -230,9 +279,10 @@ export function EditStaffDialog({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {DEPARTMENTS.map((dept) => (
-                            <SelectItem key={dept} value={dept}>
-                              {dept}
+                          {/* ✅ Lấy department từ ROLE_CONFIG */}
+                          {ROLE_CONFIG.map((dept) => (
+                            <SelectItem key={dept.name} value={dept.name}>
+                              {dept.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -250,7 +300,8 @@ export function EditStaffDialog({
                       <FormLabel>Position *</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value} // ✅ Sử dụng value thay cho defaultValue
+                        disabled={!watchedDepartment}
                       >
                         <FormControl>
                           <SelectTrigger className="w-full">
@@ -258,9 +309,10 @@ export function EditStaffDialog({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {POSITIONS.map((pos) => (
-                            <SelectItem key={pos} value={pos}>
-                              {pos}
+                          {/* ✅ Lấy position từ availablePositions */}
+                          {availablePositions.map((pos) => (
+                            <SelectItem key={pos.name} value={pos.name}>
+                              {pos.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -305,46 +357,53 @@ export function EditStaffDialog({
                       Permissions
                     </FormLabel>
                     <FormDescription>
-                      Select the areas this staff member can access
+                      Select the permissions for this position. Defaults are
+                      pre-selected.
                     </FormDescription>
                   </div>
                   <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-                    {PERMISSIONS.map((permission) => (
-                      <FormField
-                        key={permission}
-                        control={form.control}
-                        name="permissions"
-                        render={({ field }) => {
-                          return (
-                            <FormItem
-                              key={permission}
-                              className="flex flex-row items-start space-y-0 space-x-3"
-                            >
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value?.includes(permission)}
-                                  onCheckedChange={(checked) => {
-                                    return checked
-                                      ? field.onChange([
-                                          ...field.value,
-                                          permission,
-                                        ])
-                                      : field.onChange(
-                                          field.value?.filter(
-                                            (value) => value !== permission,
-                                          ),
-                                        );
-                                  }}
-                                />
-                              </FormControl>
-                              <FormLabel className="font-normal capitalize">
-                                {permission}
-                              </FormLabel>
-                            </FormItem>
-                          );
-                        }}
-                      />
-                    ))}
+                    {availablePermissions.length > 0 ? (
+                      availablePermissions.map((permission) => (
+                        <FormField
+                          key={permission}
+                          control={form.control}
+                          name="permissions"
+                          render={({ field }) => {
+                            return (
+                              <FormItem
+                                key={permission}
+                                className="flex flex-row items-start space-y-0 space-x-3"
+                              >
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value?.includes(permission)}
+                                    onCheckedChange={(checked) => {
+                                      return checked
+                                        ? field.onChange([
+                                            ...field.value,
+                                            permission,
+                                          ])
+                                        : field.onChange(
+                                            field.value?.filter(
+                                              (value) => value !== permission,
+                                            ),
+                                          );
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormLabel className="font-normal capitalize">
+                                  {permission}
+                                </FormLabel>
+                              </FormItem>
+                            );
+                          }}
+                        />
+                      ))
+                    ) : (
+                      <p className="text-muted-foreground col-span-full text-sm italic">
+                        Select a position to see available permissions.
+                      </p>
+                    )}
                   </div>
                   <FormMessage />
                 </FormItem>

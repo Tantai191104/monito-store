@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -32,7 +32,9 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useCreateStaff } from '@/hooks/useStaff';
-import { DEPARTMENTS, PERMISSIONS, POSITIONS } from '@/types/staff';
+// ✅ Import config mới
+import { ROLE_CONFIG, DEPARTMENTS } from '@/config/roles';
+import { PERMISSIONS } from '@/types/staff';
 
 const staffSchema = z.object({
   name: z
@@ -91,6 +93,39 @@ export function AddStaffDialog({ trigger }: AddStaffDialogProps) {
       permissions: [],
     },
   });
+
+  // ✅ Watch for changes in department and position
+  const watchedDepartment = form.watch('department');
+  const watchedPosition = form.watch('position');
+
+  // ✅ Memoize available positions based on selected department
+  const availablePositions = useMemo(() => {
+    if (!watchedDepartment) return [];
+    return (
+      ROLE_CONFIG.find((dept) => dept.name === watchedDepartment)?.positions ||
+      []
+    );
+  }, [watchedDepartment]);
+
+  // ✅ Memoize available permissions based on selected position
+  const availablePermissions = useMemo(() => {
+    if (!watchedPosition) return [];
+    return (
+      availablePositions.find((pos) => pos.name === watchedPosition)
+        ?.permissions || []
+    );
+  }, [watchedPosition, availablePositions]);
+
+  // ✅ Effect to reset position and permissions when department changes
+  useEffect(() => {
+    form.setValue('position', '');
+    form.setValue('permissions', []);
+  }, [watchedDepartment, form]);
+
+  // ✅ Effect to set default permissions when position changes
+  useEffect(() => {
+    form.setValue('permissions', availablePermissions);
+  }, [availablePermissions, form]);
 
   const onSubmit = async (data: StaffFormValues) => {
     try {
@@ -267,7 +302,8 @@ export function AddStaffDialog({ trigger }: AddStaffDialogProps) {
                       <FormLabel>Position *</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value}
+                        disabled={!watchedDepartment} // ✅ Disable if no department
                       >
                         <FormControl>
                           <SelectTrigger className="w-full">
@@ -275,9 +311,9 @@ export function AddStaffDialog({ trigger }: AddStaffDialogProps) {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {POSITIONS.map((pos) => (
-                            <SelectItem key={pos} value={pos}>
-                              {pos}
+                          {availablePositions.map((pos) => (
+                            <SelectItem key={pos.name} value={pos.name}>
+                              {pos.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -300,46 +336,53 @@ export function AddStaffDialog({ trigger }: AddStaffDialogProps) {
                       Permissions
                     </FormLabel>
                     <FormDescription>
-                      Select the areas this staff member can access
+                      Select the permissions for this position. Defaults are
+                      pre-selected.
                     </FormDescription>
                   </div>
                   <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-                    {PERMISSIONS.map((permission) => (
-                      <FormField
-                        key={permission}
-                        control={form.control}
-                        name="permissions"
-                        render={({ field }) => {
-                          return (
-                            <FormItem
-                              key={permission}
-                              className="flex flex-row items-start space-y-0 space-x-3"
-                            >
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value?.includes(permission)}
-                                  onCheckedChange={(checked) => {
-                                    return checked
-                                      ? field.onChange([
-                                          ...field.value,
-                                          permission,
-                                        ])
-                                      : field.onChange(
-                                          field.value?.filter(
-                                            (value) => value !== permission,
-                                          ),
-                                        );
-                                  }}
-                                />
-                              </FormControl>
-                              <FormLabel className="font-normal capitalize">
-                                {permission}
-                              </FormLabel>
-                            </FormItem>
-                          );
-                        }}
-                      />
-                    ))}
+                    {availablePermissions.length > 0 ? (
+                      availablePermissions.map((permission) => (
+                        <FormField
+                          key={permission}
+                          control={form.control}
+                          name="permissions"
+                          render={({ field }) => {
+                            return (
+                              <FormItem
+                                key={permission}
+                                className="flex flex-row items-start space-y-0 space-x-3"
+                              >
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value?.includes(permission)}
+                                    onCheckedChange={(checked) => {
+                                      return checked
+                                        ? field.onChange([
+                                            ...field.value,
+                                            permission,
+                                          ])
+                                        : field.onChange(
+                                            field.value?.filter(
+                                              (value) => value !== permission,
+                                            ),
+                                          );
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormLabel className="font-normal capitalize">
+                                  {permission}
+                                </FormLabel>
+                              </FormItem>
+                            );
+                          }}
+                        />
+                      ))
+                    ) : (
+                      <p className="text-muted-foreground col-span-full text-sm italic">
+                        Select a position to see available permissions.
+                      </p>
+                    )}
                   </div>
                   <FormMessage />
                 </FormItem>
