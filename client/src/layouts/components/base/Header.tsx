@@ -141,14 +141,7 @@ export const Header = () => {
                   </DropdownMenuItem>
 
                   <DropdownMenuSeparator />
-
-                  <DropdownMenuItem asChild>
-                    <Link to="/customer/settings">
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Settings</span>
-                    </Link>
-                  </DropdownMenuItem>
-
+                  
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleLogout}
