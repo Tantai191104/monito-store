@@ -52,6 +52,18 @@ export const DEPARTMENTS = [
   'Marketing',
 ] as const;
 
+export const POSITIONS = [
+  'Store Manager',
+  'Assistant Manager',
+  'Sales Associate',
+  'Pet Care Specialist',
+  'Professional Groomer',
+  'Inventory Coordinator',
+  'Customer Support Agent',
+  'Marketing Specialist',
+  'Content Creator',
+];
+
 export const PERMISSIONS = [
   'products',
   'pets',
@@ -64,3 +76,7 @@ export const PERMISSIONS = [
   'shipping',
   'reports',
 ] as const;
+
+export type Department = (typeof DEPARTMENTS)[number];
+export type Position = (typeof POSITIONS)[number];
+export type Permission = (typeof PERMISSIONS)[number];

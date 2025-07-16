@@ -32,6 +32,7 @@ export interface UserDocument extends Document {
   // ✅ Password reset fields
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
+  deletedAt?: Date | null;
 
   comparePassword(value: string): Promise<boolean>;
 }
@@ -67,6 +68,11 @@ const userSchema = new Schema<UserDocument>(
       type: String,
       trim: true,
       maxLength: [20, 'Phone number must be less than 20 characters'],
+      unique: true,
+      sparse: true, // ✅ Allow multiple nulls, but enforce uniqueness on provided values
+      required: function (this: UserDocument) {
+        return this.role === 'staff';
+      },
     },
     isActive: {
       type: Boolean,
@@ -153,6 +159,10 @@ const userSchema = new Schema<UserDocument>(
       default: null,
     },
     resetPasswordExpires: {
+      type: Date,
+      default: null,
+    },
+    deletedAt: {
       type: Date,
       default: null,
     },

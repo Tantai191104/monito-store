@@ -19,7 +19,7 @@ export const getUserColumns = ({
     onToggleActive,
 }: {
     onViewDetail: (user: UserResponse) => void
-    onToggleActive: (user: UserResponse, action: 'suspend' | 'activate') => void
+    onToggleActive: (user: UserResponse, action: 'inactive' | 'activate') => void
 }): ColumnDef<UserResponse>[] => [
         {
             accessorKey: 'name',
@@ -91,12 +91,12 @@ export const getUserColumns = ({
             accessorKey: 'isActive',
             header: 'Status',
             cell: ({ row }) => {
-                const active = row.original.isActive
+                const active = row.original.isActive;
                 return (
                     <Badge variant={active ? 'default' : 'destructive'}>
-                        {active ? 'Active' : 'Suspended'}
+                        {active ? 'Active' : 'Inactive'}
                     </Badge>
-                )
+                );
             },
         },
         {
@@ -139,10 +139,10 @@ export const getUserColumns = ({
                                 {user.isActive ? (
                                     <DropdownMenuItem
                                         className="text-red-600"
-                                        onClick={() => onToggleActive(user, 'suspend')}
+                                        onClick={() => onToggleActive(user, 'inactive')}
                                     >
                                         <Ban className="mr-2 h-4 w-4" />
-                                        Suspend
+                                        Inactive
                                     </DropdownMenuItem>
                                 ) : (
                                     <DropdownMenuItem
