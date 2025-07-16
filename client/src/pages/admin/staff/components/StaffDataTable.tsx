@@ -47,6 +47,7 @@ import type { Staff } from '@/types/staff';
 import { AddStaffDialog } from './AddStaffDialog';
 import { useDeleteStaff, useUpdateStaff } from '@/hooks/useStaff';
 import { toast } from 'sonner';
+import { DataTableToolbar } from '@/components/ui/data-table/DataTableToolbar';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -192,135 +193,94 @@ export function StaffDataTable<TData extends Staff, TValue>({
     );
   }
 
+  const filterControls = (
+    <>
+      {/* Search */}
+      <div className="relative">
+        <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
+        <Input
+          placeholder="Search staff..."
+          value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
+          onChange={(event) =>
+            table.getColumn('name')?.setFilterValue(event.target.value)
+          }
+          className="max-w-sm pl-8"
+        />
+      </div>
+
+      {/* Department Filter */}
+      <Select
+        value={
+          (table.getColumn('department')?.getFilterValue() as string) ?? 'all'
+        }
+        onValueChange={(value) =>
+          table
+            .getColumn('department')
+            ?.setFilterValue(value === 'all' ? '' : value)
+        }
+      >
+        <SelectTrigger className="w-[180px]">
+          <SelectValue placeholder="Department" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Departments</SelectItem>
+          {departmentFilterOptions.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {/* Status Filter */}
+      <Select
+        value={
+          (table.getColumn('isActive')?.getFilterValue() as string) ?? 'all'
+        }
+        onValueChange={(value) =>
+          table
+            .getColumn('isActive')
+            ?.setFilterValue(value === 'all' ? '' : value)
+        }
+      >
+        <SelectTrigger className="w-[120px]">
+          <SelectValue placeholder="Status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Status</SelectItem>
+          {statusFilterOptions.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {/* Clear filters */}
+      {(table.getColumn('name')?.getFilterValue() ||
+        table.getColumn('department')?.getFilterValue() ||
+        table.getColumn('isActive')?.getFilterValue()) && (
+        <Button
+          variant="ghost"
+          onClick={() => {
+            table.getColumn('name')?.setFilterValue('');
+            table.getColumn('department')?.setFilterValue('');
+            table.getColumn('isActive')?.setFilterValue('');
+          }}
+        >
+          Reset
+        </Button>
+      )}
+    </>
+  );
+
   return (
     <div className={cn('space-y-4', className)}>
       {/* ✅ Toolbar with filters and actions */}
-      <div className="flex items-center justify-between">
-        <div className="flex flex-1 items-center space-x-2">
-          {/* Search */}
-          <div className="relative">
-            <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
-            <Input
-              placeholder="Search staff..."
-              value={
-                (table.getColumn('name')?.getFilterValue() as string) ?? ''
-              }
-              onChange={(event) =>
-                table.getColumn('name')?.setFilterValue(event.target.value)
-              }
-              className="max-w-sm pl-8"
-            />
-          </div>
-
-          {/* Department Filter */}
-          {/* NOTE: NEU CO BAO LOI VUI LONG KE ME DOAN PHAN NAY */}
-          <Select
-            value={
-              (table.getColumn('department')?.getFilterValue() as string) ??
-              'all'
-            }
-            onValueChange={(value) =>
-              table
-                .getColumn('department')
-                ?.setFilterValue(value === 'all' ? '' : value)
-            }
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Department" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Departments</SelectItem>
-              {departmentFilterOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {/* Status Filter */}
-          <Select
-            value={
-              (table.getColumn('isActive')?.getFilterValue() as string) ?? 'all'
-            }
-            onValueChange={(value) =>
-              table
-                .getColumn('isActive')
-                ?.setFilterValue(value === 'all' ? '' : value)
-            }
-          >
-            <SelectTrigger className="w-[120px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              {statusFilterOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {/* Clear filters */}
-          {(table.getColumn('name')?.getFilterValue() ||
-            table.getColumn('department')?.getFilterValue() ||
-            table.getColumn('isActive')?.getFilterValue()) && (
-            <Button
-              variant="ghost"
-              onClick={() => {
-                table.getColumn('name')?.setFilterValue('');
-                table.getColumn('department')?.setFilterValue('');
-                table.getColumn('isActive')?.setFilterValue('');
-              }}
-            >
-              Reset
-            </Button>
-          )}
-        </div>
-
-        {/* ✅ Right side actions */}
-        <div className="flex items-center space-x-2">
-          {/* Bulk actions */}
-          {selectedRowCount > 0 && (
-            <div className="mr-4 flex items-center space-x-2">
-              <Badge variant="secondary">
-                {selectedRowCount} of {totalRowCount} selected
-              </Badge>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleBulkActivate}
-                className="text-green-600"
-              >
-                <Eye className="h-4 w-4" />
-                Activate
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleBulkDeactivate}
-                className="text-orange-600"
-              >
-                <EyeOff className="h-4 w-4" />
-                Deactivate
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleBulkDelete}
-                className="text-red-600"
-              >
-                <Trash2 className="h-4 w-4" />
-                Delete
-              </Button>
-            </div>
-          )}
-
-          {/* Add staff button */}
+      <DataTableToolbar
+        table={table}
+        filterControls={filterControls}
+        addButton={
           <AddStaffDialog
             trigger={
               <Button>
@@ -329,8 +289,48 @@ export function StaffDataTable<TData extends Staff, TValue>({
               </Button>
             }
           />
+        }
+      />
+
+      {/* Bulk actions */}
+      {selectedRowCount > 0 && (
+        <div className="bg-muted/50 flex items-center justify-between rounded-md border px-4 py-2">
+          <div className="text-muted-foreground text-sm">
+            {selectedRowCount} of {totalRowCount} row(s) selected.
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleBulkActivate}
+              className="text-green-600"
+            >
+              <Eye className="h-4 w-4" />
+              Activate
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleBulkDeactivate}
+              className="text-orange-600"
+            >
+              <EyeOff className="h-4 w-4" />
+              Deactivate
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleBulkDelete}
+              className="text-red-600"
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ✅ Data table */}
       <div className="rounded-md border">
