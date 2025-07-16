@@ -29,7 +29,9 @@ export interface Order {
     | 'processing'
     | 'shipped'
     | 'delivered'
-    | 'cancelled';
+    | 'cancelled'
+    | 'pending_refund'
+    | 'refunded';
   paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
   shippingAddress: {
     street: string;
@@ -42,4 +44,12 @@ export interface Order {
   notes?: string;
   createdAt: string;
   updatedAt: string;
+  refundInfo?: {
+    reason: string;
+    description?: string;
+    bankName: string;
+    accountNumber: string;
+    amount: number;
+    requestedAt: string;
+  };
 }

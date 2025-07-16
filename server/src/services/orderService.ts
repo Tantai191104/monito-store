@@ -330,6 +330,7 @@ export const orderService = {
       pending: ['processing', 'cancelled'],
       processing: ['delivered', 'cancelled', 'refunded'],
       delivered: ['refunded'],
+      pending_refund: ['refunded'],
       cancelled: [],
       refunded: [],
     };
@@ -409,6 +410,26 @@ export const orderService = {
     const order = await OrderModel.findById(orderId);
     if (!order) throw new NotFoundException('Order not found');
     order.reviews = (order.reviews || []).filter(r => r.user.toString() !== userId);
+    await order.save();
+    return order;
+  },
+
+  /**
+   * Request refund (customer)
+   */
+  async requestRefund(orderId: string, customerId: string, refundData: { reason: string, bankName: string, accountNumber: string, description?: string }) {
+    const order = await OrderModel.findOne({ _id: orderId, customer: customerId });
+    if (!order) throw new NotFoundException('Order not found');
+    if (order.status !== 'delivered' && order.status !== 'pending_refund') throw new BadRequestException('Only delivered or pending refund orders can be refunded/edited');
+    order.status = 'pending_refund';
+    order.refundInfo = {
+      reason: refundData.reason,
+      bankName: refundData.bankName,
+      accountNumber: refundData.accountNumber,
+      description: refundData.description || '',
+      amount: order.total,
+      requestedAt: new Date(),
+    };
     await order.save();
     return order;
   },

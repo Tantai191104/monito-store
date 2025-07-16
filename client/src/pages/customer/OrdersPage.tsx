@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { useOrders } from '@/hooks/useOrders';
 import { useCancelOrder } from '@/hooks/useOrders';
@@ -19,6 +18,8 @@ import { useProducts } from '@/hooks/useProducts';
 import React from 'react';
 import API from '@/lib/axios';
 import { useAuth } from '@/hooks/useAuth';
+import Select from 'react-select';
+import { useEffect } from 'react';
 
 const getStatusVariant = (status: string) => {
   switch (status) {
@@ -78,6 +79,7 @@ const ORDER_STATUS = [
   { value: 'pending', label: 'Pending Confirmation' },
   { value: 'processing', label: 'Processing/Shipping' },
   { value: 'delivered', label: 'Delivered' },
+  { value: 'pending_refund', label: 'Pending Refund Approval' },
   { value: 'cancelled', label: 'Cancelled' },
   { value: 'refunded', label: 'Refunded' },
 ];
@@ -95,6 +97,9 @@ const OrdersPage = () => {
   const [reviewStates, setReviewStates] = useState<Record<string, { rating: number; content: string }>>({});
   // State: lưu orderId đang edit lại review
   const [editingReview, setEditingReview] = useState<string | null>(null);
+
+  // Add state to track editing refund
+  const [editingRefund, setEditingRefund] = useState(false);
 
   // Get filter values from URL params
   const statusFilter = searchParams.get('status') || '';
@@ -131,6 +136,8 @@ const OrdersPage = () => {
   let filteredOrders: typeof orders = [];
   if (activeTab === 'cancelled') {
     filteredOrders = orders.filter(order => order.status === 'cancelled');
+  } else if (activeTab === 'pending_refund') {
+    filteredOrders = orders.filter(order => order.status === 'pending_refund');
   } else if (activeTab === 'all') {
     filteredOrders = orders;
   } else {
@@ -261,6 +268,73 @@ const OrdersPage = () => {
     return diff > 0 ? diff : 0;
   };
 
+  // State for refund dialog
+  const [refundDialogOpen, setRefundDialogOpen] = useState(false);
+  const [refundOrder, setRefundOrder] = useState<any>(null);
+  const [refundReason, setRefundReason] = useState('');
+  const [refundBankName, setRefundBankName] = useState('');
+  const [refundAccountNumber, setRefundAccountNumber] = useState('');
+  const [refundAmount, setRefundAmount] = useState(0);
+  const [refundDescription, setRefundDescription] = useState('');
+
+  const refundReasons = [
+    'Missing item',
+    'Wrong item sent',
+    'Damaged item',
+    'Defective item',
+    'Expired item',
+    'Not as described',
+    'Used item',
+    'Counterfeit item',
+  ];
+
+  const openRefundDialog = (order: any) => {
+    setRefundOrder(order);
+    setRefundReason('');
+    setRefundBankName('');
+    setRefundAccountNumber('');
+    setRefundAmount(order.total);
+    setRefundDescription('');
+    setRefundDialogOpen(true);
+  };
+
+  const handleRefundSubmit = async () => {
+    if (!refundOrder) return;
+    try {
+      await API.patch(`/orders/${refundOrder._id}/refund`, {
+        reason: refundReason,
+        bankName: refundBankName,
+        accountNumber: refundAccountNumber,
+        refundAmount: refundAmount,
+        description: refundDescription,
+      });
+      toast.success('Refund request submitted!');
+      setRefundDialogOpen(false);
+      setEditingRefund(false);
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to submit refund request');
+    }
+  };
+
+  // Type for bank options
+  const [bankOptions, setBankOptions] = useState<{ value: string; label: string }[]>([]);
+  const [isLoadingBanks, setIsLoadingBanks] = useState(false);
+
+  useEffect(() => {
+    setIsLoadingBanks(true);
+    fetch('https://gist.githubusercontent.com/trihtm/c5299c3c999d76db10398ef43efdb1eb/raw/8979b47cb24bb3524cd4009f269cf9e3ab2ee5b8/vietnam-banks')
+      .then(res => res.json())
+      .then(data => {
+        const options = data.banksnapas.map((b: any) => ({
+          value: b.shortName,
+          label: `${b.shortName} - ${b.vn_name}`,
+        }));
+        setBankOptions(options);
+      })
+      .finally(() => setIsLoadingBanks(false));
+  }, []);
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -384,6 +458,9 @@ const OrdersPage = () => {
                     )}
                     {order.status === 'pending' && order.paymentStatus === 'paid' && (
                       <Badge variant="secondary" className="capitalize">Paid, Pending Confirmation</Badge>
+                    )}
+                    {order.status === 'pending_refund' && (
+                      <Badge className="capitalize bg-yellow-400 text-yellow-900">Pending Refund Approval</Badge>
                     )}
                   </div>
                 </div>
@@ -580,6 +657,32 @@ const OrdersPage = () => {
                         Cancel Order
                       </Button>
                     )}
+                    {order.status === 'pending_refund' && order.refundInfo && !editingRefund && (
+                      <div className="mt-4 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                        <h4 className="font-semibold text-yellow-800 mb-2">Refund Request Details</h4>
+                        <div className="text-sm text-gray-800 mb-1"><strong>Reason:</strong> {order.refundInfo?.reason}</div>
+                        {order.refundInfo?.description && (
+                          <div className="text-sm text-gray-800 mb-1"><strong>Description:</strong> {order.refundInfo?.description}</div>
+                        )}
+                        <div className="text-sm text-gray-800 mb-1"><strong>Bank Name:</strong> {order.refundInfo?.bankName}</div>
+                        <div className="text-sm text-gray-800 mb-1"><strong>Account Number:</strong> {order.refundInfo?.accountNumber}</div>
+                        <div className="text-sm text-gray-800 mb-1"><strong>Refund Amount:</strong> {order.refundInfo?.amount?.toLocaleString('vi-VN')} VND</div>
+                        <div className="text-xs text-gray-500 mt-2">Requested at: {order.refundInfo?.requestedAt ? new Date(order.refundInfo?.requestedAt).toLocaleString() : ''}</div>
+                        <Button className="mt-2" variant="outline" onClick={() => {
+                          setEditingRefund(true);
+                          setRefundOrder(order);
+                          setRefundReason(order.refundInfo?.reason || '');
+                          setRefundBankName(order.refundInfo?.bankName || '');
+                          setRefundAccountNumber(order.refundInfo?.accountNumber || '');
+                          setRefundAmount(order.refundInfo?.amount || 0);
+                          setRefundDescription(order.refundInfo?.description || '');
+                          setRefundDialogOpen(true);
+                        }}>Edit Refund Request</Button>
+                      </div>
+                    )}
+                    {order.status === 'delivered' && (
+                      <Button onClick={() => openRefundDialog(order)} className="mt-2" variant="outline">Refund</Button>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -606,6 +709,96 @@ const OrdersPage = () => {
               remainingSeconds={getRemainingSeconds(selectedOrder.createdAt || selectedOrder.orderDate, 300)}
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Refund Dialog */}
+      <Dialog open={refundDialogOpen} onOpenChange={(open) => {
+        setRefundDialogOpen(open);
+        if (!open) setEditingRefund(false);
+      }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Refund Request for Order #{refundOrder?.orderNumber}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="refundReason" className="block text-sm font-medium text-gray-700">
+                Refund Reason
+              </label>
+              <select
+                id="refundReason"
+                value={refundReason}
+                onChange={e => setRefundReason(e.target.value)}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+              >
+                <option value="">Select a reason</option>
+                {refundReasons.map(reason => (
+                  <option key={reason} value={reason}>{reason}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="refundBankName" className="block text-sm font-medium text-gray-700">
+                Bank Name
+              </label>
+              <Select
+                id="refundBankName"
+                options={bankOptions}
+                isLoading={isLoadingBanks}
+                value={bankOptions.find(opt => opt.value === refundBankName) || undefined}
+                onChange={(opt: { value: string; label: string } | null) => setRefundBankName(opt ? opt.value : '')}
+                placeholder="Select a bank..."
+                isClearable
+                isSearchable
+                className="mt-1"
+                styles={{ menu: (base: any) => ({ ...base, zIndex: 9999 }) }}
+              />
+            </div>
+            <div>
+              <label htmlFor="refundAccountNumber" className="block text-sm font-medium text-gray-700">
+                Account Number
+              </label>
+              <input
+                type="text"
+                id="refundAccountNumber"
+                value={refundAccountNumber}
+                onChange={e => setRefundAccountNumber(e.target.value)}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+              />
+            </div>
+            <div>
+              <label htmlFor="refundAmount" className="block text-sm font-medium text-gray-700">
+                Refund Amount
+              </label>
+              <input
+                type="number"
+                id="refundAmount"
+                value={refundAmount}
+                readOnly
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 bg-gray-100 cursor-not-allowed"
+              />
+            </div>
+            <div>
+              <label htmlFor="refundDescription" className="block text-sm font-medium text-gray-700">
+                Description (Optional)
+              </label>
+              <textarea
+                id="refundDescription"
+                value={refundDescription}
+                onChange={e => setRefundDescription(e.target.value)}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                rows={3}
+              />
+            </div>
+            <Button
+              className="bg-[#003459] text-white"
+              onClick={handleRefundSubmit}
+              disabled={!refundReason || !refundBankName || !refundAccountNumber || refundAmount <= 0}
+            >
+              Submit Refund Request
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

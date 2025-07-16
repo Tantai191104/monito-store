@@ -166,4 +166,26 @@ export const orderController = {
       next(error);
     }
   },
+
+  /**
+   * Request refund (customer)
+   */
+  async requestRefund(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const { id } = req.params;
+      const customerId = req.userId!;
+      const { reason, bankName, accountNumber, description } = req.body;
+      const order = await orderService.requestRefund(id, customerId, { reason, bankName, accountNumber, description });
+      res.status(STATUS_CODE.OK).json({
+        message: 'Refund requested successfully',
+        data: { order },
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
 }; 

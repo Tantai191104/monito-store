@@ -77,7 +77,12 @@ const StatusChangeCell = ({ order }: { order: Order }) => {
   const mutation = useUpdateOrderStatus();
   
   const statusOptions = [
-    'pending', 'processing', 'delivered', 'cancelled', 'refunded'
+    { value: 'pending', label: 'Pending' },
+    { value: 'processing', label: 'Processing' },
+    { value: 'delivered', label: 'Delivered' },
+    { value: 'pending_refund', label: 'Pending Refund' },
+    { value: 'refunded', label: 'Refunded' },
+    { value: 'cancelled', label: 'Cancelled' },
   ];
 
   const handleStatusChange = (value: string) => {
@@ -117,15 +122,15 @@ const StatusChangeCell = ({ order }: { order: Order }) => {
       <Select
         value={order.status}
         onValueChange={handleStatusChange}
-        disabled={mutation.isPending}
+        disabled={mutation.isPending || order.status === 'cancelled'}
       >
         <SelectTrigger className="w-[120px] capitalize">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>
           {statusOptions.map(opt => (
-            <SelectItem key={opt} value={opt} className="capitalize">
-              {opt}
+            <SelectItem key={opt.value} value={opt.value} className="capitalize">
+              {opt.label}
             </SelectItem>
           ))}
         </SelectContent>
@@ -209,7 +214,12 @@ export const orderColumns: ColumnDef<Order>[] = [
     accessorKey: 'customer',
     header: 'Customer',
     cell: ({ row }) => {
-      const customer = row.getValue('customer') as Order['customer'];
+      const customer = row.getValue('customer') as Order['customer'] | null;
+      if (!customer) {
+        return (
+          <div className="max-w-[200px] text-gray-400 italic">No customer info</div>
+        );
+      }
       return (
         <div className="max-w-[200px]">
           <div className="font-medium">{customer.name}</div>
