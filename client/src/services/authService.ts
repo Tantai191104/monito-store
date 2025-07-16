@@ -62,18 +62,4 @@ export const authService = {
     const response = await API.post<ApiResponse>('/auth/reset-password', data);
     return response.data;
   },
-
-  async checkNameExists(name: string): Promise<boolean> {
-    const response = await API.get('/user', { params: { name } });
-    const users = Array.isArray(response.data?.data) ? response.data.data : [];
-    return !!users && users.length > 0;
-  },
-
-
-  async isSameName(name: string): Promise<boolean> {
-    const response = await API.get<ApiResponse<{ user: User }>>('/user/current-user');
-    const currentUser = response.data.data?.user;
-    if (!currentUser) return false;
-    return currentUser.name === name;
-  },
 };
