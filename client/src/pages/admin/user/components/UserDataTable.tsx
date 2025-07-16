@@ -18,15 +18,14 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
-import { Search, Users } from 'lucide-react';
 import { DataTablePagination } from '@/components/ui/data-table/DataTablePagination';
 import type { UserResponse } from '@/services/userService';
 import { getUserColumns } from './UserColumns';
+import { Users } from 'lucide-react';
 interface UserDataTableProps {
     data: UserResponse[];
     onViewDetail: (user: UserResponse) => void;
-    onToggleActive: (user: UserResponse, action: 'suspend' | 'activate') => void;
+    onToggleActive: (user: UserResponse, action: 'inactive' | 'activate') => void;
 }
 
 export function UserDataTable({
@@ -56,21 +55,6 @@ export function UserDataTable({
 
     return (
         <div className="space-y-4">
-            {/* Toolbar */}
-            <div className="flex items-center justify-between">
-                <div className="relative w-full max-w-md">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search users..."
-                        value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
-                        onChange={(e) =>
-                            table.getColumn('name')?.setFilterValue(e.target.value)
-                        }
-                        className="pl-8"
-                    />
-                </div>
-            </div>
-
             {/* Table */}
             <div className="rounded-md border">
                 <Table>

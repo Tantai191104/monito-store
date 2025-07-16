@@ -50,9 +50,10 @@ const UserManagement = () => {
   const debouncedSearch = useDebounce(searchTerm, 300);
   const [confirmDialogUser, setConfirmDialogUser] = useState<{
     user: UserResponse;
-    action: 'suspend' | 'activate';
+    action: 'inactive' | 'activate';
   } | null>(null);
-  
+  const [reason, setReason] = useState('');
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -70,6 +71,9 @@ const UserManagement = () => {
 
     loadData();
   }, []);
+  useEffect(() => {
+    if (!confirmDialogUser) setReason('');
+  }, [confirmDialogUser]);
 
   const filteredUsers = useMemo(() => {
     return users.filter((user) => {
@@ -98,10 +102,10 @@ const UserManagement = () => {
     setShowDetailModal(false);
   };
 
-  const handleToggleUserStatus = async (user: UserResponse) => {
+  const handleToggleUserStatus = async (user: UserResponse, reason: string) => {
     try {
-      const res = await updateUserStatus(user._id, !user.isActive);
-
+      const res = await updateUserStatus(user._id, !user.isActive, reason, user.email);
+      console.log(reason)
       if (res?.data) {
         toast.success(res.message);
 
@@ -143,7 +147,7 @@ const UserManagement = () => {
   return (
     <div className="container mx-auto py-0">
       {/* Header */}
-      <div className="flex items-center justify-between mb-3 border-b p-6">
+      <div className="flex items-center justify-between mb-6 border-b p-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
           <p className="text-muted-foreground">
@@ -164,7 +168,7 @@ const UserManagement = () => {
         !summary.activeUsers ||
         !summary.suspendedUsers ||
         !summary.newUsersThisMonth ? (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-4 mt-6">
           {Array(4)
             .fill(0)
             .map((_, i) => (
@@ -259,7 +263,7 @@ const UserManagement = () => {
       )}
 
       {/* Filters */}
-      <Card>
+      <Card className="mt-6">
         <CardHeader>
           <CardTitle>Search & Filter Users</CardTitle>
           <CardDescription>
@@ -286,7 +290,7 @@ const UserManagement = () => {
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="true">Active</SelectItem>
-                <SelectItem value="false">Suspended</SelectItem>
+                <SelectItem value="false">Inactive</SelectItem>
               </SelectContent>
             </Select>
 
@@ -304,41 +308,68 @@ const UserManagement = () => {
           </div>
         </CardContent>
       </Card>
-
-      <UserDataTable
-        data={filteredUsers}
-        onViewDetail={openUserDetail}
-        onToggleActive={(user, action) => setConfirmDialogUser({ user, action })}
-      />
-
+      <div className='mt-6'>
+        <UserDataTable
+          data={filteredUsers}
+          onViewDetail={openUserDetail}
+          onToggleActive={(user, action) => setConfirmDialogUser({ user, action })}
+        />
+      </div>
       <UserDetailModal
         open={showDetailModal}
         onClose={closeUserDetail}
         user={selectedUser}
       />
       {confirmDialogUser && (
-        <AlertDialog open={!!confirmDialogUser} onOpenChange={(open) => !open && setConfirmDialogUser(null)}>
+        <AlertDialog
+          open={!!confirmDialogUser}
+          onOpenChange={(open) => {
+            if (!open) {
+              setConfirmDialogUser(null);
+              setReason('');
+            }
+          }}
+        >
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>
-                {confirmDialogUser.action === 'suspend'
+                {confirmDialogUser.action === 'inactive'
                   ? 'Confirm user suspension?'
                   : 'Confirm user activation?'}
               </AlertDialogTitle>
               <AlertDialogDescription>
-                {confirmDialogUser.action === 'suspend'
-                  ? 'This action will change the user’s status to Suspended. Are you sure you want to proceed?'
+                {confirmDialogUser.action === 'inactive'
+                  ? 'This action will change the user’s status to inactive. Are you sure you want to proceed?'
                   : 'This will reactivate the user and restore their access. Proceed?'}
               </AlertDialogDescription>
+
+              {/* Form nhập lý do */}
+              <div className="mt-4">
+                <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-1">
+                  Reason (required)
+                </label>
+                <textarea
+                  id="reason"
+                  rows={3}
+                  className="w-full border rounded-md px-3 py-2 text-sm"
+                  placeholder="Enter reason here..."
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  required
+                />
+              </div>
             </AlertDialogHeader>
+
             <AlertDialogFooter>
               <AlertDialogCancel onClick={() => setConfirmDialogUser(null)}>
                 Cancel
               </AlertDialogCancel>
               <AlertDialogAction
+                disabled={!reason.trim()}
                 onClick={async () => {
-                  await handleToggleUserStatus(confirmDialogUser.user);
+                  await handleToggleUserStatus(confirmDialogUser.user, reason);
                   setConfirmDialogUser(null);
+                  setReason('');
                 }}
               >
                 Confirm

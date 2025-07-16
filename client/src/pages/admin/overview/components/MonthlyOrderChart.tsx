@@ -56,7 +56,12 @@ const MonthlyOrderChart = () => {
             <BarChart data={data} barGap={16}>
               <CartesianGrid vertical={false} strokeDasharray="3 3" />
               <XAxis dataKey="month" tickLine={false} axisLine={false} />
-              <YAxis tickLine={false} axisLine={false} />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(value) => Math.round(value).toString()}
+                domain={[0, 'auto']}
+              />
               <Tooltip
                 wrapperClassName="rounded-md shadow-md"
                 contentStyle={{ borderRadius: 8, fontSize: 14 }}
