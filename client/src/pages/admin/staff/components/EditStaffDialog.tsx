@@ -363,12 +363,12 @@ export function EditStaffDialog({
               <Button type="submit" disabled={updateStaff.isPending}>
                 {updateStaff.isPending ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                     Updating...
                   </>
                 ) : (
                   <>
-                    <Users className="mr-2 h-4 w-4" />
+                    <Users className="h-4 w-4" />
                     Update Staff Member
                   </>
                 )}
