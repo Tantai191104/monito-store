@@ -5,12 +5,20 @@ import type { Product } from '@/types/product';
 import { ShoppingCart, Gift, MessageCircle } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 const ProductInfo = ({ product }: { product: Product }) => {
   const { addItem } = useCart();
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const handleAddToCart = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
     setIsAddingToCart(true);
     try {
       addItem(product, 'product');
