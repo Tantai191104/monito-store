@@ -32,6 +32,7 @@ export interface UserDocument extends Document {
   // ✅ Password reset fields
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
+  deletedAt?: Date | null;
 
   comparePassword(value: string): Promise<boolean>;
 }
@@ -158,6 +159,10 @@ const userSchema = new Schema<UserDocument>(
       default: null,
     },
     resetPasswordExpires: {
+      type: Date,
+      default: null,
+    },
+    deletedAt: {
       type: Date,
       default: null,
     },

@@ -109,7 +109,7 @@ export const staffService = {
       search?: string;
     } = {},
   ) {
-    const query: any = { role: 'staff' };
+    const query: any = { role: 'staff', deletedAt: null };
 
     // Apply filters
     if (filters.department) {
@@ -130,7 +130,7 @@ export const staffService = {
 
     const staff = await UserModel.find(query)
       .select('-password')
-      .sort({ joinDate: -1 });
+      .sort({ createdAt: -1 });
 
     return staff;
   },
@@ -238,7 +238,7 @@ export const staffService = {
   },
 
   /**
-   * Delete staff member (soft delete by deactivating)
+   * Delete staff member (soft delete by setting deletedAt)
    */
   async deleteStaff(staffId: string) {
     const staff = await UserModel.findOne({
@@ -250,8 +250,8 @@ export const staffService = {
       throw new NotFoundException('Staff member not found');
     }
 
-    // Soft delete by deactivating
-    staff.isActive = false;
+    // Soft delete by setting the deletedAt timestamp
+    staff.deletedAt = new Date();
     await staff.save();
 
     return { deletedStaff: staff };
