@@ -46,9 +46,10 @@ export const fetchUsers = async (): Promise<ApiResponse<UserResponse[]>> => {
   console.log("DATA:", res.data.data);
   return res.data;
 }
-export const updateUserStatus = async (userId: string, isActive: boolean): Promise<ApiResponse<UserResponse>> => {
+export const updateUserStatus = async (userId: string, isActive: boolean, reason: string, email: string): Promise<ApiResponse<UserResponse>> => {
   const res = await API.patch(`/user/${userId}/status`, {
     isActive,
+    reason, email
   });
   console.log("DATA:", res.data);
   return res.data;

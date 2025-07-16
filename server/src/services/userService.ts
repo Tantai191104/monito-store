@@ -12,6 +12,7 @@ import UserModel from '../models/userModel';
  * Utils
  */
 import { NotFoundException } from '../utils/errors';
+import { sendEmail } from '../utils/sendEmail';
 
 export const userService = {
   /**
@@ -116,7 +117,7 @@ export const userService = {
       throw new Error('Failed to fetch all users');
     }
   },
-  async updateUserStatus(userId: string, newStatus: boolean) {
+  async updateUserStatus(userId: string, newStatus: boolean, reason: string , email : string) {
     const user = await UserModel.findById(userId);
 
     if (!user) {
@@ -125,6 +126,21 @@ export const userService = {
 
     user.isActive = newStatus;
     await user.save();
+
+    const subject = 'Account Status Updated';
+    const html = `
+    <div style="font-family: sans-serif; color: #333;">
+      <h2>Dear ${user.name || 'User'},</h2>
+      <p>Your account has been <strong style="color:${newStatus ? 'green' : 'red'};">
+      ${newStatus ? 'active' : 'inactive'}
+      </strong>.</p>
+      <p><strong>Reason:</strong> ${reason}</p>
+      <hr/>
+      <p style="font-size: 12px; color: #888;">If you have any questions, please contact support.</p>
+    </div>
+  `;
+
+    await sendEmail({ to: email, subject, html });
 
     return user;
   },
