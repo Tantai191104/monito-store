@@ -62,4 +62,11 @@ export const authService = {
     const response = await API.post<ApiResponse>('/auth/reset-password', data);
     return response.data;
   },
+  
+  async isSameName(name: string): Promise<boolean> {
+    const response = await API.get<ApiResponse<{ user: User }>>('/user/current-user');
+    const currentUser = response.data.data?.user;
+    if (!currentUser) return false;
+    return currentUser.name === name;
+  },
 };
