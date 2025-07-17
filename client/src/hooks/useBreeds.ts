@@ -1,7 +1,8 @@
 import { toast } from 'sonner';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { breedService } from '@/services/breedService';
+// ✅ Sửa lại import để lấy đúng service và type
+import { breedService, type BulkDeleteResult } from '@/services/breedService';
 import type {
   CreateBreedPayload,
   UpdateBreedPayload,
@@ -16,6 +17,7 @@ export const breedKeys = {
   list: (filters: string) => [...breedKeys.lists(), { filters }] as const,
   details: () => [...breedKeys.all, 'detail'] as const,
   detail: (id: string) => [...breedKeys.details(), id] as const,
+  usageStats: (id: string) => [...breedKeys.all, 'usage-stats', id] as const,
 };
 
 // Get all breeds
@@ -177,7 +179,59 @@ export const useDeleteBreed = () => {
   });
 };
 
-// Bulk operations
+// ✅ Enhanced bulk delete with constraint handling
+export const useBulkDeleteBreeds = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (ids: string[]) => breedService.bulkDeleteBreeds(ids),
+    onSuccess: (response) => {
+      const result = response.data as BulkDeleteResult;
+
+      // Remove successfully deleted breeds from cache
+      if (result.deleted.length > 0) {
+        const deletedIds = result.deleted.map((breed) => breed._id);
+
+        queryClient.setQueryData(breedKeys.lists(), (old: Breed[] = []) =>
+          old.filter((breed) => !deletedIds.includes(breed._id)),
+        );
+
+        deletedIds.forEach((id) => {
+          queryClient.removeQueries({ queryKey: breedKeys.detail(id) });
+          queryClient.removeQueries({
+            queryKey: breedKeys.usageStats(id),
+          });
+        });
+
+        queryClient.invalidateQueries({ queryKey: breedKeys.all });
+      }
+
+      // Show detailed results
+      if (result.failed.length === 0) {
+        toast.success(`Successfully deleted ${result.deleted.length} breeds!`);
+      } else if (result.deleted.length === 0) {
+        toast.error('No breeds could be deleted', {
+          description: 'All selected breeds are being used by pets.',
+          duration: 6000,
+        });
+      } else {
+        toast.warning(
+          `Partial success: ${result.deleted.length} deleted, ${result.failed.length} failed`,
+          {
+            description: 'Some breeds are being used by pets.',
+            duration: 6000,
+          },
+        );
+      }
+    },
+    onError: (error: any) => {
+      const apiError = error.response?.data as ApiError;
+      const message = getErrorMessage(apiError?.errorCode, apiError?.message);
+      toast.error(message || 'An unexpected error occurred.');
+    },
+  });
+};
+
 export const useBulkActivateBreeds = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -232,44 +286,6 @@ export const useBulkDeactivateBreeds = () => {
       const apiError = error.response?.data as ApiError;
       const message = getErrorMessage(apiError?.errorCode, apiError?.message);
       toast.error(message);
-    },
-  });
-};
-
-// ✅ Enhanced bulk delete with constraint handling
-export const useBulkDeleteBreeds = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (ids: string[]) => {
-      await Promise.all(ids.map((id) => breedService.deleteBreed(id)));
-      return ids;
-    },
-    onSuccess: (deletedIds) => {
-      queryClient.setQueryData(breedKeys.lists(), (old: Breed[] = []) =>
-        old.filter((breed) => !deletedIds.includes(breed._id)),
-      );
-
-      deletedIds.forEach((id) => {
-        queryClient.removeQueries({ queryKey: breedKeys.detail(id) });
-      });
-
-      queryClient.invalidateQueries({ queryKey: breedKeys.all });
-      toast.success(`${deletedIds.length} breeds deleted successfully!`);
-    },
-    onError: (error: any) => {
-      const apiError = error.response?.data as ApiError;
-
-      // ✅ Handle constraint violations
-      if (apiError?.errorCode === 'BREED_IN_USE') {
-        toast.error('Some breeds cannot be deleted', {
-          description: 'They are being used by pets.',
-          duration: 6000,
-        });
-      } else {
-        const message = getErrorMessage(apiError?.errorCode, apiError?.message);
-        toast.error(message);
-      }
     },
   });
 };
