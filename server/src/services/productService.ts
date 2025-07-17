@@ -76,6 +76,10 @@ export const productService = {
     // Build query
     const query: any = {};
 
+    if (typeof isActive === 'boolean') {
+      query.isActive = isActive;
+    }
+
     // Apply search filters
     if (search) {
       query.$or = [

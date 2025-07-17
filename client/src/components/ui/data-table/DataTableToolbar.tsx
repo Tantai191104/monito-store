@@ -66,7 +66,7 @@ export function DataTableToolbar<TData>({
         ) : addHref && addLabel ? (
           <Button asChild>
             <Link to={addHref}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="h-4 w-4" />
               {addLabel}
             </Link>
           </Button>

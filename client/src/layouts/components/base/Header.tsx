@@ -1,13 +1,8 @@
 /**
  * Node modules
-*/
+ */
 import { Link, useLocation } from 'react-router-dom';
-import {
-  ShoppingCart,
-  User,
-  LogOut,
-  Settings, Package
-} from 'lucide-react';
+import { ShoppingCart, User, LogOut, Settings, Package } from 'lucide-react';
 /**
  * Components
  */
@@ -163,7 +158,7 @@ export const Header = () => {
           ) : (
             /* ✅ Guest User OR Staff/Admin - Join Community Button */
             <Link to="/login">
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+              <Button className="bg-[#003459] text-primary-foreground hover:bg-[#003459]/90">
                 Join the community
               </Button>
             </Link>

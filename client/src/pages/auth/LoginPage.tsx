@@ -68,8 +68,8 @@ const LoginPage = () => {
 
   return (
     <div className="flex w-[400px] flex-col gap-6 rounded-lg bg-white p-5">
-      <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-primary text-2xl font-bold">
+      <div className="flex flex-col items-center gap-2 text-center ">
+        <h1 className="text-[#003459] text-2xl font-bold">
           Login to your account
         </h1>
         <p className="text-muted-foreground text-sm text-balance">
@@ -116,7 +116,11 @@ const LoginPage = () => {
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full" disabled={login.isPending}>
+          <Button
+            type="submit"
+            className="w-full bg-[#003459]"
+            disabled={login.isPending}
+          >
             {login.isPending ? (
               <LoaderCircleIcon className="size-5" />
             ) : (
