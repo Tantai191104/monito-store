@@ -10,12 +10,11 @@ import { ArrowRightIcon, Package } from 'lucide-react';
  */
 import { Button } from '@/components/ui/button';
 
-
 /**
  * Hooks
  */
 import { usePets } from '@/hooks/usePets';
-import PetCard from '@/pages/main/pets/components/PetCard'; // Import từ pets folder
+import PetCard from '@/pages/main/pets/components/PetCard';
 
 const PetSection = () => {
   const navigate = useNavigate();

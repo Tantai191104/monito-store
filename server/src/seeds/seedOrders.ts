@@ -41,7 +41,10 @@ export const seedOrders = async () => {
         subtotal: products[0].price * 2,
         tax: Math.round(products[0].price * 2 * 0.1),
         shipping: 30000,
-        total: products[0].price * 2 + Math.round(products[0].price * 2 * 0.1) + 30000,
+        total:
+          products[0].price * 2 +
+          Math.round(products[0].price * 2 * 0.1) +
+          30000,
         status: 'pending',
         paymentStatus: 'pending',
         shippingAddress,
@@ -138,11 +141,20 @@ export const seedOrders = async () => {
       },
     ];
 
-    const createdOrders = await OrderModel.insertMany(ordersData);
+    // ❌ Don't use insertMany as it bypasses 'save' middleware
+    // const createdOrders = await OrderModel.insertMany(ordersData);
+
+    // ✅ Use a loop with .create() to trigger pre-save hooks for orderNumber
+    const createdOrders = [];
+    for (const orderData of ordersData) {
+      const createdOrder = await OrderModel.create(orderData);
+      createdOrders.push(createdOrder);
+    }
+
     console.log(`✅ Successfully seeded ${createdOrders.length} orders`);
     return createdOrders;
   } catch (error) {
     console.error('❌ Error seeding orders:', error);
     throw error;
   }
-}; 
+};

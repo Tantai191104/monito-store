@@ -107,6 +107,14 @@ export const productService = {
       }
     }
 
+    // Filter by price
+    if (typeof minPrice === 'number') {
+      query.price = { ...query.price, $gte: minPrice };
+    }
+    if (typeof maxPrice === 'number') {
+      query.price = { ...query.price, $lte: maxPrice };
+    }
+
     // Only show products with ACTIVE categories in customer view
     // For staff view, show all products regardless of category status
     if (!includeInactiveCategories) {
@@ -114,7 +122,10 @@ export const productService = {
         isActive: true,
       }).select('_id');
       const activeCategoryIds = activeCategories.map((cat) => cat._id);
-      query.category = { $in: activeCategoryIds };
+      // Nếu đã có filter category thì không ghi đè
+      if (!query.category) {
+        query.category = { $in: activeCategoryIds };
+      }
     }
 
     // Build sort

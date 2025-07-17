@@ -392,14 +392,15 @@ const OrdersPage = () => {
                 {/* Order Items */}
                 <div className="space-y-4 mb-6">
                   {order.items.map((item: any, index: number) => {
-                    // Lấy ảnh từ item.image, nếu không có thì lấy từ product.images[0]
-                    const product = productMap[item.item._id || item.item.id || item.product_id];
+                    // Defensive: handle missing item.item (e.g. product/pet deleted)
+                    const itemObj = item.item;
+                    const product = itemObj && (productMap[itemObj._id || itemObj.id || item.product_id]);
                     const imageUrl = item.image || product?.images?.[0] || '/placeholder-product.jpg';
                     return (
                       <div key={index} className="flex items-center space-x-4">
                         <img
                           src={imageUrl}
-                          alt={item.item.name}
+                          alt={itemObj?.name || 'Unavailable'}
                           className="w-16 h-16 object-cover rounded-lg"
                           onError={e => {
                             const target = e.target as HTMLImageElement;
@@ -413,10 +414,12 @@ const OrdersPage = () => {
                             <Badge variant={item.type === 'pet' ? 'destructive' : 'default'} className="text-xs">
                               {item.type === 'pet' ? 'Pet' : 'Product'}
                             </Badge>
-                            <h4 className="font-medium text-gray-900">{item.item.name}</h4>
+                            <h4 className="font-medium text-gray-900">
+                              {itemObj?.name || <span className="text-gray-400 italic">[No longer available]</span>}
+                            </h4>
                           </div>
                           <p className="text-sm text-gray-600">
-                            Quantity: {item.quantity} × {formatPrice(item.item.price)} VND
+                            Quantity: {item.quantity} × {itemObj?.price ? formatPrice(itemObj.price) : 'N/A'} VND
                           </p>
                         </div>
                         <div className="text-right">
