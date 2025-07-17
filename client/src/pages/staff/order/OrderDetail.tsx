@@ -1,23 +1,9 @@
 import { useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import {
-  ArrowLeft,
-  Edit,
-  Loader2,
-  Package,
-  CheckCircle2,
-  XCircle,
-  Truck,
-  CreditCard,
-  Calendar,
-  User,
-  ShoppingCart,
-  FileText,
-} from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Loader2, Package, XCircle, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   Card,
   CardContent,
@@ -37,7 +23,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { useOrderById, useCancelOrder, useUpdateOrderStatus } from '@/hooks/useOrders';
+import {
+  useOrderById,
+  useCancelOrder,
+  useUpdateOrderStatus,
+} from '@/hooks/useOrders';
 
 const statusMap: Record<string, { label: string; color: string }> = {
   pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
@@ -103,19 +93,58 @@ const OrderDetail = () => {
     );
   }
 
+  // ✅ Helper to format address
+  const formatAddress = (address: any) => {
+    return [address.street, address.district, address.province]
+      .filter(Boolean)
+      .join(', ');
+  };
+
+  // ✅ Prepare data for info lists
+  const customerInfo = [
+    { label: 'Customer Name', value: order.customer.name },
+    { label: 'Email', value: order.customer.email },
+    { label: 'Phone', value: order.customer.phone || 'N/A' },
+    { label: 'Shipping Address', value: formatAddress(order.shippingAddress) },
+  ];
+
+  const orderMetadata = [
+    { label: 'Order Number', value: `#${order.orderNumber}` },
+    {
+      label: 'Order Date',
+      value: new Date(order.orderDate).toLocaleDateString('vi-VN'),
+    },
+    {
+      label: 'Estimated Delivery',
+      value: order.estimatedDelivery
+        ? new Date(order.estimatedDelivery).toLocaleDateString('vi-VN')
+        : 'N/A',
+    },
+    { label: 'Total Items', value: order.totalItems },
+    {
+      label: 'Last Updated',
+      value: new Date(order.updatedAt).toLocaleDateString('vi-VN'),
+    },
+  ];
+
   return (
     <div className="container mx-auto py-0">
       {/* Header */}
       <div className="mb-3 flex items-center justify-between border-b p-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Order #{order.orderNumber}</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Order #{order.orderNumber}
+          </h1>
           <p className="text-muted-foreground">
             Order Details • ID: #{order._id.slice(-8).toUpperCase()}
           </p>
         </div>
         <div className="flex items-center space-x-3">
           {order.status !== 'cancelled' && (
-            <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+            <AlertDialog
+              open={showCancelDialog}
+              onOpenChange={setShowCancelDialog}
+            >
               <AlertDialogTrigger asChild>
                 <Button variant="destructive">
                   <XCircle className="mr-2 h-4 w-4" />
@@ -126,7 +155,8 @@ const OrderDetail = () => {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Cancel Order</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Are you sure you want to cancel this order? This action cannot be undone.
+                    Are you sure you want to cancel this order? This action
+                    cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -169,17 +199,31 @@ const OrderDetail = () => {
                 <div className="divide-y">
                   {order.items.map((item, idx) => (
                     <div key={idx} className="flex items-center gap-4 py-4">
-                      {item.item.image && (
-                        <img
-                          src={item.item.image}
-                          alt={item.item.name}
-                          className="h-16 w-16 rounded object-cover border"
-                        />
-                      )}
+                      <img
+                        src={
+                          item.item?.images?.[0] || '/placeholder-product.jpg'
+                        }
+                        alt={item.item?.name || 'Item image'}
+                        className="h-16 w-16 rounded border object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = '/placeholder-product.jpg';
+                        }}
+                      />
                       <div className="flex-1">
-                        <div className="font-medium text-gray-900">{item.item.name}</div>
-                        <div className="text-xs text-gray-500">Type: {item.type}</div>
-                        <div className="text-xs text-gray-500">Quantity: {item.quantity}</div>
+                        <div className="font-medium text-gray-900">
+                          {item.item?.name || (
+                            <span className="text-gray-500 italic">
+                              [Product/Pet not available]
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Type: {item.type}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Quantity: {item.quantity}
+                        </div>
                       </div>
                       <div className="text-right font-semibold text-blue-600">
                         {item.subtotal.toLocaleString('vi-VN')} ₫
@@ -210,22 +254,16 @@ const OrderDetail = () => {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   Order Status
-                  <span className={`ml-2 rounded px-2 py-1 text-xs font-semibold ${statusMap[order.status].color}`}>
+                  <span
+                    className={`ml-2 rounded px-2 py-1 text-xs font-semibold ${statusMap[order.status].color}`}
+                  >
                     {statusMap[order.status].label}
                   </span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-col items-center gap-2">
-                  <div className="text-3xl font-bold text-blue-600">
-                    {order.total.toLocaleString('vi-VN')} ₫
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="h-4 w-4" />
-                    <span className={`rounded px-2 py-1 text-xs font-semibold ${paymentStatusMap[order.paymentStatus].color}`}>
-                      {paymentStatusMap[order.paymentStatus].label}
-                    </span>
-                  </div>
+                <div className="text-3xl text-center font-bold text-blue-600">
+                  {order.total.toLocaleString('vi-VN')} ₫
                 </div>
               </CardContent>
             </Card>
@@ -237,18 +275,18 @@ const OrderDetail = () => {
                 <CardDescription>Contact and address details</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-gray-500" />
-                    <span className="font-medium text-gray-900">{order.customer.name}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <span>{order.customer.email}</span>
-                    {order.customer.phone && <span>• {order.customer.phone}</span>}
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <span>{order.shippingAddress.street}, {order.shippingAddress.city}, {order.shippingAddress.state}, {order.shippingAddress.zipCode}</span>
-                  </div>
+                <div className="space-y-3">
+                  {customerInfo.map((info) => (
+                    <div
+                      key={info.label}
+                      className="flex justify-between border-b pb-3 text-sm last:border-b-0"
+                    >
+                      <span className="text-gray-600">{info.label}</span>
+                      <span className="text-right font-medium text-gray-900">
+                        {info.value}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
@@ -260,33 +298,18 @@ const OrderDetail = () => {
                 <CardDescription>Dates and identifiers</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2 text-sm text-gray-700">
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-gray-500" />
-                    <span>Order Number: <span className="font-medium">{order.orderNumber}</span></span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-gray-500" />
-                    <span>Order Date: {new Date(order.orderDate).toLocaleDateString('vi-VN')}</span>
-                  </div>
-                  {order.estimatedDelivery && (
-                    <div className="flex items-center gap-2">
-                      <Truck className="h-4 w-4 text-gray-500" />
-                      <span>Estimated Delivery: {new Date(order.estimatedDelivery).toLocaleDateString('vi-VN')}</span>
+                <div className="space-y-3">
+                  {orderMetadata.map((meta) => (
+                    <div
+                      key={meta.label}
+                      className="flex justify-between border-b pb-3 text-sm last:border-b-0"
+                    >
+                      <span className="text-gray-600">{meta.label}</span>
+                      <span className="font-medium text-gray-900">
+                        {meta.value}
+                      </span>
                     </div>
-                  )}
-                  <div className="flex items-center gap-2">
-                    <ShoppingCart className="h-4 w-4 text-gray-500" />
-                    <span>Total Items: {order.totalItems}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-gray-500" />
-                    <span>Created: {new Date(order.createdAt).toLocaleDateString('vi-VN')}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-gray-500" />
-                    <span>Last Updated: {new Date(order.updatedAt).toLocaleDateString('vi-VN')}</span>
-                  </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
@@ -327,4 +350,4 @@ const OrderDetailSkeleton = () => (
   </div>
 );
 
-export default OrderDetail; 
+export default OrderDetail;

@@ -13,7 +13,7 @@ export interface Order {
       _id: string;
       name: string;
       price: number;
-      image?: string;
+      images?: string[];
     };
     quantity: number;
     subtotal: number;
