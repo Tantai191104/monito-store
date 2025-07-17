@@ -12,27 +12,31 @@ interface TableSkeletonProps {
   rows?: number;
   columns?: number;
   showHeader?: boolean;
+  showToolbar?: boolean;
 }
 
 export function TableSkeleton({
   rows = 10,
   columns = 6,
   showHeader = true,
+  showToolbar = true,
 }: TableSkeletonProps) {
   return (
     <div className="w-full space-y-4">
       {/* Toolbar Skeleton */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Skeleton className="h-10 w-[300px]" />
-          <Skeleton className="h-10 w-[140px]" />
+      {showToolbar && (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Skeleton className="h-10 w-[300px]" />
+            <Skeleton className="h-10 w-[140px]" />
+          </div>
+          <div className="flex items-center space-x-2">
+            <Skeleton className="h-10 w-[100px]" />
+            <Skeleton className="h-10 w-[100px]" />
+            <Skeleton className="h-10 w-[120px]" />
+          </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <Skeleton className="h-10 w-[100px]" />
-          <Skeleton className="h-10 w-[100px]" />
-          <Skeleton className="h-10 w-[120px]" />
-        </div>
-      </div>
+      )}
 
       {/* Table Skeleton */}
       <div className="rounded-md border">
