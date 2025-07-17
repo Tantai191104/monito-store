@@ -49,12 +49,15 @@ export const useProducts = (
   });
 };
 
-export const useProduct = (id: string) => {
+export const useProduct = (
+  id: string,
+  options: { customerView?: boolean } = {},
+) => {
   const queryKey = productKeys.detail(id);
   return useQuery({
     queryKey,
     queryFn: async () => {
-      const response = await productService.getProductById(id);
+      const response = await productService.getProductById(id, options);
       return response.data?.product;
     },
     enabled: !!id,

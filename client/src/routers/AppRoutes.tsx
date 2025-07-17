@@ -58,6 +58,7 @@ import ProfilePage from '@/pages/profile/ProfilePage';
 import CartPage from '@/pages/customer/CartPage';
 import CheckoutPage from '@/pages/customer/CheckoutPage';
 import OrdersPage from '@/pages/customer/OrdersPage';
+import { PublicRoute } from './components/PublicRoute';
 
 const AppRoutes = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -118,14 +119,16 @@ const AppRoutes = () => {
       </Route>
 
       {/* ✅ Public Routes - ai cũng có thể xem, nhưng navbar khác nhau */}
-      <Route element={<BaseLayout />}>
-        <Route index element={<HomePage />} />
-        <Route path="/pets" element={<PetsPage />} />
-        <Route path="/pets/:id" element={<PetDetailPage />} />
-        <Route path="/products" element={<ProductsPage />} />
-        <Route path="/products/:id" element={<ProductDetailPage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/contact" element={<ContactPage />} />
+      <Route element={<PublicRoute />}>
+        <Route element={<BaseLayout />}>
+          <Route index element={<HomePage />} />
+          <Route path="/pets" element={<PetsPage />} />
+          <Route path="/pets/:id" element={<PetDetailPage />} />
+          <Route path="/products" element={<ProductsPage />} />
+          <Route path="/products/:id" element={<ProductDetailPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+        </Route>
       </Route>
 
       {/* ✅ Customer-only Routes - cần đăng nhập */}
@@ -135,14 +138,14 @@ const AppRoutes = () => {
       >
         <Route element={<BaseLayout />}>
           <Route index element={<Navigate replace to="/" />} />
-          <Route
-            path="profile"
-            element={<ProfilePage />}
-          />
+          <Route path="profile" element={<ProfilePage />} />
           <Route path="cart" element={<CartPage />} />
           <Route path="checkout" element={<CheckoutPage />} />
           <Route path="orders" element={<OrdersPage />} />
-          <Route path="orders/:id" element={<div>Order Detail Page - Coming Soon</div>} />
+          <Route
+            path="orders/:id"
+            element={<div>Order Detail Page - Coming Soon</div>}
+          />
           <Route
             path="wishlist"
             element={<div>Wishlist Page - Coming Soon</div>}

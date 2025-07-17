@@ -164,18 +164,27 @@ export const productService = {
   /**
    * Get product by ID
    */
-  async getProductById(productId: string) {
-    const product = await ProductModel.findById(productId).populate([
+  async getProductById(
+    productId: string,
+    options: { customerView?: boolean } = {},
+  ) {
+    const query: any = { _id: productId };
+
+    // For customer views, only return the product if it's active
+    if (options.customerView === true || options.customerView === 'true') {
+      query.isActive = true;
+    }
+
+    const product = await ProductModel.findOne(query).populate([
       { path: 'category', select: 'name description' },
     ]);
 
     if (!product) {
       throw new NotFoundException(
-        'Product not found',
+        'Product not found or is inactive', // More accurate error message
         ERROR_CODE_ENUM.PRODUCT_NOT_FOUND,
       );
     }
-
     return product;
   },
 
