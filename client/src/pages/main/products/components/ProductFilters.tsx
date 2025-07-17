@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useDebounce } from 'use-debounce';
-import { useCategories } from '@/hooks/useCategories';
+// ✅ Thay đổi hook để chỉ lấy các category đang hoạt động
+import { useActiveCategories } from '@/hooks/useCategories';
 import { useInvalidateProductQueries } from '@/hooks/useProducts';
 import { formatPrice } from '@/utils/formatter';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -21,8 +21,9 @@ const ProductFilters = ({
   searchParams,
   setSearchParams,
 }: ProductFiltersProps) => {
+  // ✅ Sử dụng hook mới
   const { data: categories = [], isLoading: categoriesLoading } =
-    useCategories();
+    useActiveCategories();
   const invalidateProductQueries = useInvalidateProductQueries();
 
   const [priceRange, setPriceRange] = useState<[number, number]>([
@@ -46,12 +47,23 @@ const ProductFilters = ({
       return;
     }
     // Use non-debounced value if we're at default values to avoid debounce delay
-    const currentPriceRange = (priceRange[0] === MIN_PRICE && priceRange[1] === MAX_PRICE)
-      ? priceRange
-      : debouncedPriceRange;
-    console.log('Product price range effect running - min:', currentPriceRange[0], 'max:', currentPriceRange[1], 'using debounced:', currentPriceRange === debouncedPriceRange);
+    const currentPriceRange =
+      priceRange[0] === MIN_PRICE && priceRange[1] === MAX_PRICE
+        ? priceRange
+        : debouncedPriceRange;
+    console.log(
+      'Product price range effect running - min:',
+      currentPriceRange[0],
+      'max:',
+      currentPriceRange[1],
+      'using debounced:',
+      currentPriceRange === debouncedPriceRange,
+    );
     // If we're at default values, don't update URL
-    if (currentPriceRange[0] === MIN_PRICE && currentPriceRange[1] === MAX_PRICE) {
+    if (
+      currentPriceRange[0] === MIN_PRICE &&
+      currentPriceRange[1] === MAX_PRICE
+    ) {
       console.log('At default values, skipping URL update');
       return;
     }
@@ -66,7 +78,14 @@ const ProductFilters = ({
       console.log('Updating product URL params:', newParams.toString());
       setSearchParams(newParams);
     }
-  }, [debouncedPriceRange, priceRange, searchParams, setSearchParams, isResetting, lastResetTime]);
+  }, [
+    debouncedPriceRange,
+    priceRange,
+    searchParams,
+    setSearchParams,
+    isResetting,
+    lastResetTime,
+  ]);
 
   useEffect(() => {
     if (isResetting) {
@@ -80,7 +99,14 @@ const ProductFilters = ({
     }
     const min = Number(searchParams.get('minPrice') || MIN_PRICE);
     const max = Number(searchParams.get('maxPrice') || MAX_PRICE);
-    console.log('Product URL sync effect - min:', min, 'max:', max, 'searchParams:', searchParams.toString());
+    console.log(
+      'Product URL sync effect - min:',
+      min,
+      'max:',
+      max,
+      'searchParams:',
+      searchParams.toString(),
+    );
     setPriceRange([min, max]);
   }, [searchParams, isResetting, lastResetTime]);
 
@@ -165,7 +191,10 @@ const ProductFilters = ({
                       setSearchParams(newParams);
                     }}
                   />
-                  <label htmlFor={`category-${category._id}`} className="text-sm">
+                  <label
+                    htmlFor={`category-${category._id}`}
+                    className="text-sm"
+                  >
                     {category.name}
                   </label>
                 </div>

@@ -52,7 +52,7 @@ const PetGrid = ({ searchParams, setSearchParams }: PetGridProps) => {
     <div key={searchParamsKey}>
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-xl font-bold text-[#003459]">
-          Small Dog{' '}
+          All Pets{' '}
           <span className="text-base font-normal text-gray-500">
             ({pagination?.total || 0} puppies)
           </span>

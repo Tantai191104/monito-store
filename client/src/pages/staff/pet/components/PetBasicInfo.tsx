@@ -52,7 +52,9 @@ const PetBasicInfo = ({ control }: PetBasicInfoProps) => {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Pet Name</FormLabel>
+              <FormLabel>
+                Pet Name <span className="text-red-500">*</span>
+              </FormLabel>
               <FormControl>
                 <Input placeholder="e.g., Max, Bella, Luna" {...field} />
               </FormControl>
@@ -67,7 +69,9 @@ const PetBasicInfo = ({ control }: PetBasicInfoProps) => {
             name="breed"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Breed</FormLabel>
+                <FormLabel>
+                  Breed <span className="text-red-500">*</span>
+                </FormLabel>
                 {breedsLoading ? (
                   <Skeleton className="h-10 w-full" />
                 ) : (
@@ -103,7 +107,9 @@ const PetBasicInfo = ({ control }: PetBasicInfoProps) => {
             name="color"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Color</FormLabel>
+                <FormLabel>
+                  Color <span className="text-red-500">*</span>
+                </FormLabel>
                 {colorsLoading ? (
                   <Skeleton className="h-10 w-full" />
                 ) : (
@@ -145,7 +151,9 @@ const PetBasicInfo = ({ control }: PetBasicInfoProps) => {
             name="gender"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Gender</FormLabel>
+                <FormLabel>
+                  Gender <span className="text-red-500">*</span>
+                </FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
@@ -172,7 +180,9 @@ const PetBasicInfo = ({ control }: PetBasicInfoProps) => {
             name="age"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Age</FormLabel>
+                <FormLabel>
+                  Age <span className="text-red-500">*</span>
+                </FormLabel>
                 <FormControl>
                   <Input placeholder="e.g., 2 months, 1 year" {...field} />
                 </FormControl>
@@ -186,7 +196,9 @@ const PetBasicInfo = ({ control }: PetBasicInfoProps) => {
             name="size"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Size</FormLabel>
+                <FormLabel>
+                  Size <span className="text-red-500">*</span>
+                </FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
@@ -214,7 +226,9 @@ const PetBasicInfo = ({ control }: PetBasicInfoProps) => {
             name="price"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Price (VND)</FormLabel>
+                <FormLabel>
+                  Price (VND) <span className="text-red-500">*</span>
+                </FormLabel>
                 <FormControl>
                   <Input
                     type="number"
