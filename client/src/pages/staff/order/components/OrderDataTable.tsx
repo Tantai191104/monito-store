@@ -66,7 +66,6 @@ export function OrderDataTable<TData, TValue>({
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
-  const [expandedRefundRow, setExpandedRefundRow] = useState<string | null>(null);
 
   const table = useReactTable({
     data,
@@ -93,9 +92,16 @@ export function OrderDataTable<TData, TValue>({
   });
 
   // Get unique values for filters
-  const getStatusOptions = (data: Order[]) => {
-    const statuses = Array.from(new Set(data.map((order) => order.status)));
-    return statuses.sort();
+  const getStatusOptions = () => {
+    // Define all possible status options to ensure they're always available in the filter
+    return [
+      'pending',
+      'processing',
+      'delivered',
+      'cancelled',
+      'pending_refund',
+      'refunded'
+    ];
   };
 
   const getPaymentStatusOptions = (data: Order[]) => {
@@ -112,7 +118,7 @@ export function OrderDataTable<TData, TValue>({
     return cities.sort();
   };
 
-  const statusOptions = getStatusOptions(data as Order[]);
+  const statusOptions = getStatusOptions();
   const paymentStatusOptions = getPaymentStatusOptions(data as Order[]);
   const cityOptions = getCityOptions(data as Order[]);
 
@@ -177,13 +183,7 @@ export function OrderDataTable<TData, TValue>({
         </div>
 
         {/* Table Skeleton */}
-        <TableSkeleton
-          // columnCount={columns.length}
-          // Ke loi rowCount nha bi clq gì á
-          rowCount={10}
-          showToolbar={false}
-          className="rounded-md border"
-        />
+        <TableSkeleton />
       </div>
     );
   }
@@ -415,7 +415,7 @@ export function OrderDataTable<TData, TValue>({
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => [
+              table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
@@ -429,45 +429,8 @@ export function OrderDataTable<TData, TValue>({
                       )}
                     </TableCell>
                   ))}
-                </TableRow>,
-                // Toggle button and refund info for pending_refund
-                (row.original as Order).status === 'pending_refund' && (
-                  <TableRow key={row.id + '-refund-toggle'}>
-                    <TableCell colSpan={columns.length} className="bg-yellow-50">
-                      <button
-                        className="text-yellow-800 underline text-sm font-medium mb-2"
-                        onClick={() => setExpandedRefundRow(expandedRefundRow === row.id ? null : row.id)}
-                      >
-                        {expandedRefundRow === row.id ? 'Hide Refund Request Details' : 'Show Refund Request Details'}
-                      </button>
-                      {expandedRefundRow === row.id && (row.original as Order).refundInfo && (
-                        <div className="p-4 border-l-4 border-yellow-400 rounded mt-2">
-                          <h4 className="font-semibold text-yellow-800 mb-2">Refund Request Details</h4>
-                          <div className="text-sm text-gray-800 mb-1"><strong>Reason:</strong> {(row.original as Order).refundInfo?.reason}</div>
-                          {(row.original as Order).refundInfo?.description && (
-                            <div className="text-sm text-gray-800 mb-1"><strong>Description:</strong> {(row.original as Order).refundInfo?.description}</div>
-                          )}
-                          <div className="text-sm text-gray-800 mb-1"><strong>Bank Name:</strong> {(row.original as Order).refundInfo?.bankName}</div>
-                          <div className="text-sm text-gray-800 mb-1"><strong>Account Number:</strong> {(row.original as Order).refundInfo?.accountNumber}</div>
-                          <div className="text-sm text-gray-800 mb-1"><strong>Refund Amount:</strong> {(row.original as Order).refundInfo?.amount?.toLocaleString('vi-VN')} VND</div>
-                          {(row.original as Order).refundInfo?.images && (row.original as Order).refundInfo?.images.length > 0 && (
-                            <div className="text-sm text-gray-800 mb-2">
-                              <strong>Attached Images:</strong>
-                              <div className="flex gap-2 mt-2">
-                                {(row.original as Order).refundInfo!.images!.map((img: string, idx: number) => (
-                                  <img key={idx} src={img} alt="refund evidence" className="w-16 h-16 object-cover rounded border cursor-pointer hover:opacity-80" 
-                                       onClick={() => window.open(img, '_blank')} />
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                          <div className="text-xs text-gray-500 mt-2">Requested at: {(row.original as Order).refundInfo?.requestedAt ? new Date((row.original as Order).refundInfo!.requestedAt).toLocaleString() : ''}</div>
-                        </div>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ),
-              ])
+                </TableRow>
+              ))
             ) : (
               <TableRow>
                 <TableCell

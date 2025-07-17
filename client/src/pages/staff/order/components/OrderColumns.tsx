@@ -57,14 +57,41 @@ const StatusChangeCell = ({ order }: { order: Order }) => {
   const [newStatus, setNewStatus] = useState<Order['status'] | null>(null);
   const mutation = useUpdateOrderStatus();
 
-  const statusOptions = [
-    { value: 'pending', label: 'Pending' },
-    { value: 'processing', label: 'Processing' },
-    { value: 'delivered', label: 'Delivered' },
-    { value: 'pending_refund', label: 'Pending Refund' },
-    { value: 'refunded', label: 'Refunded' },
-    { value: 'cancelled', label: 'Cancelled' },
-  ];
+  // Define available status transitions based on current status
+  const getAvailableStatusOptions = (currentStatus: Order['status']) => {
+    const allStatusOptions = [
+      { value: 'pending', label: 'Pending' },
+      { value: 'processing', label: 'Processing' },
+      { value: 'delivered', label: 'Delivered' },
+      { value: 'pending_refund', label: 'Pending Refund' },
+      { value: 'refunded', label: 'Refunded' },
+      { value: 'cancelled', label: 'Cancelled' },
+    ];
+
+    switch (currentStatus) {
+      case 'pending':
+        return allStatusOptions.filter(opt => 
+          ['processing', 'cancelled'].includes(opt.value)
+        );
+      case 'processing':
+        return allStatusOptions.filter(opt => 
+          ['delivered'].includes(opt.value)
+        );
+      case 'pending_refund':
+        return allStatusOptions.filter(opt => 
+          ['refunded'].includes(opt.value)
+        );
+      case 'delivered':
+      case 'refunded':
+      case 'cancelled':
+        return []; // No status changes allowed
+      default:
+        return [];
+    }
+  };
+
+  const availableStatusOptions = getAvailableStatusOptions(order.status);
+  const isStatusChangeDisabled = availableStatusOptions.length === 0;
 
   const handleStatusChange = (value: string) => {
     if (value === order.status) return; // No change needed
@@ -103,13 +130,22 @@ const StatusChangeCell = ({ order }: { order: Order }) => {
       <Select
         value={order.status}
         onValueChange={handleStatusChange}
-        disabled={mutation.isPending || order.status === 'cancelled'}
+        disabled={mutation.isPending || isStatusChangeDisabled}
       >
         <SelectTrigger className="w-[120px] capitalize">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>
-          {statusOptions.map((opt) => (
+          {/* Show current status */}
+          <SelectItem 
+            key={order.status} 
+            value={order.status} 
+            className="capitalize"
+          >
+            {order.status.replace('_', ' ')} (Current)
+          </SelectItem>
+          {/* Show available status options */}
+          {availableStatusOptions.map((opt: { value: string; label: string }) => (
             <SelectItem
               key={opt.value}
               value={opt.value}
@@ -118,6 +154,16 @@ const StatusChangeCell = ({ order }: { order: Order }) => {
               {opt.label}
             </SelectItem>
           ))}
+          {/* Show message when no changes allowed */}
+          {isStatusChangeDisabled && (
+            <SelectItem 
+              value="disabled" 
+              disabled 
+              className="text-gray-400 italic"
+            >
+              No changes allowed
+            </SelectItem>
+          )}
         </SelectContent>
       </Select>
 
@@ -127,9 +173,19 @@ const StatusChangeCell = ({ order }: { order: Order }) => {
             <AlertDialogTitle>Confirm Status Change</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to change the order status from{' '}
-              <span className="font-semibold capitalize">{order.status}</span>{' '}
-              to <span className="font-semibold capitalize">{newStatus}</span>?
+              <span className="font-semibold capitalize">{order.status?.replace('_', ' ')}</span>{' '}
+              to <span className="font-semibold capitalize">{newStatus?.replace('_', ' ')}</span>?
               <br />
+              <br />
+              <div className="bg-blue-50 p-3 rounded-md mt-2">
+                <p className="text-sm text-blue-800 font-medium">Status Flow:</p>
+                <ul className="text-sm text-blue-700 mt-1 space-y-1">
+                  <li>• Pending → Processing or Cancelled</li>
+                  <li>• Processing → Delivered</li>
+                  <li>• Pending Refund → Refunded</li>
+                  <li>• Delivered/Refunded/Cancelled → No changes allowed</li>
+                </ul>
+              </div>
               <br />
               <span className="text-sm text-gray-600">
                 Order: {order.orderNumber}

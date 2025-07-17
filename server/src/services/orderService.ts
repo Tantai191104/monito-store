@@ -334,14 +334,14 @@ export const orderService = {
       throw new NotFoundException('Order not found');
     }
 
-    // Chỉ cho phép chuyển trạng thái hợp lệ
+    // Chỉ cho phép chuyển trạng thái hợp lệ theo business logic
     const validTransitions: Record<string, string[]> = {
       pending: ['processing', 'cancelled'],
-      processing: ['delivered', 'cancelled', 'refunded'],
-      delivered: ['refunded'],
-      pending_refund: ['refunded'],
-      cancelled: [],
-      refunded: [],
+      processing: ['delivered'], // Chỉ cho phép delivered từ processing
+      delivered: [], // Không cho phép thay đổi từ delivered
+      pending_refund: ['refunded'], // Chỉ cho phép refunded từ pending_refund
+      cancelled: [], // Không cho phép thay đổi từ cancelled
+      refunded: [], // Không cho phép thay đổi từ refunded
     };
     if (!validTransitions[order.status].includes(status)) {
       throw new BadRequestException(`Cannot change status from ${order.status} to ${status}`);
@@ -349,14 +349,10 @@ export const orderService = {
 
     // Xử lý cập nhật stock khi chuyển trạng thái
     if (order.status === 'pending' && status === 'processing') {
-      // Giảm stock khi đơn được xác nhận
+      // Stock đã được giảm khi tạo order, không cần giảm thêm
+      // Chỉ cần đánh dấu pet là không có sẵn
       for (const item of order.items) {
-        if (item.type === 'product') {
-          await ProductModel.findByIdAndUpdate(
-            item.item,
-            { $inc: { stock: -item.quantity } }
-          );
-        } else if (item.type === 'pet') {
+        if (item.type === 'pet') {
           await PetModel.findByIdAndUpdate(
             item.item,
             { isAvailable: false }
@@ -364,6 +360,20 @@ export const orderService = {
         }
       }
     }
+    
+    if (order.status === 'pending' && status === 'cancelled') {
+      // Hoàn trả stock khi hủy đơn từ pending
+      for (const item of order.items) {
+        if (item.type === 'product') {
+          await ProductModel.findByIdAndUpdate(
+            item.item,
+            { $inc: { stock: item.quantity } }
+          );
+        }
+        // Pet vẫn available vì chưa được reserve
+      }
+    }
+    
     if (status === 'refunded') {
       // Cộng lại stock khi hoàn tiền
       for (const item of order.items) {

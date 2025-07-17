@@ -1,7 +1,6 @@
-import { useState } from 'react';
+
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, Package, XCircle, CreditCard } from 'lucide-react';
-import { toast } from 'sonner';
+import { ArrowLeft, Package, AlertTriangle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -12,20 +11,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+
 import {
   useOrderById,
-  useCancelOrder,
   useUpdateOrderStatus,
 } from '@/hooks/useOrders';
 
@@ -36,6 +24,8 @@ const statusMap: Record<string, { label: string; color: string }> = {
   shipped: { label: 'Shipped', color: 'bg-orange-100 text-orange-800' },
   delivered: { label: 'Delivered', color: 'bg-green-100 text-green-800' },
   cancelled: { label: 'Cancelled', color: 'bg-red-100 text-red-800' },
+  pending_refund: { label: 'Pending Refund', color: 'bg-orange-100 text-orange-800' },
+  refunded: { label: 'Refunded', color: 'bg-gray-100 text-gray-800' },
 };
 
 const paymentStatusMap: Record<string, { label: string; color: string }> = {
@@ -48,22 +38,30 @@ const paymentStatusMap: Record<string, { label: string; color: string }> = {
 const OrderDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
-  const { data: order, isLoading, error } = useOrderById(id!);
-  const cancelOrder = useCancelOrder();
+  // Early return if no id
+  if (!id) {
+    return (
+      <div className="container mx-auto flex min-h-[calc(100vh-80px)] flex-col items-center justify-center">
+        <div className="text-center">
+          <Package className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+          <h3 className="mb-2 text-lg font-medium text-gray-900">
+            Invalid Order
+          </h3>
+          <p className="mb-4 text-gray-600">
+            No order ID provided.
+          </p>
+          <Button onClick={() => navigate('/staff/orders')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Orders
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const { data: order, isLoading, error } = useOrderById(id);
   const updateOrderStatus = useUpdateOrderStatus();
-
-  const handleCancelOrder = async () => {
-    if (!order) return;
-    try {
-      await cancelOrder.mutateAsync(order._id);
-      toast.success('Order cancelled successfully!');
-      navigate('/staff/orders');
-    } catch (err: any) {
-      toast.error(err?.message || 'Failed to cancel order');
-    }
-  };
 
   const handleBack = () => {
     navigate('/staff/orders');
@@ -139,47 +137,7 @@ const OrderDetail = () => {
             Order Details • ID: #{order._id.slice(-8).toUpperCase()}
           </p>
         </div>
-        <div className="flex items-center space-x-3">
-          {order.status !== 'cancelled' && (
-            <AlertDialog
-              open={showCancelDialog}
-              onOpenChange={setShowCancelDialog}
-            >
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive">
-                  <XCircle className="mr-2 h-4 w-4" />
-                  Cancel Order
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Cancel Order</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to cancel this order? This action
-                    cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Back</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleCancelOrder}
-                    className="bg-red-600 hover:bg-red-700"
-                    disabled={cancelOrder.isPending}
-                  >
-                    {cancelOrder.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Cancelling...
-                      </>
-                    ) : (
-                      'Cancel Order'
-                    )}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-        </div>
+
       </div>
 
       {/* Content */}
@@ -245,6 +203,89 @@ const OrderDetail = () => {
                 </CardContent>
               </Card>
             )}
+
+            {/* Refund Request Details */}
+            {order.status === 'pending_refund' && order.refundInfo && (
+              <Card className="!rounded-sm shadow-none border-orange-200">
+                <CardHeader>
+                  <CardTitle className="flex items-center text-orange-800">
+                    <AlertTriangle className="h-5 w-5 mr-2 text-orange-500" />
+                    Refund Request Details
+                  </CardTitle>
+                  <CardDescription>Customer has requested a refund for this order</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {/* Basic Refund Info */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-700 mb-1">Reason</h4>
+                        <p className="text-sm bg-orange-50 p-2 rounded border">{order.refundInfo.reason}</p>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-700 mb-1">Refund Amount</h4>
+                        <p className="text-sm font-semibold text-red-600 bg-red-50 p-2 rounded border">
+                          {order.refundInfo.amount?.toLocaleString('vi-VN')} ₫
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Bank Information */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-700 mb-1">Bank Name</h4>
+                        <p className="text-sm bg-gray-50 p-2 rounded border">{order.refundInfo.bankName}</p>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-700 mb-1">Account Number</h4>
+                        <p className="text-sm bg-gray-50 p-2 rounded border font-mono">{order.refundInfo.accountNumber}</p>
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    {order.refundInfo.description && (
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-700 mb-1">Additional Description</h4>
+                        <p className="text-sm bg-blue-50 p-3 rounded border">{order.refundInfo.description}</p>
+                      </div>
+                    )}
+
+                    {/* Attached Images */}
+                    {order.refundInfo.images && order.refundInfo.images.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-700 mb-2">Attached Evidence</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          {order.refundInfo.images.map((image: string, index: number) => (
+                            <div key={index} className="relative">
+                              <img
+                                src={image}
+                                alt={`Refund evidence ${index + 1}`}
+                                className="w-full h-24 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-80 transition-opacity"
+                                onClick={() => window.open(image, '_blank')}
+                              />
+                              <div className="absolute bottom-1 right-1 bg-black bg-opacity-50 text-white text-xs px-1 py-0.5 rounded">
+                                {index + 1}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">Click on images to view in full size</p>
+                      </div>
+                    )}
+
+                    {/* Request Date */}
+                    <div className="border-t pt-3">
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-500">Requested At:</span>
+                        <span className="font-medium">
+                          {new Date(order.refundInfo.requestedAt).toLocaleString('vi-VN')}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Right Column - Sidebar */}
@@ -255,9 +296,9 @@ const OrderDetail = () => {
                 <CardTitle className="flex items-center justify-between">
                   Order Status
                   <span
-                    className={`ml-2 rounded px-2 py-1 text-xs font-semibold ${statusMap[order.status].color}`}
+                    className={`ml-2 rounded px-2 py-1 text-xs font-semibold ${statusMap[order.status]?.color || 'bg-gray-100 text-gray-800'}`}
                   >
-                    {statusMap[order.status].label}
+                    {statusMap[order.status]?.label || order.status}
                   </span>
                 </CardTitle>
               </CardHeader>
