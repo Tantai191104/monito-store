@@ -58,6 +58,7 @@ import ProfilePage from '@/pages/profile/ProfilePage';
 import CartPage from '@/pages/customer/CartPage';
 import CheckoutPage from '@/pages/customer/CheckoutPage';
 import OrdersPage from '@/pages/customer/OrdersPage';
+import OrderDetail from '@/pages/staff/order/OrderDetail';
 import { PublicRoute } from './components/PublicRoute';
 
 const AppRoutes = () => {
@@ -182,6 +183,7 @@ const AppRoutes = () => {
           <Route path="pets/:id" element={<PetDetail />} />
           <Route path="pets/:id/edit" element={<EditPet />} />
           <Route path="orders" element={<OrdersManagement />} />
+          <Route path="orders/:id" element={<OrderDetail />} />
           <Route path="categories" element={<CategoriesManagement />} />
           <Route path="colors" element={<ColorsManagement />} />
           <Route path="breeds" element={<BreedsManagement />} />
