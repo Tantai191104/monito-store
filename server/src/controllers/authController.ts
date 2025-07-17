@@ -7,7 +7,12 @@ import { NextFunction, Request, Response } from 'express';
 /**
  * Validations
  */
-import { loginSchema, registerSchema, forgotPasswordSchema, resetPasswordSchema } from '../validations/authValidation';
+import {
+  loginSchema,
+  registerSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+} from '../validations/authValidation';
 
 /**
  * Services
@@ -56,7 +61,7 @@ export const authController = {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production', // HTTPS only in production
         sameSite: 'strict',
-        path: `${process.env.BASE_PATH}/auth/refresh-token`,
+        path: '/',
         maxAge: ms(process.env.REFRESH_TOKEN_EXPIRE! as StringValue), // 7 days
       });
 
@@ -114,7 +119,11 @@ export const authController = {
     }
   },
 
-  async forgotPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async forgotPassword(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const body = forgotPasswordSchema.parse(req.body);
 
@@ -126,7 +135,11 @@ export const authController = {
     }
   },
 
-  async resetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async resetPassword(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const body = resetPasswordSchema.parse(req.body);
 
