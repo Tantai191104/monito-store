@@ -4,7 +4,6 @@ import {
   MoreHorizontal,
   Eye,
   Edit,
-  Truck,
   Package,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -34,27 +33,9 @@ import type { Order } from '@/types/order';
 import { useUpdateOrderStatus } from '@/hooks/useOrders';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 // Helper function to get status badge variant
-const getStatusVariant = (status: Order['status']) => {
-  switch (status) {
-    case 'pending':
-      return 'secondary';
-    case 'confirmed':
-      return 'default';
-    case 'processing':
-      return 'default';
-    case 'shipped':
-      return 'outline';
-    case 'delivered':
-      return 'default';
-    case 'cancelled':
-      return 'destructive';
-    default:
-      return 'secondary';
-  }
-};
-
 const getPaymentStatusVariant = (status: Order['paymentStatus']) => {
   switch (status) {
     case 'paid':
@@ -161,6 +142,43 @@ const StatusChangeCell = ({ order }: { order: Order }) => {
         </AlertDialogContent>
       </AlertDialog>
     </>
+  );
+};
+
+// Add wrapper component for Actions cell
+const OrderActionsCell = ({ order }: { order: Order }) => {
+  const navigate = useNavigate();
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-8 w-8 p-0">
+          <span className="sr-only">Open menu</span>
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+        <DropdownMenuItem
+          onClick={() => navigator.clipboard.writeText(order.orderNumber)}
+        >
+          Copy order number
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem className="flex items-center" onClick={() => navigate(`/staff/orders/${order._id}`)}>
+          <Eye className="h-4 w-4" />
+          View details
+        </DropdownMenuItem>
+        <DropdownMenuItem className="flex items-center">
+          <Edit className="h-4 w-4" />
+          Edit order
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem className="flex items-center">
+          <Package className="h-4 w-4" />
+          Update status
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 
@@ -380,39 +398,7 @@ export const orderColumns: ColumnDef<Order>[] = [
     header: 'Actions',
     cell: ({ row }) => {
       const order = row.original;
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(order.orderNumber)}
-            >
-              Copy order number
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="flex items-center">
-              <Eye className="h-4 w-4" />
-              View details
-            </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center">
-              <Edit className="h-4 w-4" />
-              Edit order
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="flex items-center">
-              <Package className="h-4 w-4" />
-              Update status
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
+      return <OrderActionsCell order={order} />;
     },
   },
 ];
