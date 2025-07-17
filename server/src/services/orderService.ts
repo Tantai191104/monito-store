@@ -15,6 +15,7 @@ import OrderModel, { OrderDocument } from '../models/orderModel';
 import ProductModel from '../models/productModel';
 import PetModel from '../models/petModel';
 import UserModel from '../models/userModel';
+import ReviewModel from '../models/reviewModel';
 import { paymentService } from './paymentService';
 
 /**
@@ -221,6 +222,11 @@ export const orderService = {
       OrderModel.countDocuments(query),
     ]);
 
+    // Populate reviews cho từng order
+    for (const order of orders) {
+      (order as any).reviews = await ReviewModel.find({ orderId: (order as any)._id }).lean();
+    }
+
     return {
       orders,
       pagination: {
@@ -246,11 +252,14 @@ export const orderService = {
     const order = await OrderModel.findOne(query).populate([
       { path: 'customer', select: 'name email phone' },
       { path: 'items.item', select: 'name price images description' },
-    ]);
+    ]).lean();
 
     if (!order) {
       throw new NotFoundException('Order not found');
     }
+
+    // Populate reviews cho order
+    (order as any).reviews = await ReviewModel.find({ orderId: (order as any)._id }).lean();
 
     return order;
   },
@@ -330,6 +339,7 @@ export const orderService = {
       pending: ['processing', 'cancelled'],
       processing: ['delivered', 'cancelled', 'refunded'],
       delivered: ['refunded'],
+      pending_refund: ['refunded'],
       cancelled: [],
       refunded: [],
     };
@@ -392,11 +402,11 @@ export const orderService = {
     order.reviews = order.reviews || [];
     const existing = order.reviews.find(r => r.user.toString() === userId);
     if (existing) {
-      existing.rating = rating;
-      existing.content = content;
-      existing.createdAt = new Date();
+      (existing as any).rating = rating;
+      (existing as any).content = content;
+      (existing as any).createdAt = new Date();
     } else {
-      order.reviews.push({ user: userId, rating, content, createdAt: new Date() });
+      order.reviews.push({ user: new mongoose.Types.ObjectId(userId), rating, content, createdAt: new Date() });
     }
     await order.save();
     return order;
@@ -409,6 +419,27 @@ export const orderService = {
     const order = await OrderModel.findById(orderId);
     if (!order) throw new NotFoundException('Order not found');
     order.reviews = (order.reviews || []).filter(r => r.user.toString() !== userId);
+    await order.save();
+    return order;
+  },
+
+  /**
+   * Request refund (customer)
+   */
+  async requestRefund(orderId: string, customerId: string, refundData: { reason: string, bankName: string, accountNumber: string, description?: string, images?: string[] }) {
+    const order = await OrderModel.findOne({ _id: orderId, customer: customerId });
+    if (!order) throw new NotFoundException('Order not found');
+    if (order.status !== 'delivered' && order.status !== 'pending_refund') throw new BadRequestException('Only delivered or pending refund orders can be refunded/edited');
+    order.status = 'pending_refund';
+    order.refundInfo = {
+      reason: refundData.reason,
+      bankName: refundData.bankName,
+      accountNumber: refundData.accountNumber,
+      description: refundData.description || '',
+      images: refundData.images || [],
+      amount: order.total,
+      requestedAt: new Date(),
+    };
     await order.save();
     return order;
   },

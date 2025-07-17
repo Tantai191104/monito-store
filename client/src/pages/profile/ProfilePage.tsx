@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ShoppingBag, Edit, Save, X, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { ShoppingBag, Edit, Save, X, Loader2 } from 'lucide-react';
 
 /**
  * Components
@@ -20,7 +20,6 @@ import {
   CardFooter,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
@@ -66,6 +65,7 @@ const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const updateProfile = useUpdateProfile();
   const changePassword = useChangePassword();
+  const [profileError, setProfileError] = useState<string | null>(null);
 
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -96,6 +96,11 @@ const ProfilePage = () => {
   }, [user, profileForm]);
 
   const onProfileSubmit = async (data: ProfileFormValues) => {
+    setProfileError(null);
+    if (user && user.name === data.name) {
+      setProfileError('Name is the same as your current profile.');
+      return;
+    }
     await updateProfile.mutateAsync(data, {
       onSuccess: () => setIsEditing(false),
     });
@@ -345,6 +350,11 @@ const ProfilePage = () => {
                       )}
                     </CardHeader>
                     <CardContent className="space-y-6">
+                      {profileError && (
+                        <div className="text-red-500 text-sm">
+                          {profileError}
+                        </div>
+                      )}
                       <div className="grid gap-6 md:grid-cols-2">
                         <FormField
                           control={profileForm.control}

@@ -1,11 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table';
-import {
-  ArrowUpDown,
-  MoreHorizontal,
-  Eye,
-  Edit,
-  Package,
-} from 'lucide-react';
+import { ArrowUpDown, MoreHorizontal, Eye, Edit, Package } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -31,7 +25,13 @@ import {
 import { Badge } from '@/components/ui/badge';
 import type { Order } from '@/types/order';
 import { useUpdateOrderStatus } from '@/hooks/useOrders';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
@@ -56,21 +56,26 @@ const StatusChangeCell = ({ order }: { order: Order }) => {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [newStatus, setNewStatus] = useState<Order['status'] | null>(null);
   const mutation = useUpdateOrderStatus();
-  
+
   const statusOptions = [
-    'pending', 'processing', 'delivered', 'cancelled', 'refunded'
+    { value: 'pending', label: 'Pending' },
+    { value: 'processing', label: 'Processing' },
+    { value: 'delivered', label: 'Delivered' },
+    { value: 'pending_refund', label: 'Pending Refund' },
+    { value: 'refunded', label: 'Refunded' },
+    { value: 'cancelled', label: 'Cancelled' },
   ];
 
   const handleStatusChange = (value: string) => {
     if (value === order.status) return; // No change needed
-    
+
     setNewStatus(value as Order['status']);
     setIsConfirmOpen(true);
   };
 
   const confirmStatusChange = () => {
     if (!newStatus) return;
-    
+
     mutation.mutate(
       { id: order._id, status: newStatus },
       {
@@ -83,8 +88,8 @@ const StatusChangeCell = ({ order }: { order: Order }) => {
           toast.error('Failed to update order status');
           setIsConfirmOpen(false);
           setNewStatus(null);
-        }
-      }
+        },
+      },
     );
   };
 
@@ -98,15 +103,19 @@ const StatusChangeCell = ({ order }: { order: Order }) => {
       <Select
         value={order.status}
         onValueChange={handleStatusChange}
-        disabled={mutation.isPending}
+        disabled={mutation.isPending || order.status === 'cancelled'}
       >
         <SelectTrigger className="w-[120px] capitalize">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>
-          {statusOptions.map(opt => (
-            <SelectItem key={opt} value={opt} className="capitalize">
-              {opt}
+          {statusOptions.map((opt) => (
+            <SelectItem
+              key={opt.value}
+              value={opt.value}
+              className="capitalize"
+            >
+              {opt.label}
             </SelectItem>
           ))}
         </SelectContent>
@@ -118,8 +127,8 @@ const StatusChangeCell = ({ order }: { order: Order }) => {
             <AlertDialogTitle>Confirm Status Change</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to change the order status from{' '}
-              <span className="font-semibold capitalize">{order.status}</span> to{' '}
-              <span className="font-semibold capitalize">{newStatus}</span>?
+              <span className="font-semibold capitalize">{order.status}</span>{' '}
+              to <span className="font-semibold capitalize">{newStatus}</span>?
               <br />
               <br />
               <span className="text-sm text-gray-600">
@@ -131,7 +140,7 @@ const StatusChangeCell = ({ order }: { order: Order }) => {
             <AlertDialogCancel onClick={cancelStatusChange}>
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={confirmStatusChange}
               disabled={mutation.isPending}
               className="bg-blue-600 hover:bg-blue-700"
@@ -164,7 +173,10 @@ const OrderActionsCell = ({ order }: { order: Order }) => {
           Copy order number
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="flex items-center" onClick={() => navigate(`/staff/orders/${order._id}`)}>
+        <DropdownMenuItem
+          className="flex items-center"
+          onClick={() => navigate(`/staff/orders/${order._id}`)}
+        >
           <Eye className="h-4 w-4" />
           View details
         </DropdownMenuItem>
@@ -227,7 +239,14 @@ export const orderColumns: ColumnDef<Order>[] = [
     accessorKey: 'customer',
     header: 'Customer',
     cell: ({ row }) => {
-      const customer = row.getValue('customer') as Order['customer'];
+      const customer = row.getValue('customer') as Order['customer'] | null;
+      if (!customer) {
+        return (
+          <div className="max-w-[200px] text-gray-400 italic">
+            No customer info
+          </div>
+        );
+      }
       return (
         <div className="max-w-[200px]">
           <div className="font-medium">{customer.name}</div>

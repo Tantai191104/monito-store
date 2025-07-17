@@ -27,7 +27,6 @@ const upload = multer({
 uploadRoute.post(
   '/image',
   authenticate,
-  requireAdminOrStaff,
   upload.single('image'),
   uploadController.uploadImage,
 );

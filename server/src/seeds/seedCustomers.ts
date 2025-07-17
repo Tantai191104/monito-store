@@ -168,6 +168,7 @@ export const seedCustomers = async () => {
         name: 'Kevin Brown',
         email: 'kevin@example.com',
         password: hashedPassword,
+        phone: '+1-555-1013',
         role: 'customer',
         isActive: false, // ✅ Inactive customer
         joinDate: new Date('2024-08-20'),
