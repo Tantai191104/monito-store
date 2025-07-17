@@ -178,8 +178,8 @@ export const orderController = {
     try {
       const { id } = req.params;
       const customerId = req.userId!;
-      const { reason, bankName, accountNumber, description } = req.body;
-      const order = await orderService.requestRefund(id, customerId, { reason, bankName, accountNumber, description });
+      const { reason, bankName, accountNumber, description, images } = req.body;
+      const order = await orderService.requestRefund(id, customerId, { reason, bankName, accountNumber, description, images });
       res.status(STATUS_CODE.OK).json({
         message: 'Refund requested successfully',
         data: { order },

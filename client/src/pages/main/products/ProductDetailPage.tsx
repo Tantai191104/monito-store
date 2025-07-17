@@ -6,6 +6,7 @@ import { AlertTriangle } from 'lucide-react';
 import ProductBreadcrumb from './components/detail/ProductBreadcrumb';
 import ProductInfo from './components/detail/ProductInfo';
 import ProductSpecifications from './components/detail/ProductSpecifications';
+import ProductReviews from './components/detail/ProductReviews';
 import ImageGallery from '@/components/ImageGallery';
 
 const ProductDetailPage = () => {
@@ -43,6 +44,11 @@ const ProductDetailPage = () => {
             <ProductInfo product={product} />
             <ProductSpecifications product={product} />
           </div>
+        </div>
+        
+        {/* Product Reviews Section */}
+        <div className="mt-12">
+          <ProductReviews productId={product._id} />
         </div>
       </div>
     </div>

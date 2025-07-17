@@ -48,6 +48,7 @@ export interface RefundInfo {
   bankName: string;
   accountNumber: string;
   description?: string;
+  images?: string[];
   amount: number;
   requestedAt: Date;
 }
@@ -108,6 +109,7 @@ const refundInfoSchema = new Schema<RefundInfo>({
   bankName: { type: String, required: true },
   accountNumber: { type: String, required: true },
   description: { type: String },
+  images: [{ type: String }],
   amount: { type: Number, required: true },
   requestedAt: { type: Date, required: true },
 });

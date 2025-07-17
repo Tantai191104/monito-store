@@ -51,5 +51,7 @@ export interface Order {
     accountNumber: string;
     amount: number;
     requestedAt: string;
+    images?: string[];
   };
+  reviews?: any[];
 }

@@ -8,6 +8,7 @@ import {
   Package,
 } from 'lucide-react';
 import { useState } from 'react';
+import OrderDetailModal from './OrderDetailModal';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -390,38 +391,50 @@ export const orderColumns: ColumnDef<Order>[] = [
     header: 'Actions',
     cell: ({ row }) => {
       const order = row.original;
+      const [detailModalOpen, setDetailModalOpen] = useState(false);
 
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(order.orderNumber)}
-            >
-              Copy order number
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="flex items-center">
-              <Eye className="h-4 w-4" />
-              View details
-            </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center">
-              <Edit className="h-4 w-4" />
-              Edit order
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="flex items-center">
-              <Package className="h-4 w-4" />
-              Update status
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={() => navigator.clipboard.writeText(order.orderNumber)}
+              >
+                Copy order number
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                className="flex items-center"
+                onClick={() => setDetailModalOpen(true)}
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                View details
+              </DropdownMenuItem>
+              <DropdownMenuItem className="flex items-center">
+                <Edit className="h-4 w-4 mr-2" />
+                Edit order
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="flex items-center">
+                <Package className="h-4 w-4 mr-2" />
+                Update status
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          <OrderDetailModal
+            order={order}
+            open={detailModalOpen}
+            onOpenChange={setDetailModalOpen}
+          />
+        </>
       );
     },
   },
