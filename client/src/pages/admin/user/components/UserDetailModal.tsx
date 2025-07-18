@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Mail, Phone, Calendar } from 'lucide-react';
 import type { UserResponse } from '@/services/userService';
+import { formatPrice } from '@/utils/formatter';
 
 
 type Props = {
@@ -70,7 +71,7 @@ const UserDetailModal = ({ open, onClose, user }: Props) => {
                         </span>
                     </div>
                     <div>Orders: {user.orders ?? 0}</div>
-                    <div>Total Spent: ${user.totalSpent?.toFixed(2) ?? '0.00'}</div>
+                    <div>Total Spent: {formatPrice(user.totalSpent)} VND</div>
                 </div>
 
                 <DialogFooter>

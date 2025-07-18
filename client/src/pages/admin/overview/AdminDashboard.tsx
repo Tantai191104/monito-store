@@ -25,12 +25,16 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import UserStatsChart from './components/MonthlyOrderChart';
 import { SkeletonSection } from '@/pages/common/SkeletonSection';
-import { getAllSummary, getBussinessMetric, getUserStatistics } from '@/services/adminService';
+import {
+  getAllSummary,
+  getBussinessMetric,
+  getUserStatistics,
+} from '@/services/adminService';
 type SystemStat = {
   name: string;
   value: string;
   change: string;
-  trend: "up" | "down";
+  trend: 'up' | 'down';
   color: string;
   bgColor: string;
 };
@@ -38,8 +42,8 @@ type BusinessMetric = {
   name: string;
   value: string;
   change: string;
-  trend: "up" | "down";
-}
+  trend: 'up' | 'down';
+};
 type UserStat = {
   label: string;
   value: number;
@@ -49,13 +53,13 @@ const AdminDashboard = () => {
   const [timeRange, setTimeRange] = useState('7d');
   const [systemStats, setSystemStats] = useState<SystemStat[]>([]);
   const [businessMetrics, setBusinessMetrics] = useState<BusinessMetric[]>([]);
-  const [userStats, setUserStats] = useState<UserStat[]>([])
+  const [userStats, setUserStats] = useState<UserStat[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const iconMap: Record<string, LucideIcon> = {
-    "Total Users": Users,
-    "Active Staff": Activity,
-    "Total Revenue": DollarSign,
-    "System Uptime": Server,
+    'Total Users': Users,
+    'Active Staff': Activity,
+    'Total Revenue': DollarSign,
+    'System Uptime': Server,
   };
   useEffect(() => {
     const daysMap: Record<string, number> = {
@@ -75,9 +79,9 @@ const AdminDashboard = () => {
         ]);
         setSystemStats(summary);
         setBusinessMetrics(metrics);
-        setUserStats(userStats)
+        setUserStats(userStats);
       } catch (error) {
-        console.error("Failed to fetch admin dashboard data:", error);
+        console.error('Failed to fetch admin dashboard data:', error);
       } finally {
         setIsLoading(false);
       }
@@ -122,9 +126,9 @@ const AdminDashboard = () => {
   ];
 
   return (
-     <div className="space-y-6 px-4 sm:px-6 lg:px-8 py-6">
+    <div className="space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6 border-b pb-6">
+      <div className="mb-6 flex items-center justify-between border-b pb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
           <p className="text-gray-600">
@@ -173,7 +177,9 @@ const AdminDashboard = () => {
                       )}
                       <span
                         className={
-                          stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
+                          stat.trend === 'up'
+                            ? 'text-green-600'
+                            : 'text-red-600'
                         }
                       >
                         {stat.change}
@@ -213,10 +219,11 @@ const AdminDashboard = () => {
                         </div>
                         <div className="text-right">
                           <span
-                            className={`flex items-center text-sm font-medium ${metric.trend === 'up'
-                              ? 'text-green-600'
-                              : 'text-red-600'
-                              }`}
+                            className={`flex items-center text-sm font-medium ${
+                              metric.trend === 'up'
+                                ? 'text-green-600'
+                                : 'text-red-600'
+                            }`}
                           >
                             {metric.trend === 'up' ? (
                               <TrendingUp className="mr-1 h-3 w-3" />
@@ -247,7 +254,9 @@ const AdminDashboard = () => {
                   {userStats.map((stat, index) => (
                     <div key={index} className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{stat.label}</span>
+                        <span className="text-sm font-medium">
+                          {stat.label}
+                        </span>
                         <span className="font-bold">
                           {stat.value.toLocaleString()}
                         </span>
@@ -283,7 +292,9 @@ const AdminDashboard = () => {
                       asChild
                     >
                       <a href={action.href}>
-                        <div className={`rounded-lg p-2 ${action.bgColor} mr-3`}>
+                        <div
+                          className={`rounded-lg p-2 ${action.bgColor} mr-3`}
+                        >
                           <Icon className={`h-5 w-5 ${action.color}`} />
                         </div>
                         <div className="text-left">

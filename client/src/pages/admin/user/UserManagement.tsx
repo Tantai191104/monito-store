@@ -185,7 +185,7 @@ const UserManagement = () => {
             ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-4 p-6">
           {/* Total Users */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -261,7 +261,7 @@ const UserManagement = () => {
       )}
 
       {/* Filters */}
-      <Card className="mt-6">
+      <Card className="mx-6">
         <CardHeader>
           <CardTitle>Search & Filter Users</CardTitle>
           <CardDescription>
@@ -294,7 +294,7 @@ const UserManagement = () => {
           </div>
         </CardContent>
       </Card>
-      <div className='mt-6'>
+      <div className='p-6'>
         <UserDataTable
           data={filteredUsers}
           onViewDetail={openUserDetail}
