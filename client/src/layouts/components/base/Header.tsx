@@ -2,26 +2,13 @@
  * Node modules
  */
 import { Link, useLocation } from 'react-router-dom';
-import {
-  ShoppingCart,
-  User,
-  LogOut,
-  Settings,
-  Heart,
-  Package,
-  History,
-  CreditCard,
-  Bell,
-} from 'lucide-react';
-import { useState } from 'react';
-
+import { ShoppingCart, User, LogOut, Settings, Package } from 'lucide-react';
 /**
  * Components
  */
 import { Logo } from '@/components/Logo';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/contexts/CartContext';
@@ -47,13 +34,6 @@ export const Header = () => {
   const location = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
   const { state: cartState } = useCart();
-
-  const isActive = (path: string) => {
-    if (path === '/') {
-      return location.pathname === '/';
-    }
-    return location.pathname.startsWith(path);
-  };
 
   const handleLogout = async () => {
     await logout.mutateAsync();
@@ -156,14 +136,7 @@ export const Header = () => {
                   </DropdownMenuItem>
 
                   <DropdownMenuSeparator />
-
-                  <DropdownMenuItem asChild>
-                    <Link to="/customer/settings">
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Settings</span>
-                    </Link>
-                  </DropdownMenuItem>
-
+                  
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleLogout}
@@ -178,7 +151,7 @@ export const Header = () => {
           ) : (
             /* ✅ Guest User OR Staff/Admin - Join Community Button */
             <Link to="/login">
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+              <Button className="bg-[#003459] text-primary-foreground hover:bg-[#003459]/90">
                 Join the community
               </Button>
             </Link>

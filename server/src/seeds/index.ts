@@ -19,6 +19,7 @@ import { seedColors } from './seedColors';
 import { seedCategories } from './seedCategories';
 import { seedPets } from './seedPets';
 import { seedProducts } from './seedProducts';
+import { seedOrders } from './seedOrders';
 
 const runSeeds = async () => {
   try {
@@ -30,6 +31,7 @@ const runSeeds = async () => {
     console.log('\n🗑️  Clearing all existing data...');
 
     // Clear in reverse dependency order
+    const { default: OrderModel } = await import('../models/orderModel');
     const { default: ProductModel } = await import('../models/productModel');
     const { default: PetModel } = await import('../models/petModel');
     const { default: CategoryModel } = await import('../models/categoryModel');
@@ -37,6 +39,7 @@ const runSeeds = async () => {
     const { default: BreedModel } = await import('../models/breedModel');
     const { default: UserModel } = await import('../models/userModel');
 
+    await OrderModel.deleteMany({});
     await ProductModel.deleteMany({});
     await PetModel.deleteMany({});
     await CategoryModel.deleteMany({});
@@ -81,6 +84,10 @@ const runSeeds = async () => {
     await seedProducts();
     console.log('');
 
+    // 9. Seed orders
+    await seedOrders();
+    console.log('');
+
     console.log('🎉 All seeds completed successfully!');
 
     // Show summary
@@ -92,6 +99,7 @@ const runSeeds = async () => {
     const colorCount = await ColorModel.countDocuments();
     const categoryCount = await CategoryModel.countDocuments();
     const petCount = await PetModel.countDocuments();
+    const orderCount = await OrderModel.countDocuments();
     const productCount = await ProductModel.countDocuments();
 
     console.log('\n📊 Final Database Summary:');
@@ -103,6 +111,7 @@ const runSeeds = async () => {
     console.log(`   • Categories: ${categoryCount}`);
     console.log(`   • Pets: ${petCount}`);
     console.log(`   • Products: ${productCount}`);
+    console.log(`   • Orders: ${orderCount}`);
 
     console.log('\n🔐 Login Credentials:');
     console.log('👤 Admin: admin@monito.com / admin123');

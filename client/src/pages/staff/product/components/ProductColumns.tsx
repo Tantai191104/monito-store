@@ -48,13 +48,13 @@ function ProductActionsCell({ product }: { product: Product }) {
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
           <DropdownMenuItem asChild>
             <Link to={`/staff/products/${product._id}`}>
-              <Eye className="mr-2 h-4 w-4" />
+              <Eye className="h-4 w-4" />
               View Details
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link to={`/staff/products/${product._id}/edit`}>
-              <Edit className="mr-2 h-4 w-4" />
+              <Edit className="h-4 w-4" />
               Edit
             </Link>
           </DropdownMenuItem>
@@ -62,9 +62,9 @@ function ProductActionsCell({ product }: { product: Product }) {
           {/* ✅ Activate/Deactivate Action */}
           <DropdownMenuItem onClick={() => setDeactivateDialogOpen(true)}>
             {product.isActive ? (
-              <EyeOff className="mr-2 h-4 w-4" />
+              <EyeOff className="h-4 w-4" />
             ) : (
-              <Eye className="mr-2 h-4 w-4" />
+              <Eye className="h-4 w-4" />
             )}
             {product.isActive ? 'Deactivate' : 'Activate'}
           </DropdownMenuItem>
@@ -73,7 +73,7 @@ function ProductActionsCell({ product }: { product: Product }) {
             onClick={() => setDeleteDialogOpen(true)}
             className="text-red-600 focus:text-red-600"
           >
-            <Trash2 className="mr-2 h-4 w-4" />
+            <Trash2 className="h-4 w-4" />
             Delete
           </DropdownMenuItem>
         </DropdownMenuContent>

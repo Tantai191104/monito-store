@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -23,7 +23,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -33,7 +32,9 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useCreateStaff } from '@/hooks/useStaff';
-import { DEPARTMENTS, PERMISSIONS } from '@/types/staff';
+// ✅ Import config mới
+import { ROLE_CONFIG, DEPARTMENTS } from '@/config/roles';
+import { PERMISSIONS } from '@/types/staff';
 
 const staffSchema = z.object({
   name: z
@@ -45,20 +46,28 @@ const staffSchema = z.object({
     .string()
     .trim()
     .email('Invalid email format')
-    .min(1, 'Email is required'),
+    .min(1, 'Email is required')
+    .max(50, 'Password must be less than 50 characters'),
   password: z
     .string()
     .trim()
     .min(6, 'Password must be at least 6 characters')
     .max(50, 'Password must be less than 50 characters'),
-  phone: z.string().trim().optional().or(z.literal('')),
+  phone: z
+    .string()
+    .trim()
+    .min(1, 'Phone number is required')
+    .regex(
+      /^\+?(\d{1,3})?[-. (]*\d{3}[-. )]*\d{3}[-. ]*\d{4}$/,
+      'Invalid phone number format',
+    ),
   department: z.string().min(1, 'Department is required'),
   position: z
     .string()
     .trim()
     .min(1, 'Position is required')
     .max(50, 'Position must be less than 50 characters'),
-  permissions: z.array(z.string()).default([]),
+  permissions: z.array(z.string()),
 });
 
 type StaffFormValues = z.infer<typeof staffSchema>;
@@ -85,6 +94,39 @@ export function AddStaffDialog({ trigger }: AddStaffDialogProps) {
     },
   });
 
+  // ✅ Watch for changes in department and position
+  const watchedDepartment = form.watch('department');
+  const watchedPosition = form.watch('position');
+
+  // ✅ Memoize available positions based on selected department
+  const availablePositions = useMemo(() => {
+    if (!watchedDepartment) return [];
+    return (
+      ROLE_CONFIG.find((dept) => dept.name === watchedDepartment)?.positions ||
+      []
+    );
+  }, [watchedDepartment]);
+
+  // ✅ Memoize available permissions based on selected position
+  const availablePermissions = useMemo(() => {
+    if (!watchedPosition) return [];
+    return (
+      availablePositions.find((pos) => pos.name === watchedPosition)
+        ?.permissions || []
+    );
+  }, [watchedPosition, availablePositions]);
+
+  // ✅ Effect to reset position and permissions when department changes
+  useEffect(() => {
+    form.setValue('position', '');
+    form.setValue('permissions', []);
+  }, [watchedDepartment, form]);
+
+  // ✅ Effect to set default permissions when position changes
+  useEffect(() => {
+    form.setValue('permissions', availablePermissions);
+  }, [availablePermissions, form]);
+
   const onSubmit = async (data: StaffFormValues) => {
     try {
       await createStaff.mutateAsync({
@@ -108,13 +150,13 @@ export function AddStaffDialog({ trigger }: AddStaffDialogProps) {
       <DialogTrigger asChild>
         {trigger || (
           <Button>
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="h-4 w-4" />
             Add Staff Member
           </Button>
         )}
       </DialogTrigger>
 
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
+      <DialogContent className="overflow-y-auto sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
@@ -138,7 +180,7 @@ export function AddStaffDialog({ trigger }: AddStaffDialogProps) {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Full Name *</FormLabel>
+                      <FormLabel>Name *</FormLabel>
                       <FormControl>
                         <Input placeholder="e.g., John Smith" {...field} />
                       </FormControl>
@@ -173,29 +215,28 @@ export function AddStaffDialog({ trigger }: AddStaffDialogProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Password *</FormLabel>
-                      <FormControl>
-                        <div className="relative">
+                      <div className="relative">
+                        <FormControl>
                           <Input
                             type={showPassword ? 'text' : 'password'}
-                            placeholder="Create secure password"
+                            placeholder="Minimum 6 characters"
                             {...field}
                           />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="absolute top-0 right-0 h-full px-3 py-2 hover:bg-transparent"
-                            onClick={() => setShowPassword(!showPassword)}
-                          >
-                            {showPassword ? (
-                              <EyeOff className="h-4 w-4" />
-                            ) : (
-                              <Eye className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </div>
-                      </FormControl>
-                      <FormDescription>Minimum 6 characters</FormDescription>
+                        </FormControl>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute top-0 right-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -206,7 +247,7 @@ export function AddStaffDialog({ trigger }: AddStaffDialogProps) {
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Phone Number</FormLabel>
+                      <FormLabel>Phone Number *</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="e.g., +1 (555) 123-4567"
@@ -236,7 +277,7 @@ export function AddStaffDialog({ trigger }: AddStaffDialogProps) {
                         defaultValue={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select department" />
                           </SelectTrigger>
                         </FormControl>
@@ -259,12 +300,24 @@ export function AddStaffDialog({ trigger }: AddStaffDialogProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Position *</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="e.g., Senior Staff, Manager"
-                          {...field}
-                        />
-                      </FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        disabled={!watchedDepartment} // ✅ Disable if no department
+                      >
+                        <FormControl>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select position" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {availablePositions.map((pos) => (
+                            <SelectItem key={pos.name} value={pos.name}>
+                              {pos.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -283,46 +336,53 @@ export function AddStaffDialog({ trigger }: AddStaffDialogProps) {
                       Permissions
                     </FormLabel>
                     <FormDescription>
-                      Select the areas this staff member can access
+                      Select the permissions for this position. Defaults are
+                      pre-selected.
                     </FormDescription>
                   </div>
                   <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-                    {PERMISSIONS.map((permission) => (
-                      <FormField
-                        key={permission}
-                        control={form.control}
-                        name="permissions"
-                        render={({ field }) => {
-                          return (
-                            <FormItem
-                              key={permission}
-                              className="flex flex-row items-start space-y-0 space-x-3"
-                            >
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value?.includes(permission)}
-                                  onCheckedChange={(checked) => {
-                                    return checked
-                                      ? field.onChange([
-                                          ...field.value,
-                                          permission,
-                                        ])
-                                      : field.onChange(
-                                          field.value?.filter(
-                                            (value) => value !== permission,
-                                          ),
-                                        );
-                                  }}
-                                />
-                              </FormControl>
-                              <FormLabel className="font-normal capitalize">
-                                {permission}
-                              </FormLabel>
-                            </FormItem>
-                          );
-                        }}
-                      />
-                    ))}
+                    {availablePermissions.length > 0 ? (
+                      availablePermissions.map((permission) => (
+                        <FormField
+                          key={permission}
+                          control={form.control}
+                          name="permissions"
+                          render={({ field }) => {
+                            return (
+                              <FormItem
+                                key={permission}
+                                className="flex flex-row items-start space-y-0 space-x-3"
+                              >
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value?.includes(permission)}
+                                    onCheckedChange={(checked) => {
+                                      return checked
+                                        ? field.onChange([
+                                            ...field.value,
+                                            permission,
+                                          ])
+                                        : field.onChange(
+                                            field.value?.filter(
+                                              (value) => value !== permission,
+                                            ),
+                                          );
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormLabel className="font-normal capitalize">
+                                  {permission}
+                                </FormLabel>
+                              </FormItem>
+                            );
+                          }}
+                        />
+                      ))
+                    ) : (
+                      <p className="text-muted-foreground col-span-full text-sm italic">
+                        Select a position to see available permissions.
+                      </p>
+                    )}
                   </div>
                   <FormMessage />
                 </FormItem>
@@ -341,12 +401,12 @@ export function AddStaffDialog({ trigger }: AddStaffDialogProps) {
               <Button type="submit" disabled={createStaff.isPending}>
                 {createStaff.isPending ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                     Creating...
                   </>
                 ) : (
                   <>
-                    <Users className="mr-2 h-4 w-4" />
+                    <Users className="h-4 w-4" />
                     Create Staff Member
                   </>
                 )}

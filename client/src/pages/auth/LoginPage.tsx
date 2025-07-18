@@ -5,8 +5,8 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { AlertCircle } from 'lucide-react';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
 
 /**
  * Components
@@ -45,12 +45,11 @@ const formSchema = z.object({
 
 const LoginPage = () => {
   const { login } = useAuth();
-  const [logoutReason, setLogoutReason] = useState('');
 
   useEffect(() => {
     const reason = localStorage.getItem('logoutReason');
     if (reason === 'session_expired') {
-      setLogoutReason('Your session has expired or your password was changed. Please log in again.');
+      toast.error('Your session has expired. Please log in again.');
       localStorage.removeItem('logoutReason');
     }
   }, []);
@@ -69,14 +68,8 @@ const LoginPage = () => {
 
   return (
     <div className="flex w-[400px] flex-col gap-6 rounded-lg bg-white p-5">
-      {logoutReason && (
-        <div className="flex items-center gap-3 mb-2 rounded-lg border border-yellow-200 bg-yellow-50 p-3 shadow-sm animate-fade-in">
-          <AlertCircle className="h-5 w-5 text-yellow-600" />
-          <span className="text-yellow-800 font-medium">{logoutReason}</span>
-        </div>
-      )}
-      <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-primary text-2xl font-bold">
+      <div className="flex flex-col items-center gap-2 text-center ">
+        <h1 className="text-[#003459] text-2xl font-bold">
           Login to your account
         </h1>
         <p className="text-muted-foreground text-sm text-balance">
@@ -123,7 +116,11 @@ const LoginPage = () => {
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full" disabled={login.isPending}>
+          <Button
+            type="submit"
+            className="w-full bg-[#003459]"
+            disabled={login.isPending}
+          >
             {login.isPending ? (
               <LoaderCircleIcon className="size-5" />
             ) : (

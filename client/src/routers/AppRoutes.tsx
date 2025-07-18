@@ -38,8 +38,8 @@ import CategoriesManagement from '@/pages/staff/category/CategoriesManagement';
 import ColorsManagement from '@/pages/staff/color/ColorsManagement';
 import BreedsManagement from '@/pages/staff/breed/BreedsManagement';
 import AddPet from '@/pages/staff/pet/AddPet';
-import AdminDashboard from '@/pages/admin/AdminDashboard';
-import UserManagement from '@/pages/admin/UserManagement';
+import AdminDashboard from '@/pages/admin/overview/AdminDashboard';
+import UserManagement from '@/pages/admin/user/UserManagement';
 import LoadingScreen from '@/pages/common/LoadingScreen';
 import AddProduct from '@/pages/staff/product/AddProduct';
 import StaffManagement from '@/pages/admin/staff/StaffManagement';
@@ -58,6 +58,8 @@ import ProfilePage from '@/pages/profile/ProfilePage';
 import CartPage from '@/pages/customer/CartPage';
 import CheckoutPage from '@/pages/customer/CheckoutPage';
 import OrdersPage from '@/pages/customer/OrdersPage';
+import OrderDetail from '@/pages/staff/order/OrderDetail';
+import { PublicRoute } from './components/PublicRoute';
 
 const AppRoutes = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -118,14 +120,16 @@ const AppRoutes = () => {
       </Route>
 
       {/* ✅ Public Routes - ai cũng có thể xem, nhưng navbar khác nhau */}
-      <Route element={<BaseLayout />}>
-        <Route index element={<HomePage />} />
-        <Route path="/pets" element={<PetsPage />} />
-        <Route path="/pets/:id" element={<PetDetailPage />} />
-        <Route path="/products" element={<ProductsPage />} />
-        <Route path="/products/:id" element={<ProductDetailPage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/contact" element={<ContactPage />} />
+      <Route element={<PublicRoute />}>
+        <Route element={<BaseLayout />}>
+          <Route index element={<HomePage />} />
+          <Route path="/pets" element={<PetsPage />} />
+          <Route path="/pets/:id" element={<PetDetailPage />} />
+          <Route path="/products" element={<ProductsPage />} />
+          <Route path="/products/:id" element={<ProductDetailPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+        </Route>
       </Route>
 
       {/* ✅ Customer-only Routes - cần đăng nhập */}
@@ -135,14 +139,14 @@ const AppRoutes = () => {
       >
         <Route element={<BaseLayout />}>
           <Route index element={<Navigate replace to="/" />} />
-          <Route
-            path="profile"
-            element={<ProfilePage />}
-          />
+          <Route path="profile" element={<ProfilePage />} />
           <Route path="cart" element={<CartPage />} />
           <Route path="checkout" element={<CheckoutPage />} />
           <Route path="orders" element={<OrdersPage />} />
-          <Route path="orders/:id" element={<div>Order Detail Page - Coming Soon</div>} />
+          <Route
+            path="orders/:id"
+            element={<div>Order Detail Page - Coming Soon</div>}
+          />
           <Route
             path="wishlist"
             element={<div>Wishlist Page - Coming Soon</div>}
@@ -179,6 +183,7 @@ const AppRoutes = () => {
           <Route path="pets/:id" element={<PetDetail />} />
           <Route path="pets/:id/edit" element={<EditPet />} />
           <Route path="orders" element={<OrdersManagement />} />
+          <Route path="orders/:id" element={<OrderDetail />} />
           <Route path="categories" element={<CategoriesManagement />} />
           <Route path="colors" element={<ColorsManagement />} />
           <Route path="breeds" element={<BreedsManagement />} />

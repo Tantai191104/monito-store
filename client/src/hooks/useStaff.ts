@@ -129,20 +129,14 @@ export const useDeleteStaff = () => {
   return useMutation({
     mutationFn: (id: string) => staffService.deleteStaff(id),
     onSuccess: (_, deletedId) => {
-      // Remove from cache immediately
+      // ✅ Remove from cache immediately
       queryClient.setQueryData(staffKeys.lists(), (old: Staff[] = []) =>
-        old.map((staff) =>
-          staff._id === deletedId ? { ...staff, isActive: false } : staff,
-        ),
+        old.filter((staff) => staff._id !== deletedId),
       );
 
-      // Update specific staff cache
-      queryClient.setQueryData(staffKeys.detail(deletedId), (old: Staff) =>
-        old ? { ...old, isActive: false } : old,
-      );
-
+      // ✅ Invalidate to ensure consistency
       queryClient.invalidateQueries({ queryKey: staffKeys.all });
-      toast.success('Staff member deactivated successfully!');
+      toast.success('Staff member deleted successfully!');
     },
     onError: (error: any) => {
       const apiError = error.response?.data as ApiError;

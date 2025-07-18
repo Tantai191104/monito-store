@@ -69,7 +69,11 @@ export const productController = {
     try {
       const { id } = req.params;
 
-      const product = await productService.getProductById(id);
+      const options = {
+        customerView: req.query.customerView,
+      };
+
+      const product = await productService.getProductById(id, options);
 
       res.status(STATUS_CODE.OK).json({
         message: 'Product retrieved successfully',

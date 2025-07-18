@@ -32,7 +32,7 @@ export interface OrderDocument extends Document {
   tax: number;
   shipping: number;
   total: number;
-  status: 'pending' | 'processing' | 'delivered' | 'cancelled' | 'refunded';
+  status: 'pending' | 'processing' | 'delivered' | 'cancelled' | 'refunded' | 'pending_refund';
   paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
   shippingAddress: ShippingAddress;
   orderDate: Date;
@@ -40,6 +40,17 @@ export interface OrderDocument extends Document {
   notes?: string;
   order_url?: string;
   reviews?: OrderReview[];
+  refundInfo?: RefundInfo;
+}
+
+export interface RefundInfo {
+  reason: string;
+  bankName: string;
+  accountNumber: string;
+  description?: string;
+  images?: string[];
+  amount: number;
+  requestedAt: Date;
 }
 
 const orderItemSchema = new Schema<OrderItem>({
@@ -93,6 +104,16 @@ const orderReviewSchema = new Schema<OrderReview>({
   createdAt: { type: Date, default: Date.now },
 });
 
+const refundInfoSchema = new Schema<RefundInfo>({
+  reason: { type: String, required: true },
+  bankName: { type: String, required: true },
+  accountNumber: { type: String, required: true },
+  description: { type: String },
+  images: [{ type: String }],
+  amount: { type: Number, required: true },
+  requestedAt: { type: Date, required: true },
+});
+
 const orderSchema = new Schema<OrderDocument>(
   {
     orderNumber: {
@@ -144,7 +165,7 @@ const orderSchema = new Schema<OrderDocument>(
       type: String,
       required: [true, 'Order status is required'],
       enum: {
-        values: ['pending', 'processing', 'delivered', 'cancelled', 'refunded'],
+        values: ['pending', 'processing', 'delivered', 'cancelled', 'refunded', 'pending_refund'],
         message: '{VALUE} is not a valid order status',
       },
       default: 'pending',
@@ -182,6 +203,10 @@ const orderSchema = new Schema<OrderDocument>(
     reviews: {
       type: [orderReviewSchema],
       default: [],
+    },
+    refundInfo: {
+      type: refundInfoSchema,
+      default: null,
     },
   },
   {

@@ -30,7 +30,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useUpdateColor } from '@/hooks/useColors';
+import { useUpdateColor, useColors } from '@/hooks/useColors';
 import type { Color } from '@/types/color';
 import {
   ColorPicker,
@@ -80,6 +80,9 @@ export function EditColorDialog({
   const [internalOpen, setInternalOpen] = useState(false);
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const updateColor = useUpdateColor();
+  const { data: colors = [] } = useColors();
+  const [hexCodeError, setHexCodeError] = useState<string | null>(null);
+  const [nameError, setNameError] = useState<string | null>(null);
 
   // Determine if controlled or uncontrolled
   const isControlled = controlledOpen !== undefined;
@@ -111,6 +114,25 @@ export function EditColorDialog({
   }, [color, form, open]);
 
   const onSubmit = async (data: ColorFormValues) => {
+    const isHexDuplicate = colors.some(
+      (c) => c._id !== color._id && c.hexCode.toLowerCase() === data.hexCode.trim().toLowerCase()
+    );
+    if (isHexDuplicate) {
+      setHexCodeError('This hex code already exists.');
+    } else {
+      setHexCodeError(null);
+    }
+    const isNameDuplicate = colors.some(
+      (c) => c._id !== color._id && c.name.trim().toLowerCase() === data.name.trim().toLowerCase()
+    );
+    if (isNameDuplicate) {
+      setNameError('This color name already exists.');
+    } else {
+      setNameError(null);
+    }
+    if (isHexDuplicate || isNameDuplicate) {
+      return;
+    }
     try {
       await updateColor.mutateAsync({
         id: color._id,
@@ -122,7 +144,7 @@ export function EditColorDialog({
         },
       });
       setOpen(false);
-    } catch (error) {
+    } catch {
       // Error is handled in the mutation
     }
   };
@@ -212,6 +234,9 @@ export function EditColorDialog({
                     manually
                   </FormDescription>
                   <FormMessage />
+                  {hexCodeError && (
+                    <div className="text-sm text-red-600 mt-1">{hexCodeError}</div>
+                  )}
                 </FormItem>
               )}
             />
@@ -232,6 +257,9 @@ export function EditColorDialog({
                     Choose a descriptive name for the color
                   </FormDescription>
                   <FormMessage />
+                  {nameError && (
+                    <div className="text-sm text-red-600 mt-1">{nameError}</div>
+                  )}
                 </FormItem>
               )}
             />

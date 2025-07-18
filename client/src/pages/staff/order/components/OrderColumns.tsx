@@ -1,12 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table';
-import {
-  ArrowUpDown,
-  MoreHorizontal,
-  Eye,
-  Edit,
-  Truck,
-  Package,
-} from 'lucide-react';
+import { ArrowUpDown, MoreHorizontal, Eye, Edit, Package } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -32,29 +25,17 @@ import {
 import { Badge } from '@/components/ui/badge';
 import type { Order } from '@/types/order';
 import { useUpdateOrderStatus } from '@/hooks/useOrders';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 // Helper function to get status badge variant
-const getStatusVariant = (status: Order['status']) => {
-  switch (status) {
-    case 'pending':
-      return 'secondary';
-    case 'confirmed':
-      return 'default';
-    case 'processing':
-      return 'default';
-    case 'shipped':
-      return 'outline';
-    case 'delivered':
-      return 'default';
-    case 'cancelled':
-      return 'destructive';
-    default:
-      return 'secondary';
-  }
-};
-
 const getPaymentStatusVariant = (status: Order['paymentStatus']) => {
   switch (status) {
     case 'paid':
@@ -75,21 +56,53 @@ const StatusChangeCell = ({ order }: { order: Order }) => {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [newStatus, setNewStatus] = useState<Order['status'] | null>(null);
   const mutation = useUpdateOrderStatus();
-  
-  const statusOptions = [
-    'pending', 'processing', 'delivered', 'cancelled', 'refunded'
-  ];
+
+  // Define available status transitions based on current status
+  const getAvailableStatusOptions = (currentStatus: Order['status']) => {
+    const allStatusOptions = [
+      { value: 'pending', label: 'Pending' },
+      { value: 'processing', label: 'Processing' },
+      { value: 'delivered', label: 'Delivered' },
+      { value: 'pending_refund', label: 'Pending Refund' },
+      { value: 'refunded', label: 'Refunded' },
+      { value: 'cancelled', label: 'Cancelled' },
+    ];
+
+    switch (currentStatus) {
+      case 'pending':
+        return allStatusOptions.filter(opt => 
+          ['processing', 'cancelled'].includes(opt.value)
+        );
+      case 'processing':
+        return allStatusOptions.filter(opt => 
+          ['delivered'].includes(opt.value)
+        );
+      case 'pending_refund':
+        return allStatusOptions.filter(opt => 
+          ['refunded'].includes(opt.value)
+        );
+      case 'delivered':
+      case 'refunded':
+      case 'cancelled':
+        return []; // No status changes allowed
+      default:
+        return [];
+    }
+  };
+
+  const availableStatusOptions = getAvailableStatusOptions(order.status);
+  const isStatusChangeDisabled = availableStatusOptions.length === 0;
 
   const handleStatusChange = (value: string) => {
     if (value === order.status) return; // No change needed
-    
+
     setNewStatus(value as Order['status']);
     setIsConfirmOpen(true);
   };
 
   const confirmStatusChange = () => {
     if (!newStatus) return;
-    
+
     mutation.mutate(
       { id: order._id, status: newStatus },
       {
@@ -102,8 +115,8 @@ const StatusChangeCell = ({ order }: { order: Order }) => {
           toast.error('Failed to update order status');
           setIsConfirmOpen(false);
           setNewStatus(null);
-        }
-      }
+        },
+      },
     );
   };
 
@@ -117,17 +130,40 @@ const StatusChangeCell = ({ order }: { order: Order }) => {
       <Select
         value={order.status}
         onValueChange={handleStatusChange}
-        disabled={mutation.isPending}
+        disabled={mutation.isPending || isStatusChangeDisabled}
       >
-        <SelectTrigger className="w-[120px] capitalize">
+        <SelectTrigger className="w-[230px] capitalize">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>
-          {statusOptions.map(opt => (
-            <SelectItem key={opt} value={opt} className="capitalize">
-              {opt}
+          {/* Show current status */}
+          <SelectItem 
+            key={order.status} 
+            value={order.status} 
+            className="capitalize"
+          >
+            {order.status.replace('_', ' ')} (Current)
+          </SelectItem>
+          {/* Show available status options */}
+          {availableStatusOptions.map((opt: { value: string; label: string }) => (
+            <SelectItem
+              key={opt.value}
+              value={opt.value}
+              className="capitalize"
+            >
+              {opt.label}
             </SelectItem>
           ))}
+          {/* Show message when no changes allowed */}
+          {isStatusChangeDisabled && (
+            <SelectItem 
+              value="disabled" 
+              disabled 
+              className="text-gray-400 italic"
+            >
+              No changes allowed
+            </SelectItem>
+          )}
         </SelectContent>
       </Select>
 
@@ -137,9 +173,19 @@ const StatusChangeCell = ({ order }: { order: Order }) => {
             <AlertDialogTitle>Confirm Status Change</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to change the order status from{' '}
-              <span className="font-semibold capitalize">{order.status}</span> to{' '}
-              <span className="font-semibold capitalize">{newStatus}</span>?
+              <span className="font-semibold capitalize">{order.status?.replace('_', ' ')}</span>{' '}
+              to <span className="font-semibold capitalize">{newStatus?.replace('_', ' ')}</span>?
               <br />
+              <br />
+              <div className="bg-blue-50 p-3 rounded-md mt-2">
+                <p className="text-sm text-blue-800 font-medium">Status Flow:</p>
+                <ul className="text-sm text-blue-700 mt-1 space-y-1">
+                  <li>• Pending → Processing or Cancelled</li>
+                  <li>• Processing → Delivered</li>
+                  <li>• Pending Refund → Refunded</li>
+                  <li>• Delivered/Refunded/Cancelled → No changes allowed</li>
+                </ul>
+              </div>
               <br />
               <span className="text-sm text-gray-600">
                 Order: {order.orderNumber}
@@ -150,7 +196,7 @@ const StatusChangeCell = ({ order }: { order: Order }) => {
             <AlertDialogCancel onClick={cancelStatusChange}>
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={confirmStatusChange}
               disabled={mutation.isPending}
               className="bg-blue-600 hover:bg-blue-700"
@@ -161,6 +207,46 @@ const StatusChangeCell = ({ order }: { order: Order }) => {
         </AlertDialogContent>
       </AlertDialog>
     </>
+  );
+};
+
+// Add wrapper component for Actions cell
+const OrderActionsCell = ({ order }: { order: Order }) => {
+  const navigate = useNavigate();
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-8 w-8 p-0">
+          <span className="sr-only">Open menu</span>
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+        <DropdownMenuItem
+          onClick={() => navigator.clipboard.writeText(order.orderNumber)}
+        >
+          Copy order number
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="flex items-center"
+          onClick={() => navigate(`/staff/orders/${order._id}`)}
+        >
+          <Eye className="h-4 w-4" />
+          View details
+        </DropdownMenuItem>
+        <DropdownMenuItem className="flex items-center">
+          <Edit className="h-4 w-4" />
+          Edit order
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem className="flex items-center">
+          <Package className="h-4 w-4" />
+          Update status
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 
@@ -209,7 +295,14 @@ export const orderColumns: ColumnDef<Order>[] = [
     accessorKey: 'customer',
     header: 'Customer',
     cell: ({ row }) => {
-      const customer = row.getValue('customer') as Order['customer'];
+      const customer = row.getValue('customer') as Order['customer'] | null;
+      if (!customer) {
+        return (
+          <div className="max-w-[200px] text-gray-400 italic">
+            No customer info
+          </div>
+        );
+      }
       return (
         <div className="max-w-[200px]">
           <div className="font-medium">{customer.name}</div>
@@ -323,21 +416,21 @@ export const orderColumns: ColumnDef<Order>[] = [
       return value.includes(row.getValue(id));
     },
   },
-  {
-    accessorKey: 'shippingAddress',
-    header: 'Shipping Location',
-    cell: ({ row }) => {
-      const address = row.getValue(
-        'shippingAddress',
-      ) as Order['shippingAddress'];
-      return (
-        <div className="max-w-[150px] text-sm">
-          <div>{address.city}</div>
-          <div className="text-xs text-gray-500">{address.state}</div>
-        </div>
-      );
-    },
-  },
+  // {
+  //   accessorKey: 'shippingAddress',
+  //   header: 'Shipping Location',
+  //   cell: ({ row }) => {
+  //     const address = row.getValue(
+  //       'shippingAddress',
+  //     ) as Order['shippingAddress'];
+  //     return (
+  //       <div className="max-w-[150px] text-sm">
+  //         <div>{address.city}</div>
+  //         <div className="text-xs text-gray-500">{address.state}</div>
+  //       </div>
+  //     );
+  //   },
+  // },
   {
     accessorKey: 'orderDate',
     header: ({ column }) => {
@@ -380,39 +473,7 @@ export const orderColumns: ColumnDef<Order>[] = [
     header: 'Actions',
     cell: ({ row }) => {
       const order = row.original;
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(order.orderNumber)}
-            >
-              Copy order number
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="flex items-center">
-              <Eye className="h-4 w-4" />
-              View details
-            </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center">
-              <Edit className="h-4 w-4" />
-              Edit order
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="flex items-center">
-              <Package className="h-4 w-4" />
-              Update status
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
+      return <OrderActionsCell order={order} />;
     },
   },
 ];

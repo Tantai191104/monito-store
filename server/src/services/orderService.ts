@@ -15,6 +15,7 @@ import OrderModel, { OrderDocument } from '../models/orderModel';
 import ProductModel from '../models/productModel';
 import PetModel from '../models/petModel';
 import UserModel from '../models/userModel';
+import ReviewModel from '../models/reviewModel';
 import { paymentService } from './paymentService';
 
 /**
@@ -221,6 +222,11 @@ export const orderService = {
       OrderModel.countDocuments(query),
     ]);
 
+    // Populate reviews cho từng order
+    for (const order of orders) {
+      (order as any).reviews = await ReviewModel.find({ orderId: (order as any)._id }).lean();
+    }
+
     return {
       orders,
       pagination: {
@@ -246,11 +252,14 @@ export const orderService = {
     const order = await OrderModel.findOne(query).populate([
       { path: 'customer', select: 'name email phone' },
       { path: 'items.item', select: 'name price images description' },
-    ]);
+    ]).lean();
 
     if (!order) {
       throw new NotFoundException('Order not found');
     }
+
+    // Populate reviews cho order
+    (order as any).reviews = await ReviewModel.find({ orderId: (order as any)._id }).lean();
 
     return order;
   },
@@ -325,13 +334,14 @@ export const orderService = {
       throw new NotFoundException('Order not found');
     }
 
-    // Chỉ cho phép chuyển trạng thái hợp lệ
+    // Chỉ cho phép chuyển trạng thái hợp lệ theo business logic
     const validTransitions: Record<string, string[]> = {
       pending: ['processing', 'cancelled'],
-      processing: ['delivered', 'cancelled', 'refunded'],
-      delivered: ['refunded'],
-      cancelled: [],
-      refunded: [],
+      processing: ['delivered'], // Chỉ cho phép delivered từ processing
+      delivered: [], // Không cho phép thay đổi từ delivered
+      pending_refund: ['refunded'], // Chỉ cho phép refunded từ pending_refund
+      cancelled: [], // Không cho phép thay đổi từ cancelled
+      refunded: [], // Không cho phép thay đổi từ refunded
     };
     if (!validTransitions[order.status].includes(status)) {
       throw new BadRequestException(`Cannot change status from ${order.status} to ${status}`);
@@ -339,14 +349,10 @@ export const orderService = {
 
     // Xử lý cập nhật stock khi chuyển trạng thái
     if (order.status === 'pending' && status === 'processing') {
-      // Giảm stock khi đơn được xác nhận
+      // Stock đã được giảm khi tạo order, không cần giảm thêm
+      // Chỉ cần đánh dấu pet là không có sẵn
       for (const item of order.items) {
-        if (item.type === 'product') {
-          await ProductModel.findByIdAndUpdate(
-            item.item,
-            { $inc: { stock: -item.quantity } }
-          );
-        } else if (item.type === 'pet') {
+        if (item.type === 'pet') {
           await PetModel.findByIdAndUpdate(
             item.item,
             { isAvailable: false }
@@ -354,6 +360,20 @@ export const orderService = {
         }
       }
     }
+    
+    if (order.status === 'pending' && status === 'cancelled') {
+      // Hoàn trả stock khi hủy đơn từ pending
+      for (const item of order.items) {
+        if (item.type === 'product') {
+          await ProductModel.findByIdAndUpdate(
+            item.item,
+            { $inc: { stock: item.quantity } }
+          );
+        }
+        // Pet vẫn available vì chưa được reserve
+      }
+    }
+    
     if (status === 'refunded') {
       // Cộng lại stock khi hoàn tiền
       for (const item of order.items) {
@@ -392,11 +412,11 @@ export const orderService = {
     order.reviews = order.reviews || [];
     const existing = order.reviews.find(r => r.user.toString() === userId);
     if (existing) {
-      existing.rating = rating;
-      existing.content = content;
-      existing.createdAt = new Date();
+      (existing as any).rating = rating;
+      (existing as any).content = content;
+      (existing as any).createdAt = new Date();
     } else {
-      order.reviews.push({ user: userId, rating, content, createdAt: new Date() });
+      order.reviews.push({ user: new mongoose.Types.ObjectId(userId), rating, content, createdAt: new Date() });
     }
     await order.save();
     return order;
@@ -409,6 +429,27 @@ export const orderService = {
     const order = await OrderModel.findById(orderId);
     if (!order) throw new NotFoundException('Order not found');
     order.reviews = (order.reviews || []).filter(r => r.user.toString() !== userId);
+    await order.save();
+    return order;
+  },
+
+  /**
+   * Request refund (customer)
+   */
+  async requestRefund(orderId: string, customerId: string, refundData: { reason: string, bankName: string, accountNumber: string, description?: string, images?: string[] }) {
+    const order = await OrderModel.findOne({ _id: orderId, customer: customerId });
+    if (!order) throw new NotFoundException('Order not found');
+    if (order.status !== 'delivered' && order.status !== 'pending_refund') throw new BadRequestException('Only delivered or pending refund orders can be refunded/edited');
+    order.status = 'pending_refund';
+    order.refundInfo = {
+      reason: refundData.reason,
+      bankName: refundData.bankName,
+      accountNumber: refundData.accountNumber,
+      description: refundData.description || '',
+      images: refundData.images || [],
+      amount: order.total,
+      requestedAt: new Date(),
+    };
     await order.save();
     return order;
   },

@@ -45,16 +45,21 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination';
 import type { Order } from '@/types/order';
+import { TableSkeleton } from '@/components/ui/table-skeleton'; // ✅ Import skeleton
+import { Skeleton } from '@/components/ui/skeleton'; // ✅ Import skeleton
+import { cn } from '@/lib/utils'; // ✅ Import cn utility
 
 interface OrderDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  isLoading?: boolean; // ✅ Add isLoading prop
   className?: string;
 }
 
 export function OrderDataTable<TData, TValue>({
   columns,
   data,
+  isLoading = false, // ✅ Destructure with default value
   className,
 }: OrderDataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -87,9 +92,16 @@ export function OrderDataTable<TData, TValue>({
   });
 
   // Get unique values for filters
-  const getStatusOptions = (data: Order[]) => {
-    const statuses = Array.from(new Set(data.map((order) => order.status)));
-    return statuses.sort();
+  const getStatusOptions = () => {
+    // Define all possible status options to ensure they're always available in the filter
+    return [
+      'pending',
+      'processing',
+      'delivered',
+      'cancelled',
+      'pending_refund',
+      'refunded'
+    ];
   };
 
   const getPaymentStatusOptions = (data: Order[]) => {
@@ -106,7 +118,7 @@ export function OrderDataTable<TData, TValue>({
     return cities.sort();
   };
 
-  const statusOptions = getStatusOptions(data as Order[]);
+  const statusOptions = getStatusOptions();
   const paymentStatusOptions = getPaymentStatusOptions(data as Order[]);
   const cityOptions = getCityOptions(data as Order[]);
 
@@ -144,8 +156,40 @@ export function OrderDataTable<TData, TValue>({
     return sum + (row.original as Order).total;
   }, 0);
 
+  // ✅ Render skeleton when loading
+  if (isLoading) {
+    return (
+      <div className={cn('w-full space-y-4', className)}>
+        {/* Toolbar Skeleton */}
+        <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+          <div className="flex flex-col space-y-2 lg:flex-row lg:items-center lg:space-y-0 lg:space-x-2">
+            <Skeleton className="h-10 w-full lg:w-[250px]" />
+            <Skeleton className="h-10 w-full lg:w-[150px]" />
+            <Skeleton className="h-10 w-full lg:w-[150px]" />
+            <Skeleton className="h-10 w-full lg:w-[140px]" />
+          </div>
+          <div className="flex items-center space-x-2">
+            <Skeleton className="h-10 w-[120px]" />
+            <Skeleton className="h-10 w-[130px]" />
+          </div>
+        </div>
+
+        {/* Summary Stats Skeleton */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Skeleton className="h-[88px] w-full" />
+          <Skeleton className="h-[88px] w-full" />
+          <Skeleton className="h-[88px] w-full" />
+          <Skeleton className="h-[88px] w-full" />
+        </div>
+
+        {/* Table Skeleton */}
+        <TableSkeleton />
+      </div>
+    );
+  }
+
   return (
-    <div className={`w-full space-y-4 ${className}`}>
+    <div className={cn('w-full space-y-4', className)}>
       {/* Toolbar */}
       <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
         <div className="flex flex-col space-y-2 lg:flex-row lg:items-center lg:space-y-0 lg:space-x-2">

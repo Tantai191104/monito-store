@@ -77,7 +77,6 @@ const AddPet = () => {
       navigate('/staff/pets');
     } catch (error: any) {
       console.error('Failed to add pet:', error);
-      alert(error?.message || 'Failed to add pet. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

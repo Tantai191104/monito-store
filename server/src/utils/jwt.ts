@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import type { StringValue } from 'ms';
 
-export const generateTokens = (payload: { userId: string; tokenVersion: number }) => {
+export const generateTokens = (payload: { userId: string, role: string }) => {
   const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET!, {
     expiresIn: process.env.ACCESS_TOKEN_EXPIRE as StringValue,
   });
@@ -13,5 +13,5 @@ export const generateTokens = (payload: { userId: string; tokenVersion: number }
 };
 
 export const verifyToken = (token: string, secret: string) => {
-  return jwt.verify(token, secret) as jwt.JwtPayload & { userId: string; tokenVersion: number };
+  return jwt.verify(token, secret) as jwt.JwtPayload & { userId: string, role: string };
 };

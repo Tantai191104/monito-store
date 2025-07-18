@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useCreateCategory } from '@/hooks/useCategories';
+import { useCreateCategory, useCategories } from '@/hooks/useCategories';
 
 const categorySchema = z.object({
   name: z
@@ -49,6 +49,8 @@ interface AddCategoryDialogProps {
 export function AddCategoryDialog({ trigger }: AddCategoryDialogProps) {
   const [open, setOpen] = useState(false);
   const createCategory = useCreateCategory();
+  const { data: categories = [] } = useCategories();
+  const [nameError, setNameError] = useState<string | null>(null);
 
   const form = useForm<CategoryFormValues>({
     resolver: zodResolver(categorySchema),
@@ -59,6 +61,16 @@ export function AddCategoryDialog({ trigger }: AddCategoryDialogProps) {
   });
 
   const onSubmit = async (data: CategoryFormValues) => {
+    // Kiểm tra trùng lặp tên category (không phân biệt hoa/thường, loại bỏ khoảng trắng)
+    const isDuplicate = categories.some(
+      (cat) => cat.name.trim().toLowerCase() === data.name.trim().toLowerCase()
+    );
+    if (isDuplicate) {
+      setNameError('This category name already exists.');
+      return;
+    } else {
+      setNameError(null);
+    }
     try {
       await createCategory.mutateAsync({
         name: data.name,
@@ -66,7 +78,7 @@ export function AddCategoryDialog({ trigger }: AddCategoryDialogProps) {
       });
       form.reset();
       setOpen(false);
-    } catch (error) {
+    } catch {
       // Error is handled in the mutation
     }
   };
@@ -105,6 +117,9 @@ export function AddCategoryDialog({ trigger }: AddCategoryDialogProps) {
                     Choose a descriptive name for your category
                   </FormDescription>
                   <FormMessage />
+                  {nameError && (
+                    <div className="text-sm text-red-600 mt-1">{nameError}</div>
+                  )}
                 </FormItem>
               )}
             />

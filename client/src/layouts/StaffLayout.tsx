@@ -55,6 +55,10 @@ const StaffLayout = () => {
       { label: 'Dashboard', href: '/staff' },
       { label: 'Categories Management', isCurrentPage: true },
     ],
+    '/staff/orders': [
+      { label: 'Dashboard', href: '/staff' },
+      { label: 'Orders Management', isCurrentPage: true },
+    ],
   };
 
   const getBreadcrumbItems = (pathname: string): BreadcrumbItem[] => {
@@ -98,6 +102,15 @@ const StaffLayout = () => {
         { label: 'Dashboard', href: '/staff' },
         { label: 'Pets Management', href: '/staff/pets' },
         { label: 'Pet Details', isCurrentPage: true },
+      ];
+    }
+
+        const orderDetailMatch = pathname.match(/^\/staff\/orders\/([^/]+)$/);
+    if (orderDetailMatch && !pathname.includes('/edit')) {
+      return [
+        { label: 'Dashboard', href: '/staff' },
+        { label: 'Orders Management', href: '/staff/orders' },
+        { label: 'Order Details', isCurrentPage: true },
       ];
     }
 

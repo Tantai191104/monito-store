@@ -13,6 +13,17 @@ import type {
   UpdateBreedPayload,
 } from '@/types/breed';
 
+// ✅ Add bulk delete result type
+export interface BulkDeleteResult {
+  deleted: Breed[];
+  failed: Array<{
+    breedId: string;
+    breedName: string;
+    reason: string;
+    petCount: number;
+  }>;
+}
+
 export const breedService = {
   // Get all breeds
   async getBreeds(): Promise<ApiResponse<Breed[]>> {
@@ -54,6 +65,17 @@ export const breedService = {
   // Delete breed
   async deleteBreed(id: string): Promise<ApiResponse> {
     const response = await API.delete<ApiResponse>(`/breeds/${id}`);
+    return response.data;
+  },
+
+  async bulkDeleteBreeds(
+    ids: string[],
+  ): Promise<ApiResponse<BulkDeleteResult>> {
+    // ✅ Use POST instead of DELETE to send a request body
+    const response = await API.post<ApiResponse<BulkDeleteResult>>(
+      '/breeds/bulk-delete',
+      { ids },
+    );
     return response.data;
   },
 
