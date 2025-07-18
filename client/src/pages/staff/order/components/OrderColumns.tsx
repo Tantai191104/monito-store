@@ -132,7 +132,7 @@ const StatusChangeCell = ({ order }: { order: Order }) => {
         onValueChange={handleStatusChange}
         disabled={mutation.isPending || isStatusChangeDisabled}
       >
-        <SelectTrigger className="w-[120px] capitalize">
+        <SelectTrigger className="w-[230px] capitalize">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>
@@ -416,21 +416,21 @@ export const orderColumns: ColumnDef<Order>[] = [
       return value.includes(row.getValue(id));
     },
   },
-  {
-    accessorKey: 'shippingAddress',
-    header: 'Shipping Location',
-    cell: ({ row }) => {
-      const address = row.getValue(
-        'shippingAddress',
-      ) as Order['shippingAddress'];
-      return (
-        <div className="max-w-[150px] text-sm">
-          <div>{address.city}</div>
-          <div className="text-xs text-gray-500">{address.state}</div>
-        </div>
-      );
-    },
-  },
+  // {
+  //   accessorKey: 'shippingAddress',
+  //   header: 'Shipping Location',
+  //   cell: ({ row }) => {
+  //     const address = row.getValue(
+  //       'shippingAddress',
+  //     ) as Order['shippingAddress'];
+  //     return (
+  //       <div className="max-w-[150px] text-sm">
+  //         <div>{address.city}</div>
+  //         <div className="text-xs text-gray-500">{address.state}</div>
+  //       </div>
+  //     );
+  //   },
+  // },
   {
     accessorKey: 'orderDate',
     header: ({ column }) => {

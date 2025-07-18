@@ -1,19 +1,32 @@
 import { useEffect, useState } from 'react';
 import { Package, Heart, ShoppingCart, Users } from 'lucide-react';
-import { getAllSummary, getBussinessMetric, getDailyRevenue } from '@/services/adminService';
+import {
+  getAllSummary,
+  getBussinessMetric,
+  getDailyRevenue,
+} from '@/services/adminService';
 import type { LucideIcon } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid } from 'recharts';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  CartesianGrid,
+} from 'recharts';
 
 const iconMap: Record<string, LucideIcon> = {
   'Total Products': Package,
   'Active Pets': Heart,
   'Pending Orders': ShoppingCart,
-  'Customers': Users,
+  Customers: Users,
   'Total Users': Users,
   'Active Staff': Users,
   'Total Revenue': Package,
   'System Uptime': Package,
-  'Products': Package,
+  Products: Package,
   'Pets Registered': Heart,
   'Orders Today': ShoppingCart,
 };
@@ -109,8 +122,8 @@ const StaffDashboard = () => {
   ];
 
   return (
-    <div className="container mx-auto p-8 py-0">
-      <div className="mb-8">
+    <div className="container mx-auto py-0">
+      <div className="mb-3 border-b p-6">
         <h1 className="text-3xl font-bold text-gray-900">Staff Dashboard</h1>
         <p className="text-muted-foreground">
           Welcome back! Here's what's happening today.
@@ -118,10 +131,13 @@ const StaffDashboard = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-8 grid grid-cols-1 gap-6 p-6 md:grid-cols-2 lg:grid-cols-4">
         {loading ? (
           Array.from({ length: 4 }).map((_, idx) => (
-            <div key={idx} className="rounded-lg bg-white p-6 shadow animate-pulse h-32" />
+            <div
+              key={idx}
+              className="h-32 animate-pulse rounded-lg bg-white p-6 shadow"
+            />
           ))
         ) : error ? (
           <div className="col-span-4 text-red-500">{error}</div>
@@ -129,7 +145,10 @@ const StaffDashboard = () => {
           stats.map((stat) => {
             const Icon = iconMap[stat.name] || Package;
             return (
-              <div key={stat.name} className={`rounded-lg bg-white p-6 shadow ${stat.bgColor || ''}`}>
+              <div
+                key={stat.name}
+                className={`rounded-lg bg-white p-6 shadow ${stat.bgColor || ''}`}
+              >
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="text-sm font-medium text-gray-600">
                     {stat.name}
@@ -139,8 +158,8 @@ const StaffDashboard = () => {
                 <div className="mb-2 text-2xl font-bold">{stat.value}</div>
                 {stat.change && (
                   <p className="text-xs text-gray-600">
-                    <span className={stat.color || ''}>{stat.change}</span>{' '}
-                    from last month
+                    <span className={stat.color || ''}>{stat.change}</span> from
+                    last month
                   </p>
                 )}
               </div>
@@ -149,10 +168,12 @@ const StaffDashboard = () => {
         )}
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mt-8">
-        <h3 className="text-lg font-semibold mb-4">Daily Revenue & Profit</h3>
+      <div className="mt-8 p-6">
+        <h3 className="mb-4 text-lg font-semibold">Daily Revenue & Profit</h3>
         {chartLoading ? (
-          <div className="h-64 flex items-center justify-center">Loading chart...</div>
+          <div className="flex h-64 items-center justify-center">
+            Loading chart...
+          </div>
         ) : chartError ? (
           <div className="text-red-500">{chartError}</div>
         ) : (
@@ -160,8 +181,8 @@ const StaffDashboard = () => {
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" />
-              <YAxis tickFormatter={v => v.toLocaleString('en-US')} />
-              <Tooltip formatter={v => v.toLocaleString('en-US')} />
+              <YAxis tickFormatter={(v) => v.toLocaleString('en-US')} />
+              <Tooltip formatter={(v) => v.toLocaleString('en-US')} />
               <Legend />
               <Bar dataKey="revenue" fill="#8884d8" name="Revenue" />
               <Bar dataKey="profit" fill="#82ca9d" name="Profit" />
@@ -170,7 +191,7 @@ const StaffDashboard = () => {
         )}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="mt-8 grid grid-cols-1 gap-6 p-6 lg:grid-cols-2">
         {/* Recent Orders */}
         <div className="rounded-lg bg-white shadow">
           <div className="border-b p-6">
