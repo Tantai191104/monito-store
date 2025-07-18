@@ -10,13 +10,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import {
-  Search,
-  Trash2,
-  Loader2,
-  ToggleLeft,
-  ToggleRight,
-} from 'lucide-react';
+import { Search, Trash2, Loader2, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -212,7 +206,7 @@ export function ProductDataTable<TData extends Product, TValue>({
                 selectedProducts.every((p) => p.isActive)
               }
             >
-              <ToggleRight className="mr-2 h-4 w-4" />
+              <ToggleRight className="h-4 w-4" />
               Activate
             </Button>
             <Button
@@ -224,7 +218,7 @@ export function ProductDataTable<TData extends Product, TValue>({
                 selectedProducts.every((p) => !p.isActive)
               }
             >
-              <ToggleLeft className="mr-2 h-4 w-4" />
+              <ToggleLeft className="h-4 w-4" />
               Deactivate
             </Button>
             <Button
@@ -233,7 +227,7 @@ export function ProductDataTable<TData extends Product, TValue>({
               onClick={() => setBulkDeleteDialogOpen(true)}
               disabled={bulkDeleteProducts.isPending}
             >
-              <Trash2 className="mr-2 h-4 w-4" />
+              <Trash2 className="h-4 w-4" />
               Delete Selected
             </Button>
           </div>
@@ -314,7 +308,7 @@ export function ProductDataTable<TData extends Product, TValue>({
               disabled={bulkDeleteProducts.isPending}
             >
               {bulkDeleteProducts.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 'Delete'
               )}
@@ -343,7 +337,7 @@ export function ProductDataTable<TData extends Product, TValue>({
               disabled={deleteProduct.isPending}
             >
               {deleteProduct.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 'Delete'
               )}

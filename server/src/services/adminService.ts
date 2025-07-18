@@ -228,17 +228,18 @@ export const adminService = {
             {
                 $match: {
                     orderDate: { $gte: new Date(new Date().getFullYear(), 0, 1) }, // từ tháng 1 năm nay
+                    status: { $in: ["delivered", "processing", "refunded"] },
+                    paymentStatus: "paid",
                 },
             },
             {
                 $group: {
                     _id: { $month: "$orderDate" },
                     count: { $sum: 1 },
+                    revenue: { $sum: "$total" },
                 },
             },
-            {
-                $sort: { _id: 1 },
-            },
+            { $sort: { _id: 1 } },
         ]);
 
         const months = [
@@ -248,7 +249,53 @@ export const adminService = {
 
         return months.map((month, index) => {
             const match = orders.find((o) => o._id === index + 1);
-            return { month, count: match?.count || 0 };
+            return {
+                month,
+                count: match?.count || 0,
+                revenue: match?.revenue || 0,
+                profit: match ? Math.round((match.revenue || 0) * 0.1) : 0, // 10% lợi nhuận
+            };
         });
+    },
+    async getOrdersByDay(days = 30) {
+        const now = new Date();
+        const startDate = new Date(now);
+        startDate.setDate(now.getDate() - days + 1); // Lấy đủ 30 ngày gần nhất
+
+        const orders = await OrderModel.aggregate([
+            {
+                $match: {
+                    orderDate: { $gte: startDate },
+                    status: { $in: ["delivered", "processing", "refunded"] },
+                    paymentStatus: "paid",
+                },
+            },
+            {
+                $group: {
+                    _id: {
+                        $dateToString: { format: "%Y-%m-%d", date: "$orderDate" }
+                    },
+                    count: { $sum: 1 },
+                    revenue: { $sum: "$total" },
+                },
+            },
+            { $sort: { _id: 1 } },
+        ]);
+
+        // Tạo mảng đủ ngày, kể cả ngày không có đơn hàng
+        const result = [];
+        for (let i = 0; i < days; i++) {
+            const date = new Date(startDate);
+            date.setDate(startDate.getDate() + i);
+            const dateStr = date.toISOString().slice(0, 10);
+            const match = orders.find(o => o._id === dateStr);
+            result.push({
+                date: dateStr,
+                count: match?.count || 0,
+                revenue: match?.revenue || 0,
+                profit: match ? Math.round((match.revenue || 0) * 0.1) : 0, // 10% lợi nhuận giả lập
+            });
+        }
+        return result;
     },
 };

@@ -20,6 +20,12 @@ import type { LoginPayload, RegisterPayload } from '@/types/user';
  * Utils
  */
 import { getErrorMessage } from '@/utils/errorHandler';
+import type {
+  LoginPayload,
+  RegisterPayload,
+  UpdateProfilePayload,
+  ChangePasswordPayload,
+} from '@/types/user';
 
 const IS_LOGIN = 'monito-store-isLogin';
 
@@ -108,4 +114,35 @@ export const useAuth = () => {
     register: registerMutation,
     logout: logoutMutation,
   };
+};
+
+export const useUpdateProfile = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: UpdateProfilePayload) => authService.updateProfile(data),
+    onSuccess: (response) => {
+      queryClient.setQueryData(['auth-user'], response.data);
+      toast.success('Profile updated successfully!');
+    },
+    onError: (error: any) => {
+      const apiError = error.response?.data as ApiError;
+      const message = getErrorMessage(apiError?.errorCode, apiError?.message);
+      toast.error(message || 'Failed to update profile.');
+    },
+  });
+};
+
+export const useChangePassword = () => {
+  return useMutation({
+    mutationFn: (data: ChangePasswordPayload) =>
+      authService.changePassword(data),
+    onSuccess: () => {
+      toast.success('Password changed successfully!');
+    },
+    onError: (error: any) => {
+      const apiError = error.response?.data as ApiError;
+      const message = getErrorMessage(apiError?.errorCode, apiError?.message);
+      toast.error(message || 'Failed to change password.');
+    },
+  });
 };

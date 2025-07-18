@@ -24,7 +24,7 @@ const AuthLayout = () => {
       />
       <div className="absolute -top-[580px] -left-[290px] aspect-square w-[635px] rotate-[25deg] rounded-[99px] bg-[#F7DBA7]" />
       <div className="flex w-full">
-        <div className="text-primary z-10 flex-1 space-y-4 p-18 pt-10">
+        <div className="text-[#003459] z-10 flex-1 space-y-4 p-18 pt-10">
           <Link to="/">
             <Logo className="relative z-10" />
           </Link>

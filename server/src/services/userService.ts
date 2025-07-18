@@ -111,13 +111,15 @@ export const userService = {
   },
   async getAllUsers() {
     try {
-      const users = await UserModel.find().sort({ createdAt: -1 });
+      const users = await UserModel.find({
+        role: { $nin: ['staff', 'admin'] },
+      }).sort({ createdAt: -1 });
       return users;
     } catch (error) {
       throw new Error('Failed to fetch all users');
     }
   },
-  async updateUserStatus(userId: string, newStatus: boolean, reason: string , email : string) {
+  async updateUserStatus(userId: string, newStatus: boolean, reason: string, email: string) {
     const user = await UserModel.findById(userId);
 
     if (!user) {

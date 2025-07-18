@@ -1,30 +1,30 @@
 import { useParams } from 'react-router-dom';
 import { useProduct } from '@/hooks/useProducts';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle } from 'lucide-react';
 import ProductBreadcrumb from './components/detail/ProductBreadcrumb';
 import ProductInfo from './components/detail/ProductInfo';
 import ProductSpecifications from './components/detail/ProductSpecifications';
+import ProductReviews from './components/detail/ProductReviews';
 import ImageGallery from '@/components/ImageGallery';
+import { EntityNotFound } from '@/components/shared/EntityNotFound';
 
 const ProductDetailPage = () => {
   const { id } = useParams<{ id: string }>();
-  const { data: product, isLoading, error } = useProduct(id!);
+  const {
+    data: product,
+    isLoading,
+    error,
+  } = useProduct(id!, { customerView: true });
 
   if (isLoading) return <ProductDetailSkeleton />;
 
   if (error || !product) {
     return (
-      <div className="container mx-auto py-12">
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>
-            Could not find the product. Please try again later.
-          </AlertDescription>
-        </Alert>
-      </div>
+      <EntityNotFound
+        entityName="Product"
+        backToUrl="/products"
+        backToUrlText="Back to All Products"
+      />
     );
   }
 
@@ -43,6 +43,11 @@ const ProductDetailPage = () => {
             <ProductInfo product={product} />
             <ProductSpecifications product={product} />
           </div>
+        </div>
+        
+        {/* Product Reviews Section */}
+        <div className="mt-12">
+          <ProductReviews productId={product._id} />
         </div>
       </div>
     </div>

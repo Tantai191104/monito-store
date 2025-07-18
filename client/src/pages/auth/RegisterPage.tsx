@@ -80,7 +80,7 @@ const RegisterPage = () => {
   return (
     <div className="flex w-[400px] flex-col gap-4 rounded-lg bg-white p-5">
       <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-primary text-2xl font-bold">Create an account</h1>
+        <h1 className="text-[#003459] text-2xl font-bold">Create an account</h1>
         <p className="text-muted-foreground text-sm text-pretty">
           Let's get started. Fill in the details below to create your account
         </p>
@@ -165,7 +165,7 @@ const RegisterPage = () => {
           </div>
           <Button
             variant="outline"
-            className="w-full"
+            className="w-full bg-[#003459]"
             type="button"
             disabled={register.isPending}
           >

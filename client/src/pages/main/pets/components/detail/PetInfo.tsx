@@ -4,6 +4,9 @@ import type { Pet } from '@/types/pet';
 import { MessageCircle } from 'lucide-react';
 
 const PetInfo = ({ pet }: { pet: Pet }) => {
+  const handleZaloContact = () => {
+    window.open('https://zalo.me/0352195876', '_blank');
+  };
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -41,6 +44,7 @@ const PetInfo = ({ pet }: { pet: Pet }) => {
 
       <div className="flex space-x-4">
         <Button
+          onClick={handleZaloContact}
           size="lg"
           variant="outline"
           className="flex-1 border-[#003459] text-[#003459] hover:bg-[#003459] hover:text-white"

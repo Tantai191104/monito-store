@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { useOrders } from '@/hooks/useOrders';
 import { useCancelOrder } from '@/hooks/useOrders';
@@ -19,6 +18,10 @@ import { useProducts } from '@/hooks/useProducts';
 import React from 'react';
 import API from '@/lib/axios';
 import { useAuth } from '@/hooks/useAuth';
+import Select from 'react-select';
+import { useEffect } from 'react';
+import { useRef } from 'react';
+
 
 const getStatusVariant = (status: string) => {
   switch (status) {
@@ -78,6 +81,7 @@ const ORDER_STATUS = [
   { value: 'pending', label: 'Pending Confirmation' },
   { value: 'processing', label: 'Processing/Shipping' },
   { value: 'delivered', label: 'Delivered' },
+  { value: 'pending_refund', label: 'Pending Refund Approval' },
   { value: 'cancelled', label: 'Cancelled' },
   { value: 'refunded', label: 'Refunded' },
 ];
@@ -95,6 +99,21 @@ const OrdersPage = () => {
   const [reviewStates, setReviewStates] = useState<Record<string, { rating: number; content: string }>>({});
   // State: lưu orderId đang edit lại review
   const [editingReview, setEditingReview] = useState<string | null>(null);
+
+  // Add state to track editing refund
+  const [editingRefund, setEditingRefund] = useState(false);
+
+  // State cho modal đánh giá từng sản phẩm
+  const [reviewModal, setReviewModal] = useState<{orderId: string, productId: string, open: boolean} | null>(null);
+  const [reviewForm, setReviewForm] = useState<{rating: number, comment: string, images: string[]}>({rating: 0, comment: '', images: []});
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Thêm state lưu review sản phẩm đang sửa
+  const [editingProductReview, setEditingProductReview] = useState<{orderId: string, productId: string, review: any} | null>(null);
+
+  // Thêm state để phân biệt modal đang ở chế độ xem hay sửa
+  const [reviewModalMode, setReviewModalMode] = useState<'create' | 'view' | 'edit'>('create');
 
   // Get filter values from URL params
   const statusFilter = searchParams.get('status') || '';
@@ -131,6 +150,8 @@ const OrdersPage = () => {
   let filteredOrders: typeof orders = [];
   if (activeTab === 'cancelled') {
     filteredOrders = orders.filter(order => order.status === 'cancelled');
+  } else if (activeTab === 'pending_refund') {
+    filteredOrders = orders.filter(order => order.status === 'pending_refund');
   } else if (activeTab === 'all') {
     filteredOrders = orders;
   } else {
@@ -237,7 +258,7 @@ const OrdersPage = () => {
     }
   };
 
-  const handleDeleteReview = async (orderId: string) => {
+  const handleDeleteOrderReview = async (orderId: string) => {
     try {
       await API.delete(`/orders/${orderId}/review`);
       toast.success('Review deleted!');
@@ -259,6 +280,215 @@ const OrdersPage = () => {
     const now = Date.now();
     const diff = Math.floor((created + duration * 1000 - now) / 1000);
     return diff > 0 ? diff : 0;
+  };
+
+  // State for refund dialog
+  const [refundDialogOpen, setRefundDialogOpen] = useState(false);
+  const [refundOrder, setRefundOrder] = useState<any>(null);
+  const [refundReason, setRefundReason] = useState('');
+  const [refundBankName, setRefundBankName] = useState('');
+  const [refundAccountNumber, setRefundAccountNumber] = useState('');
+  const [refundAmount, setRefundAmount] = useState(0);
+  const [refundDescription, setRefundDescription] = useState('');
+
+  const refundReasons = [
+    'Missing item',
+    'Wrong item sent',
+    'Damaged item',
+    'Defective item',
+    'Expired item',
+    'Not as described',
+    'Used item',
+    'Counterfeit item',
+  ];
+
+  const openRefundDialog = (order: any) => {
+    setRefundOrder(order);
+    setRefundReason('');
+    setRefundBankName('');
+    setRefundAccountNumber('');
+    setRefundAmount(order.total);
+    setRefundDescription('');
+    setRefundImages(order.refundInfo?.images || []);
+    setRefundDialogOpen(true);
+  };
+
+  const handleRefundSubmit = async () => {
+    if (!refundOrder) return;
+    try {
+      await API.patch(`/orders/${refundOrder._id}/refund`, {
+        reason: refundReason,
+        bankName: refundBankName,
+        accountNumber: refundAccountNumber,
+        refundAmount: refundAmount,
+        description: refundDescription,
+        images: refundImages,
+      });
+      toast.success('Refund request submitted!');
+      setRefundDialogOpen(false);
+      setEditingRefund(false);
+      setRefundImages([]);
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to submit refund request');
+    }
+  };
+
+  // Type for bank options
+  const [bankOptions, setBankOptions] = useState<{ value: string; label: string }[]>([]);
+  const [isLoadingBanks, setIsLoadingBanks] = useState(false);
+
+  // State cho upload ảnh refund
+  const [refundImages, setRefundImages] = useState<string[]>([]);
+  const [uploadingRefund, setUploadingRefund] = useState(false);
+  const refundFileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setIsLoadingBanks(true);
+    fetch('https://gist.githubusercontent.com/trihtm/c5299c3c999d76db10398ef43efdb1eb/raw/8979b47cb24bb3524cd4009f269cf9e3ab2ee5b8/vietnam-banks')
+      .then(res => res.json())
+      .then(data => {
+        const options = data.banksnapas.map((b: any) => ({
+          value: b.shortName,
+          label: `${b.shortName} - ${b.vn_name}`,
+        }));
+        setBankOptions(options);
+      })
+      .finally(() => setIsLoadingBanks(false));
+  }, []);
+
+  // Hàm mở modal đánh giá
+  const openReviewModal = (orderId: string, productId: string) => {
+    setReviewModal({ orderId, productId, open: true });
+    setReviewForm({ rating: 0, comment: '', images: [] });
+    setReviewModalMode('create');
+  };
+  // Thêm hàm mở modal sửa review
+  const openEditProductReview = () => {
+    setReviewModalMode('edit');
+  };
+  // Sửa lại hàm mở modal xem review
+  const openViewProductReview = (orderId: string, productId: string, review: any) => {
+    setReviewModal({ orderId, productId, open: true });
+    setReviewForm({
+      rating: review.rating,
+      comment: review.comment,
+      images: review.images || [],
+    });
+    setEditingProductReview({ orderId, productId, review });
+    setReviewModalMode('view');
+  };
+
+  // Khi đóng modal, reset editingProductReview
+  const closeReviewModal = () => {
+    setReviewModal(null);
+    setEditingProductReview(null);
+  };
+
+  // Hàm upload ảnh
+  const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('image', files[0]);
+    formData.append('folder', 'reviews');
+    try {
+      const res = await API.post('/upload/image', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setReviewForm(prev => ({ ...prev, images: [...prev.images, res.data.data.url] }));
+    } catch (err) {
+      toast.error('Upload image failed');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  // Hàm mở file picker
+  const openFilePicker = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  // Hàm xóa ảnh
+  const removeImage = (indexToRemove: number) => {
+    setReviewForm(prev => ({
+      ...prev,
+      images: prev.images.filter((_, index) => index !== indexToRemove)
+    }));
+  };
+
+  // Khi submit review, nếu editingProductReview có giá trị thì gọi API update (PUT), ngược lại là tạo mới (POST)
+  const handleSubmitProductReview = async () => {
+    if (!reviewModal || !user) return;
+    try {
+      if (editingProductReview) {
+        await API.put(`reviews/reviews/${editingProductReview.review._id}`, {
+          rating: reviewForm.rating,
+          comment: reviewForm.comment,
+          images: reviewForm.images,
+        });
+      } else {
+        await API.post(`reviews/orders/${reviewModal.orderId}/products/${reviewModal.productId}/reviews`, {
+          userId: user._id,
+          rating: reviewForm.rating,
+          comment: reviewForm.comment,
+          images: reviewForm.images,
+        });
+      }
+      toast.success('Đánh giá thành công!');
+      closeReviewModal();
+      setEditingProductReview(null);
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Gửi đánh giá thất bại');
+    }
+  };
+
+  // Hàm xóa review
+  const handleDeleteReview = async () => {
+    if (!editingProductReview) return;
+    try {
+      await API.delete(`reviews/reviews/${editingProductReview.review._id}`);
+      toast.success('Xóa đánh giá thành công!');
+      closeReviewModal();
+      setEditingProductReview(null);
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Xóa đánh giá thất bại');
+    }
+  };
+
+  // Hàm upload ảnh refund
+  const handleUploadRefundImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploadingRefund(true);
+    const formData = new FormData();
+    formData.append('image', files[0]);
+    formData.append('folder', 'refunds');
+    try {
+      const res = await API.post('/upload/image', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setRefundImages(prev => [...prev, res.data.data.url]);
+    } catch (err) {
+      toast.error('Upload image failed');
+    } finally {
+      setUploadingRefund(false);
+      if (refundFileInputRef.current) refundFileInputRef.current.value = '';
+    }
+  };
+
+  // Hàm mở file picker cho refund
+  const openRefundFilePicker = () => {
+    if (refundFileInputRef.current) {
+      refundFileInputRef.current.click();
+    }
+  };
+
+  // Hàm xóa ảnh refund
+  const removeRefundImage = (indexToRemove: number) => {
+    setRefundImages(prev => prev.filter((_, index) => index !== indexToRemove));
   };
 
   if (isLoading) {
@@ -385,6 +615,9 @@ const OrdersPage = () => {
                     {order.status === 'pending' && order.paymentStatus === 'paid' && (
                       <Badge variant="secondary" className="capitalize">Paid, Pending Confirmation</Badge>
                     )}
+                    {order.status === 'pending_refund' && (
+                      <Badge className="capitalize bg-yellow-400 text-yellow-900">Pending Refund Approval</Badge>
+                    )}
                   </div>
                 </div>
               </CardHeader>
@@ -392,14 +625,17 @@ const OrdersPage = () => {
                 {/* Order Items */}
                 <div className="space-y-4 mb-6">
                   {order.items.map((item: any, index: number) => {
-                    // Lấy ảnh từ item.image, nếu không có thì lấy từ product.images[0]
-                    const product = productMap[item.item._id || item.item.id || item.product_id];
+                    // Defensive: handle missing item.item (e.g. product/pet deleted)
+                    const itemObj = item.item;
+                    const product = itemObj && (productMap[itemObj._id || itemObj.id || item.product_id]);
                     const imageUrl = item.image || product?.images?.[0] || '/placeholder-product.jpg';
+                    // Tìm review của user cho sản phẩm này
+                    const productReview = order.reviews?.find((r: any) => r.productId === itemObj._id && r.userId === user?._id);
                     return (
                       <div key={index} className="flex items-center space-x-4">
                         <img
                           src={imageUrl}
-                          alt={item.item.name}
+                          alt={itemObj?.name || 'Unavailable'}
                           className="w-16 h-16 object-cover rounded-lg"
                           onError={e => {
                             const target = e.target as HTMLImageElement;
@@ -413,10 +649,12 @@ const OrdersPage = () => {
                             <Badge variant={item.type === 'pet' ? 'destructive' : 'default'} className="text-xs">
                               {item.type === 'pet' ? 'Pet' : 'Product'}
                             </Badge>
-                            <h4 className="font-medium text-gray-900">{item.item.name}</h4>
+                            <h4 className="font-medium text-gray-900">
+                              {itemObj?.name || <span className="text-gray-400 italic">[No longer available]</span>}
+                            </h4>
                           </div>
                           <p className="text-sm text-gray-600">
-                            Quantity: {item.quantity} × {formatPrice(item.item.price)} VND
+                            Quantity: {item.quantity} × {itemObj?.price ? formatPrice(itemObj.price) : 'N/A'} VND
                           </p>
                         </div>
                         <div className="text-right">
@@ -424,6 +662,17 @@ const OrdersPage = () => {
                             {formatPrice(item.subtotal)} VND
                           </p>
                         </div>
+                        {order.status === 'delivered' && item.type === 'product' && (
+                          productReview ? (
+                            <Button size="sm" variant="outline" onClick={() => openViewProductReview(order._id, itemObj._id, productReview)}>
+                              Xem đánh giá
+                            </Button>
+                          ) : (
+                            <Button size="sm" variant="outline" onClick={() => openReviewModal(order._id, itemObj._id)}>
+                              Đánh giá
+                            </Button>
+                          )
+                        )}
                       </div>
                     );
                   })}
@@ -481,76 +730,6 @@ const OrdersPage = () => {
                   </div>
                 )}
 
-                {/* Đánh giá cho đơn đã giao */}
-                {order.status === 'delivered' && (
-                  (() => {
-                    const myReview = getMyReview(order);
-                    if (myReview && editingReview !== order._id) {
-                      // Đã đánh giá, hiển thị review và nút sửa
-                      return (
-                        <div className="mt-6 p-4 bg-yellow-50 rounded-lg">
-                          <h4 className="font-medium text-gray-900 mb-2">Your Review</h4>
-                          <div className="flex items-center mb-2">
-                            {[1,2,3,4,5].map(star => (
-                              <Star key={star} className={star <= myReview.rating ? 'text-yellow-400' : 'text-gray-300'} fill="currentColor" />
-                            ))}
-                            <span className="ml-2 text-sm text-gray-600">{myReview.rating} stars</span>
-                          </div>
-                          <div className="text-sm text-gray-800 mb-2">{myReview.content}</div>
-                          <Button size="sm" variant="outline" onClick={() => {
-                            setEditingReview(order._id);
-                            setReviewStates(prev => ({ ...prev, [order._id]: { rating: myReview.rating, content: myReview.content } }));
-                          }}>Edit Review</Button>
-                          <Button size="sm" variant="destructive" className="ml-2" onClick={() => handleDeleteReview(order._id)}>Delete Review</Button>
-                        </div>
-                      );
-                    }
-                    // Chưa đánh giá hoặc đang sửa
-                    return (
-                      <div className="mt-6 p-4 bg-yellow-50 rounded-lg">
-                        <h4 className="font-medium text-gray-900 mb-2">Order Review</h4>
-                        <div className="flex items-center mb-2">
-                          {[1,2,3,4,5].map(star => (
-                            <button
-                              key={star}
-                              type="button"
-                              onClick={() => handleRatingChange(order._id, star)}
-                              className={
-                                (reviewStates[order._id]?.rating || 0) >= star
-                                  ? 'text-yellow-400'
-                                  : 'text-gray-300'
-                              }
-                            >
-                              <Star className="w-6 h-6" fill="currentColor" />
-                            </button>
-                          ))}
-                          <span className="ml-2 text-sm text-gray-600">
-                            {reviewStates[order._id]?.rating ? `${reviewStates[order._id].rating} stars` : 'Select stars'}
-                          </span>
-                        </div>
-                        <textarea
-                          className="w-full border rounded p-2 text-sm mb-2"
-                          rows={3}
-                          placeholder="Review content..."
-                          value={reviewStates[order._id]?.content || ''}
-                          onChange={e => handleContentChange(order._id, e.target.value)}
-                        />
-                        <Button
-                          size="sm"
-                          className="bg-[#003459] text-white"
-                          onClick={() => handleSubmitReview(order._id)}
-                          disabled={!(reviewStates[order._id]?.rating && reviewStates[order._id]?.content)}
-                        >
-                          Submit Review
-                        </Button>
-                        {myReview && (
-                          <Button size="sm" variant="ghost" className="ml-2" onClick={() => setEditingReview(null)}>Cancel Edit</Button>
-                        )}
-                      </div>
-                    );
-                  })()
-                )}
-
                 {/* Action Buttons */}
                 <div className="flex items-center justify-between mt-6 pt-6 border-t">
                   <div className="flex items-center space-x-4 text-sm text-gray-600">
@@ -576,6 +755,44 @@ const OrdersPage = () => {
                       >
                         Cancel Order
                       </Button>
+                    )}
+                    {order.status === 'pending_refund' && order.refundInfo && !editingRefund && (
+                      <div className="mt-4 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                        <h4 className="font-semibold text-yellow-800 mb-2">Refund Request Details</h4>
+                        <div className="text-sm text-gray-800 mb-1"><strong>Reason:</strong> {order.refundInfo?.reason}</div>
+                        {order.refundInfo?.description && (
+                          <div className="text-sm text-gray-800 mb-1"><strong>Description:</strong> {order.refundInfo?.description}</div>
+                        )}
+                        <div className="text-sm text-gray-800 mb-1"><strong>Bank Name:</strong> {order.refundInfo?.bankName}</div>
+                        <div className="text-sm text-gray-800 mb-1"><strong>Account Number:</strong> {order.refundInfo?.accountNumber}</div>
+                        <div className="text-sm text-gray-800 mb-1"><strong>Refund Amount:</strong> {order.refundInfo?.amount?.toLocaleString('vi-VN')} VND</div>
+                        <div className="text-xs text-gray-500 mt-2">Requested at: {order.refundInfo?.requestedAt ? new Date(order.refundInfo?.requestedAt).toLocaleString() : ''}</div>
+                        <Button className="mt-2" variant="outline" onClick={() => {
+                          setEditingRefund(true);
+                          setRefundOrder(order);
+                          setRefundReason(order.refundInfo?.reason || '');
+                          setRefundBankName(order.refundInfo?.bankName || '');
+                          setRefundAccountNumber(order.refundInfo?.accountNumber || '');
+                          setRefundAmount(order.refundInfo?.amount || 0);
+                          setRefundDescription(order.refundInfo?.description || '');
+                          setRefundImages(order.refundInfo?.images || []);
+                          setRefundDialogOpen(true);
+                        }}>Edit Refund Request</Button>
+                        {order.refundInfo?.images && order.refundInfo.images.length > 0 && (
+                          <div className="text-sm text-gray-800 mb-1">
+                            <strong>Images:</strong>
+                            <div className="flex gap-2 mt-2">
+                              {order.refundInfo.images.map((img: string, idx: number) => (
+                                <img key={idx} src={img} alt="refund" className="w-16 h-16 object-cover rounded border cursor-pointer hover:opacity-80" 
+                                     onClick={() => window.open(img, '_blank')} />
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {order.status === 'delivered' && (
+                      <Button onClick={() => openRefundDialog(order)} className="mt-2" variant="outline">Refund</Button>
                     )}
                   </div>
                 </div>
@@ -603,6 +820,271 @@ const OrdersPage = () => {
               remainingSeconds={getRemainingSeconds(selectedOrder.createdAt || selectedOrder.orderDate, 300)}
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Refund Dialog */}
+      <Dialog open={refundDialogOpen} onOpenChange={(open) => {
+        setRefundDialogOpen(open);
+        if (!open) setEditingRefund(false);
+      }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Refund Request for Order #{refundOrder?.orderNumber}</DialogTitle>
+          </DialogHeader>
+          {/* Hidden file input cho refund */}
+          <input
+            type="file"
+            accept="image/*"
+            ref={refundFileInputRef}
+            onChange={handleUploadRefundImage}
+            disabled={uploadingRefund}
+            style={{ display: 'none' }}
+          />
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="refundReason" className="block text-sm font-medium text-gray-700">
+                Refund Reason
+              </label>
+              <select
+                id="refundReason"
+                value={refundReason}
+                onChange={e => setRefundReason(e.target.value)}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+              >
+                <option value="">Select a reason</option>
+                {refundReasons.map(reason => (
+                  <option key={reason} value={reason}>{reason}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="refundBankName" className="block text-sm font-medium text-gray-700">
+                Bank Name
+              </label>
+              <Select
+                id="refundBankName"
+                options={bankOptions}
+                isLoading={isLoadingBanks}
+                value={bankOptions.find(opt => opt.value === refundBankName) || undefined}
+                onChange={(opt: { value: string; label: string } | null) => setRefundBankName(opt ? opt.value : '')}
+                placeholder="Select a bank..."
+                isClearable
+                isSearchable
+                className="mt-1"
+                styles={{ menu: (base: any) => ({ ...base, zIndex: 9999 }) }}
+              />
+            </div>
+            <div>
+              <label htmlFor="refundAccountNumber" className="block text-sm font-medium text-gray-700">
+                Account Number
+              </label>
+              <input
+                type="text"
+                id="refundAccountNumber"
+                value={refundAccountNumber}
+                onChange={e => setRefundAccountNumber(e.target.value)}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+              />
+            </div>
+            <div>
+              <label htmlFor="refundAmount" className="block text-sm font-medium text-gray-700">
+                Refund Amount
+              </label>
+              <input
+                type="number"
+                id="refundAmount"
+                value={refundAmount}
+                readOnly
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 bg-gray-100 cursor-not-allowed"
+              />
+            </div>
+            <div>
+              <label htmlFor="refundDescription" className="block text-sm font-medium text-gray-700">
+                Description (Optional)
+              </label>
+              <textarea
+                id="refundDescription"
+                value={refundDescription}
+                onChange={e => setRefundDescription(e.target.value)}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                rows={3}
+              />
+            </div>
+            <div>
+              <label htmlFor="refundImages" className="block text-sm font-medium text-gray-700">
+                Refund Images (Optional)
+              </label>
+              <div className="grid grid-cols-4 gap-2">
+                {refundImages.map((img, idx) => (
+                  <div key={idx} className="relative w-20 h-20 border-2 border-gray-200 rounded-lg overflow-hidden">
+                    <img src={img} alt="refund" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removeRefundImage(idx)}
+                      className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                {refundImages.length < 5 && (
+                  <button
+                    type="button"
+                    onClick={openRefundFilePicker}
+                    disabled={uploadingRefund}
+                    className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-gray-400 hover:bg-gray-50 transition-colors"
+                  >
+                    {uploadingRefund ? (
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-600"></div>
+                    ) : (
+                      <>
+                        <span className="text-2xl text-gray-400">+</span>
+                        <span className="text-xs text-gray-500 mt-1">Thêm ảnh</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+              {refundImages.length > 0 && (
+                <p className="text-xs text-gray-500 mt-2">Tối đa 5 ảnh</p>
+              )}
+            </div>
+            <Button
+              className="bg-[#003459] text-white"
+              onClick={handleRefundSubmit}
+              disabled={!refundReason || !refundBankName || !refundAccountNumber || refundAmount <= 0}
+            >
+              Submit Refund Request
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Đánh giá sản phẩm Modal */}
+      <Dialog open={!!reviewModal} onOpenChange={closeReviewModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {reviewModalMode === 'view' ? 'Xem đánh giá sản phẩm' :
+               reviewModalMode === 'edit' ? 'Sửa đánh giá sản phẩm' :
+               'Đánh giá sản phẩm'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex items-center mb-2">
+              {[1,2,3,4,5].map(star => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => reviewModalMode !== 'view' && setReviewForm(prev => ({ ...prev, rating: star }))}
+                  className={reviewForm.rating >= star ? 'text-yellow-400' : 'text-gray-300'}
+                  disabled={reviewModalMode === 'view'}
+                >
+                  <Star className="w-6 h-6" fill="currentColor" />
+                </button>
+              ))}
+              <span className="ml-2 text-sm text-gray-600">
+                {reviewForm.rating ? `${reviewForm.rating} sao` : 'Chọn số sao'}
+              </span>
+            </div>
+            <textarea
+              className="w-full border rounded p-2 text-sm mb-2"
+              rows={3}
+              placeholder="Nội dung đánh giá..."
+              value={reviewForm.comment}
+              onChange={e => reviewModalMode !== 'view' && setReviewForm(prev => ({ ...prev, comment: e.target.value }))}
+              readOnly={reviewModalMode === 'view'}
+            />
+            <div>
+              {/* Hidden file input */}
+              <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                onChange={handleUploadImage}
+                disabled={uploading}
+                style={{ display: 'none' }}
+              />
+              
+              <div className="grid grid-cols-4 gap-2">
+                {/* Hiển thị ảnh đã upload */}
+                {reviewForm.images.map((img, idx) => (
+                  <div key={idx} className="relative w-20 h-20 border-2 border-gray-200 rounded-lg overflow-hidden">
+                    <img src={img} alt="review" className="w-full h-full object-cover" />
+                    {reviewModalMode !== 'view' && (
+                      <button
+                        type="button"
+                        onClick={() => removeImage(idx)}
+                        className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                ))}
+                
+                {/* Nút thêm ảnh (chỉ hiển thị khi không ở chế độ view và chưa đạt giới hạn) */}
+                {reviewModalMode !== 'view' && reviewForm.images.length < 5 && (
+                  <button
+                    type="button"
+                    onClick={openFilePicker}
+                    disabled={uploading}
+                    className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-gray-400 hover:bg-gray-50 transition-colors"
+                  >
+                    {uploading ? (
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-600"></div>
+                    ) : (
+                      <>
+                        <span className="text-2xl text-gray-400">+</span>
+                        <span className="text-xs text-gray-500 mt-1">Thêm ảnh</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+              
+              {reviewForm.images.length >= 5 && reviewModalMode !== 'view' && (
+                <p className="text-xs text-gray-500 mt-2">Tối đa 5 ảnh</p>
+              )}
+            </div>
+            <div className="flex gap-2">
+              {reviewModalMode === 'view' ? (
+                <>
+                  <Button
+                    className="bg-[#003459] text-white"
+                    onClick={openEditProductReview}
+                  >
+                    Sửa đánh giá
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={handleDeleteReview}
+                  >
+                    Xóa đánh giá
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  className="bg-[#003459] text-white"
+                  onClick={handleSubmitProductReview}
+                  disabled={!(reviewForm.rating && reviewForm.comment) || uploading}
+                >
+                  {reviewModalMode === 'edit' ? 'Cập nhật đánh giá' : 'Gửi đánh giá'}
+                </Button>
+              )}
+              {reviewModalMode === 'view' && (
+                <Button variant="outline" onClick={closeReviewModal}>
+                  Đóng
+                </Button>
+              )}
+              {reviewModalMode === 'edit' && (
+                <Button variant="outline" onClick={() => setReviewModalMode('view')}>
+                  Hủy
+                </Button>
+              )}
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useDebounce } from 'use-debounce';
 import { useActiveColors } from '@/hooks/useColors';
+import { useActiveBreeds } from '@/hooks/useBreeds'; // ✅ Import hook để lấy breed
 import { useInvalidatePetQueries } from '@/hooks/usePets';
 import { formatPrice } from '@/utils/formatter';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -19,6 +20,7 @@ const MAX_PRICE = 20000000; // 20 million
 
 const PetFilters = ({ searchParams, setSearchParams }: PetFiltersProps) => {
   const { data: colors = [], isLoading: colorsLoading } = useActiveColors();
+  const { data: breeds = [], isLoading: breedsLoading } = useActiveBreeds(); // ✅ Lấy danh sách breed
   const invalidatePetQueries = useInvalidatePetQueries();
 
   const [priceRange, setPriceRange] = useState<[number, number]>([
@@ -35,22 +37,26 @@ const PetFilters = ({ searchParams, setSearchParams }: PetFiltersProps) => {
       setIsResetting(false);
       return;
     }
-    
+
     // Don't run if we just reset (within 200ms)
     if (Date.now() - lastResetTime < 200) {
       return;
     }
-    
+
     // Use non-debounced value if we're at default values to avoid debounce delay
-    const currentPriceRange = (priceRange[0] === MIN_PRICE && priceRange[1] === MAX_PRICE) 
-      ? priceRange 
-      : debouncedPriceRange;
-    
+    const currentPriceRange =
+      priceRange[0] === MIN_PRICE && priceRange[1] === MAX_PRICE
+        ? priceRange
+        : debouncedPriceRange;
+
     // If we're at default values, don't update URL
-    if (currentPriceRange[0] === MIN_PRICE && currentPriceRange[1] === MAX_PRICE) {
+    if (
+      currentPriceRange[0] === MIN_PRICE &&
+      currentPriceRange[1] === MAX_PRICE
+    ) {
       return;
     }
-    
+
     const newParams = new URLSearchParams(searchParams);
     const [min, max] = currentPriceRange;
 
@@ -71,19 +77,26 @@ const PetFilters = ({ searchParams, setSearchParams }: PetFiltersProps) => {
       newParams.set('page', '1');
       setSearchParams(newParams);
     }
-  }, [debouncedPriceRange, priceRange, searchParams, setSearchParams, isResetting, lastResetTime]);
+  }, [
+    debouncedPriceRange,
+    priceRange,
+    searchParams,
+    setSearchParams,
+    isResetting,
+    lastResetTime,
+  ]);
 
   // Sync state with URL on back/forward navigation
   useEffect(() => {
     if (isResetting) {
       return;
     }
-    
+
     // Don't run if we just reset (within 200ms)
     if (Date.now() - lastResetTime < 200) {
       return;
     }
-    
+
     const min = Number(searchParams.get('minPrice') || MIN_PRICE);
     const max = Number(searchParams.get('maxPrice') || MAX_PRICE);
     setPriceRange([min, max]);
@@ -113,13 +126,13 @@ const PetFilters = ({ searchParams, setSearchParams }: PetFiltersProps) => {
   const handleResetFilters = () => {
     setIsResetting(true);
     setLastResetTime(Date.now());
-    
+
     // Clear URL params including price params
     const newParams = new URLSearchParams();
     setSearchParams(newParams);
-    
+
     setPriceRange([MIN_PRICE, MAX_PRICE]);
-    
+
     invalidatePetQueries();
     // Force a refetch after a longer delay to ensure the debounced value has updated
     setTimeout(() => {
@@ -152,6 +165,31 @@ const PetFilters = ({ searchParams, setSearchParams }: PetFiltersProps) => {
             Reset
           </Button>
         )}
+      </div>
+
+      {/* Breed Filter */}
+      <div>
+        <h4 className="mb-2 font-semibold">Breed</h4>
+        <div className="space-y-2">
+          {breedsLoading
+            ? Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-6 w-full" />
+              ))
+            : breeds.map((breed) => (
+                <div key={breed._id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`breed-${breed._id}`}
+                    checked={searchParams.getAll('breed').includes(breed.name)}
+                    onCheckedChange={(checked) =>
+                      handleMultiSelectChange('breed', breed.name, !!checked)
+                    }
+                  />
+                  <label htmlFor={`breed-${breed._id}`} className="text-sm">
+                    {breed.name}
+                  </label>
+                </div>
+              ))}
+        </div>
       </div>
 
       {/* Gender Filter */}

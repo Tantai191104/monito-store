@@ -43,6 +43,18 @@ import {
 } from '@/hooks/useBreeds';
 import { toast } from 'sonner';
 import { AddBreedDialog } from './AddBreedDialog';
+import { DeleteBreedDialog } from './DeleteBreedDialog'; // Import dialog xóa đơn
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import type { Breed } from '@/types/breed';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -61,8 +73,9 @@ export function BreedDataTable<TData, TValue>({
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [breedToDelete, setBreedToDelete] = useState<TData | null>(null);
 
-  // ✅ Use bulk operations hooks
   const bulkDeleteBreeds = useBulkDeleteBreeds();
   const bulkActivateBreeds = useBulkActivateBreeds();
   const bulkDeactivateBreeds = useBulkDeactivateBreeds();
@@ -100,6 +113,7 @@ export function BreedDataTable<TData, TValue>({
     try {
       await bulkDeleteBreeds.mutateAsync(selectedIds);
       setRowSelection({});
+      setBulkDeleteDialogOpen(false); // Close dialog on success/partial success
     } catch (error) {
       // Error handled in mutation
     }
@@ -253,7 +267,7 @@ export function BreedDataTable<TData, TValue>({
             <Button
               variant="destructive"
               size="sm"
-              onClick={handleBulkDelete}
+              onClick={() => setBulkDeleteDialogOpen(true)}
               disabled={bulkDeleteBreeds.isPending}
             >
               {bulkDeleteBreeds.isPending ? (
@@ -317,6 +331,43 @@ export function BreedDataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
+
+      {/* Single Delete Dialog */}
+      <DeleteBreedDialog
+        breed={breedToDelete as Breed | null}
+        open={!!breedToDelete}
+        onOpenChange={(open) => !open && setBreedToDelete(null)}
+      />
+
+      {/* Bulk Delete Dialog */}
+      <AlertDialog
+        open={bulkDeleteDialogOpen}
+        onOpenChange={setBulkDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Bulk Delete</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete these breeds? This action cannot
+              be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setBulkDeleteDialogOpen(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkDelete}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              {bulkDeleteBreeds.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
+              Delete Breeds
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* ✅ Use DataTablePagination component */}
       <DataTablePagination table={table} />

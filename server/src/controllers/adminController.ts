@@ -32,7 +32,17 @@ export const adminController = {
             res.status(500).json({ message: "Internal Server Error" });
         }
     },
-    async getMonthlyOrders(req: Request, res: Response) {
+    async getOrdersByDay(req: Request, res: Response) {
+        try {
+            const days = parseInt(req.query.days as string) || 30;
+            const data = await adminService.getOrdersByDay(days);
+            res.status(200).json(data);
+        } catch (error) {
+            console.error("Error fetching daily orders", error);
+            res.status(500).json({ message: "Failed to load daily order stats" });
+        }
+    },
+    async getOrdersByMonth(req: Request, res: Response) {
         try {
             const data = await adminService.getOrdersByMonth();
             res.status(200).json(data);

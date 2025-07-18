@@ -23,7 +23,9 @@ interface ProductGridProps {
 }
 
 const ProductGrid = ({ searchParams, setSearchParams }: ProductGridProps) => {
-  const { data, isLoading, error } = useProducts(searchParams);
+  const { data, isLoading, error } = useProducts(searchParams, {
+    customerView: true,
+  });
   const products = data?.products || [];
   const pagination = data?.pagination;
 

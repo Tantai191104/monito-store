@@ -42,7 +42,6 @@ import { UserDataTable } from './components/UserDataTable';
 const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [roleFilter, setRoleFilter] = useState('all');
   const [users, setUsers] = useState<UserResponse[]>([]);
   const [summary, setSummary] = useState<SummaryResponse | null>(null);
   const [selectedUser, setSelectedUser] = useState<UserResponse | null>(null);
@@ -85,12 +84,11 @@ const UserManagement = () => {
       const matchesStatus =
         statusFilter === 'all' || user.isActive === (statusFilter === 'true');
 
-      const matchesRole =
-        roleFilter === 'all' || user.role?.toLowerCase() === roleFilter;
+      
 
-      return matchesSearch && matchesStatus && matchesRole;
+      return matchesSearch && matchesStatus;
     });
-  }, [users, debouncedSearch, statusFilter, roleFilter]);
+  }, [users, debouncedSearch, statusFilter, ]);
 
   const openUserDetail = (user: UserResponse) => {
     setSelectedUser(user);
@@ -187,7 +185,7 @@ const UserManagement = () => {
             ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-4 p-6">
           {/* Total Users */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -263,7 +261,7 @@ const UserManagement = () => {
       )}
 
       {/* Filters */}
-      <Card className="mt-6">
+      <Card className="mx-6">
         <CardHeader>
           <CardTitle>Search & Filter Users</CardTitle>
           <CardDescription>
@@ -293,22 +291,10 @@ const UserManagement = () => {
                 <SelectItem value="false">Inactive</SelectItem>
               </SelectContent>
             </Select>
-
-            <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className="w-full md:w-[180px]">
-                <SelectValue placeholder="Filter by role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Roles</SelectItem>
-                <SelectItem value="customer">Customer</SelectItem>
-                <SelectItem value="staff">Staff</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </CardContent>
       </Card>
-      <div className='mt-6'>
+      <div className='p-6'>
         <UserDataTable
           data={filteredUsers}
           onViewDetail={openUserDetail}

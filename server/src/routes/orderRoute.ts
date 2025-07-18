@@ -23,6 +23,7 @@ orderRoute.get('/:id', authenticate, orderController.getOrderById);
 orderRoute.patch('/:id/cancel', authenticate, authorize('customer'), orderController.cancelOrder);
 orderRoute.post('/:id/review', authenticate, authorize('customer'), orderController.addOrderReview);
 orderRoute.delete('/:id/review', authenticate, authorize('customer'), orderController.deleteOrderReview);
+orderRoute.patch('/:id/refund', authenticate, authorize('customer'), orderController.requestRefund);
 
 // Staff/Admin routes
 orderRoute.patch('/:id/status', authenticate, authorize('staff', 'admin'), orderController.updateOrderStatus);

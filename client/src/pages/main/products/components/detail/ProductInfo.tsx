@@ -5,12 +5,20 @@ import type { Product } from '@/types/product';
 import { ShoppingCart, Gift, MessageCircle } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 const ProductInfo = ({ product }: { product: Product }) => {
   const { addItem } = useCart();
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const handleAddToCart = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
     setIsAddingToCart(true);
     try {
       addItem(product, 'product');
@@ -20,6 +28,9 @@ const ProductInfo = ({ product }: { product: Product }) => {
     } finally {
       setIsAddingToCart(false);
     }
+  };
+  const handleZaloContact = () => {
+    window.open('https://zalo.me/0352195876', '_blank');
   };
 
   return (
@@ -43,6 +54,7 @@ const ProductInfo = ({ product }: { product: Product }) => {
           {isAddingToCart ? 'Adding...' : 'Add to cart'}
         </Button>
         <Button
+          onClick={handleZaloContact}
           size="lg"
           variant="outline"
           className="flex-1 border-[#003459] text-[#003459] hover:bg-[#003459] hover:text-white"

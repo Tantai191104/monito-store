@@ -24,12 +24,15 @@ export const useInvalidateProductQueries = () => {
 
 export const useProducts = (
   params: URLSearchParams = new URLSearchParams(),
+  options: { customerView?: boolean } = { customerView: false },
 ) => {
-  // Always add isActive=true unless already set
   const paramsWithActive = new URLSearchParams(params.toString());
-  if (!paramsWithActive.has('isActive')) {
+
+  // ✅ Only force isActive=true for customer-facing views
+  if (options.customerView && !paramsWithActive.has('isActive')) {
     paramsWithActive.set('isActive', 'true');
   }
+
   const hasFilters = paramsWithActive.toString().length > 0;
   const queryKey = hasFilters
     ? productKeys.list(paramsWithActive.toString())
@@ -46,12 +49,15 @@ export const useProducts = (
   });
 };
 
-export const useProduct = (id: string) => {
+export const useProduct = (
+  id: string,
+  options: { customerView?: boolean } = {},
+) => {
   const queryKey = productKeys.detail(id);
   return useQuery({
     queryKey,
     queryFn: async () => {
-      const response = await productService.getProductById(id);
+      const response = await productService.getProductById(id, options);
       return response.data?.product;
     },
     enabled: !!id,

@@ -23,6 +23,7 @@ export const authenticate = (
 
     const decoded = verifyToken(token, process.env.ACCESS_TOKEN_SECRET!);
     req.userId = decoded.userId;
+    req.userRole = decoded.role;
     next();
   } catch (error) {
     next(new UnauthorizedException('Invalid token'));

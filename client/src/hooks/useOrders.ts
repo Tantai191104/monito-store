@@ -35,7 +35,7 @@ export const useOrderById = (id: string) => {
     queryKey: orderKeys.detail(id),
     queryFn: async () => {
       const response = await orderService.getOrderById(id);
-      return response.data;
+      return response.data?.order; // Return the order object directly
     },
     enabled: !!id,
     staleTime: 5 * 60 * 1000,

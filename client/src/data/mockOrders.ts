@@ -63,11 +63,11 @@ const sampleItems = [
 
 const statuses: Order['status'][] = [
   'pending',
-  'confirmed',
   'processing',
-  'shipped',
   'delivered',
   'cancelled',
+  'pending_refund',
+  'refunded',
 ];
 const paymentStatuses: Order['paymentStatus'][] = ['pending', 'paid', 'failed'];
 
