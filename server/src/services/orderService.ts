@@ -150,13 +150,14 @@ export const orderService = {
       if (!order) {
         throw new Error('Order was not created');
       }
+      const orderDoc: OrderDocument = order as OrderDocument;
       const zaloPayRes = await paymentService.createZaloPayOrder({
-        orderId: (order as OrderDocument)._id.toString(),
-        amount: (order as OrderDocument).total,
-        description: `Thanh toán đơn hàng #${(order as OrderDocument).orderNumber}`,
+        orderId: (orderDoc._id as mongoose.Types.ObjectId).toString(),
+        amount: orderDoc.total,
+        description: `Thanh toán đơn hàng #${orderDoc.orderNumber}`,
       });
-      (order as OrderDocument).order_url = zaloPayRes.order_url;
-      await (order as OrderDocument).save();
+      orderDoc.order_url = zaloPayRes.order_url;
+      await orderDoc.save();
       order_url = zaloPayRes.order_url;
     }
 

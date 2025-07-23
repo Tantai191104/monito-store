@@ -70,7 +70,7 @@ export const productController = {
       const { id } = req.params;
 
       const options = {
-        customerView: req.query.customerView,
+        customerView: req.query.customerView === 'true',
       };
 
       const product = await productService.getProductById(id, options);
@@ -83,6 +83,7 @@ export const productController = {
       next(error);
     }
   },
+
 
   async updateProduct(
     req: Request,

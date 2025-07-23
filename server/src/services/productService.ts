@@ -170,8 +170,7 @@ export const productService = {
   ) {
     const query: any = { _id: productId };
 
-    // For customer views, only return the product if it's active
-    if (options.customerView === true || options.customerView === 'true') {
+    if (options.customerView === true) {
       query.isActive = true;
     }
 
@@ -181,12 +180,14 @@ export const productService = {
 
     if (!product) {
       throw new NotFoundException(
-        'Product not found or is inactive', // More accurate error message
+        'Product not found or is inactive',
         ERROR_CODE_ENUM.PRODUCT_NOT_FOUND,
       );
     }
+
     return product;
   },
+
 
   /**
    * Update product
@@ -254,7 +255,7 @@ export const productService = {
         if (orderCount > 0) {
           throw new BadRequestException(
             `Cannot delete product "${product.name}" because it is part of ${orderCount} order(s). Please deactivate it instead.`,
-            'PRODUCT_IN_USE',
+            ERROR_CODE_ENUM.PRODUCT_IN_USE,
           );
         }
 
@@ -265,7 +266,8 @@ export const productService = {
     } finally {
       session.endSession();
     }
-  },
+  }
+  ,
 
   /**
    * Update stock
