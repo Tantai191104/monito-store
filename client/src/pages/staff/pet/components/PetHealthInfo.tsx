@@ -78,7 +78,7 @@ const PetHealthInfo = ({ control }: PetHealthInfoProps) => {
                     <FormItem className="flex flex-row items-start space-y-0 space-x-3 rounded-lg border-2 border-gray-100 p-4 transition-colors hover:border-gray-200">
                       <FormControl>
                         <Checkbox
-                          checked={field.value}
+                          checked={!!field.value}
                           onCheckedChange={field.onChange}
                           className="mt-1"
                         />

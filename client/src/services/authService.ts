@@ -41,11 +41,14 @@ export const authService = {
 
   async updateProfile(data: Partial<User>): Promise<User> {
     const response = await API.put<ApiResponse<{ user: User }>>('/user/profile', data);
-    return response.data.data.user;
+    return response.data.data?.user as User;
   },
 
   async getCurrentUser(): Promise<User> {
     const response = await API.get<ApiResponse<{ user: User }>>('/user/current-user');
+    if (!response.data.data) {
+      throw new Error('User data is undefined');
+    }
     return response.data.data.user;
   },
 
