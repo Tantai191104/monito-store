@@ -12,7 +12,7 @@ import { comparePassword, hashPassword } from '../utils/bcryptjs';
 export interface UserDocument extends Document {
   name: string;
   email: string;
-  password: string;
+  password?: string;
   avatarUrl: string | null;
   role: 'admin' | 'staff' | 'customer';
   isActive: boolean;
@@ -177,7 +177,7 @@ const userSchema = new Schema<UserDocument>(
     },
     methods: {
       comparePassword(value: string) {
-        return comparePassword(value, this.password);
+        return comparePassword(value, this.password ?? '');
       },
     },
   },
