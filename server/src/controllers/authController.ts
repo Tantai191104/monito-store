@@ -51,7 +51,7 @@ export const authController = {
 
       res.cookie('accessToken', tokens.accessToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+        secure: true, // HTTPS only in production
         sameSite: 'none',
         path: '/',
         maxAge: ms(process.env.ACCESS_TOKEN_EXPIRE! as StringValue), // 15 minutes
@@ -59,7 +59,7 @@ export const authController = {
 
       res.cookie('refreshToken', tokens.refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+        secure: true, // HTTPS only in production
         sameSite: 'none',
         path: '/',
         maxAge: ms(process.env.REFRESH_TOKEN_EXPIRE! as StringValue), // 7 days
